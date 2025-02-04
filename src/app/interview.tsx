@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-export default function Interview(){ 
-    <h1> This is a interivew page </h1>
-=======
 import React from 'react';
 import Image from "next/image";
 
@@ -33,5 +29,4 @@ export default function Interview() {
           </footer>
         </div>
   );
->>>>>>> 0e1563c26fce79e4a1740df497d0aadf87386908
 }
