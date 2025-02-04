@@ -1,3 +1,20 @@
+
+FEBUARY 4TH 2024:
+page.tsx edited - 
+  - Page represents the landing page of the website (The home page)
+  - Added in the basic skeleton of the page. This being 4 buttons which will lead to the Interview page, the Job Description page, the Resume Review page, and back to the home page.
+  - Added in a link to a video about ATS which has a cover photo. 
+  - The very bottom of the page contains a link to a discord channel for Northeasterns Khoury College of Computer Science Students and Alum to interact
+  - In the top left corner is the start of the navigation bar where it says the name of the project (Pandployer).
+
+globals.css edited - 
+  - Gives css design for buttons, background, and the ATS video all on the home page (many may have to be moved in the future to a different file in order for theme to be kept tthe same globally but each elemnet being diffrent within each page)
+
+Jobs folder added -
+  - Stores all of the job descriptions and resumes which willl be used in the project for the functionnality.
+  
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+## PREWRITEN GOTTEN FROM USING REACT
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
