@@ -1,14 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 
+
 export default function Home() {
   return (
     <div className="Homepage">
       <main className="Options">
-        <Link href="interview.tsx"> Interview Page </Link>
-        <Link href="jobdes.tsx"> Job Description </Link>
-        <Link href="res-review.tsx"> Resume Review </Link>
-        <Link href="page.tsx"> Home </Link>
       </main>
 
       <a 
