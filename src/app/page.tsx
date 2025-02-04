@@ -8,19 +8,16 @@ export default function Home() {
         <h1>Pandployer</h1>
       </div>  
       <main className="Options">
-        <Link href="/interview.tsx">
-          <button className="button">Interview</button>
-        </Link>
-        <a href="src/app/jobdes.tsx">
-          <button className="button">Job Description </button>
-          </a>
-          <a href = "src/app/offer.tsx">
-          <button className="button">Send Offer </button>
-          </a>
-          <a href = "src/app/res-review.tsx">
-          <button className="button">Resume Review</button>
-          </a>
+        <Link href="interview.tsx"> Interview Page </Link>
+        <Link href="jobdes.tsx"> Job Description </Link>
+        <Link href="res-review.tsx"> Resume Review </Link>
+        <Link href="page.tsx"> Home </Link>
       </main>
+
+      <a 
+        className="ATS video" 
+        href="https://www.youtube.com/watch?v=fHpVPkIGVyY"
+        > ATS Video </a>
 
       <footer>
         <a
