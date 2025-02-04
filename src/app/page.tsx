@@ -4,18 +4,21 @@ import Link from "next/link";
 export default function Home() {
   return (
     <div className="Homepage">
+      <div className="Header">
+        <h1>Pandployer</h1>
+      </div>  
       <main className="Options">
-        <a href = "src/app/interview.tsx">
-          <button className="interview">Interview </button>
-          </a>
-          <a href = "src/app/jobdes.tsx">
-          <button className="jobdes">Job Description </button>
+        <Link href="/interview.tsx">
+          <button className="button">Interview</button>
+        </Link>
+        <a href="src/app/jobdes.tsx">
+          <button className="button">Job Description </button>
           </a>
           <a href = "src/app/offer.tsx">
-          <button className="offer">Send Offer </button>
+          <button className="button">Send Offer </button>
           </a>
           <a href = "src/app/res-review.tsx">
-          <button className="res-review">Resume Review </button>
+          <button className="button">Resume Review</button>
           </a>
       </main>
 
