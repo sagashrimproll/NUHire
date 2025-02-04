@@ -5,19 +5,16 @@ export default function Home() {
   return (
     <div className="Homepage">
       <main className="Options">
-        <a href = "src/app/interview.tsx">
-          <button className="interview">Interview </button>
-          </a>
-          <a href = "src/app/jobdes.tsx">
-          <button className="jobdes">Job Description </button>
-          </a>
-          <a href = "src/app/offer.tsx">
-          <button className="offer">Send Offer </button>
-          </a>
-          <a href = "src/app/res-review.tsx">
-          <button className="res-review">Resume Review </button>
-          </a>
+        <Link href="interview.tsx"> Interview Page </Link>
+        <Link href="jobdes.tsx"> Job Description </Link>
+        <Link href="res-review.tsx"> Resume Review </Link>
+        <Link href="page.tsx"> Home </Link>
       </main>
+
+      <a 
+        className="ATS video" 
+        href="https://www.youtube.com/watch?v=fHpVPkIGVyY"
+        > ATS Video </a>
 
       <footer>
         <a
