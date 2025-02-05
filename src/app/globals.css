@@ -43,12 +43,11 @@ main {
   background-color: black;
 }
 
-.Buttons .button {
-  flex: 0 1 calc(50% - 16px); /* Adjust the width to 50% minus the margin */
-  margin: 8px; /* Add margin to create space between buttons */
-}
+
 
 .button {
+  flex: 0 1 calc(50% - 16px); 
+  margin: 8px;
   background-color: white;
   color: black;
   border: solid hsl(228, 61%, 32%);
