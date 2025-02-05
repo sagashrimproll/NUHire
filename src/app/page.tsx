@@ -30,11 +30,7 @@ export default function Home() {
           ></iframe>
           <p>Watch to Learn about ATS</p>
         </div>
-        <div className = "Buttons">
-          <Link href="/interview" className="button" style={{ visibility: 'hidden' }}> Interview Page </Link>
-          <Link href="/jobdes"  className = "button"> Job Description </Link>
-          <Link href="/res-review"  className = "button"> Resume Review </Link>
-        </div>
+        <CreateButtons />
       </main>
 
 
@@ -55,6 +51,18 @@ export default function Home() {
           Discord
         </a>
       </footer>
+    </div>
+  );
+}
+
+function CreateButtons() {
+  return (
+    <div className="Buttons">
+      <Link href="/jobdes" className="button"> Job Description </Link>
+      <Link href="/jobdes" className="button"> Chat </Link>
+      <Link href="/jobdes" className="button"> Notes </Link>
+      <Link href="/res-review" className="button"> Resume Review </Link>
+      <Link href="/interview" className="button"> Interview Page </Link>
     </div>
   );
 }
