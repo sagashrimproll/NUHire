@@ -1,9 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
-import YouTube from 'react-youtube';
-
-
 
 export default function Home() {
   return (
@@ -11,26 +8,32 @@ export default function Home() {
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
-      <div className="Header">
-        <h1>
-          <Link href="/"  className = "home-button"> Home </Link>
-          Pandployer
-        </h1>
+      <div className="Header" >
+        <a href = "#" className= "nav">
+          <div className="one"></div>
+          <div className="two"></div>
+          <div className="three"></div>
+        </a>
+      
+        <Link href="/"  className = "home-button"> Pandployer </Link>
+      
       </div>  
       <main className="Options">
         <div className="Video">
           <iframe 
-            width="560" 
-            height="315"
+            width="1020"
+            height="630"
             src="https://www.youtube.com/embed/fHpVPkIGVyY?si=9L9JBYH8sWTEZYe6" 
             title="YouTube video player" 
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
             referrerPolicy="strict-origin-when-cross-origin" 
             allowFullScreen
+            className ="ATS-IMG"
+            style={{ display: 'block', margin: '0 auto' }}
           ></iframe>
-          <p>Watch to Learn about ATS</p>
+          Watch to Learn about ATS
         </div>
-        <CreateButtons />
+         <CreateButtons />
       </main>
 
 
@@ -45,10 +48,11 @@ export default function Home() {
             aria-hidden
             src="/discord.svg"
             alt="Discord icon"
-            width={16}
-            height={16}
+            width={25}
+            height={25}
+            style = {{display: "inline"}}
           />
-          Discord
+          <p style = {{display: "inline"}}> Join our Discord</p>
         </a>
       </footer>
     </div>
@@ -57,12 +61,16 @@ export default function Home() {
 
 function CreateButtons() {
   return (
-    <div className="Buttons">
-      <Link href="/jobdes" className="button"> Job Description </Link>
-      <Link href="/jobdes" className="button"> Chat </Link>
-      <Link href="/jobdes" className="button"> Notes </Link>
-      <Link href="/res-review" className="button"> Resume Review </Link>
-      <Link href="/interview" className="button"> Interview Page </Link>
+    <div className = "Buttons">
+          <Link href="/interview" className ="button">
+           Interview
+          </Link>
+          <Link href="/jobdes" className ="button">
+           Job Description
+          </Link>
+          <Link href="/res-review" className ="button">
+           Resume-Review 
+          </Link>
     </div>
   );
 }
