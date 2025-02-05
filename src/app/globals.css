@@ -33,12 +33,20 @@ main {
   flex-wrap: wrap;
   padding-top: 40px;
   padding-bottom: 50px;
-  background-color: black;
+  background-color: Black;
+  color: white; 
+  flex-direction: row;
+  font-family: "Poiret One", serif;
+  font-weight: 300;
+  font-style: normal;
+  text-align: center;
+  font-size: 35;
+  gap: 50px;
 }
 
 .Buttons .button {
   flex: 0 1 calc(50% - 16px); /* Adjust the width to 50% minus the margin */
-  margin: 8px; /* Add margin to create space between buttons */
+  margin: 0px; /* Add margin to create space between buttons */
 }
 
 .button {
@@ -102,6 +110,33 @@ main {
   border: 1px solid #ddd;
   border-radius: 4px;
   padding: 5px;
+}
+
+.nav div {
+  height: 4px;
+  background-color: hsl(228, 61%, 32%);
+  margin: 5px 0px; 
+  border-radius: 25px;
+  transition: 0.3s;
+}
+
+.nav {
+  width: 30px;
+  display: black;
+  margin: 1em 0 0 1em;
+}
+
+.one{
+  width: 20px;
+}
+.two{
+  width: 15px;
+}
+.three{
+  width: 10px;
+}
+.nav:hover div {
+  width: 30px;
 }
 
 footer {
