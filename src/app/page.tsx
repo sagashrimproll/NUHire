@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import YouTube from 'react-youtube';
 
 
 
@@ -17,24 +18,22 @@ export default function Home() {
         </h1>
       </div>  
       <main className="Options">
-        <div className = "Video">
-          <a 
-            className="ATS-video" 
-            href="https://www.youtube.com/watch?v=fHpVPkIGVyY"
-          >
-            <Image className="ATS-IMG"
-              src="/ATSCoverIMG.png"
-              alt="ATS Cover"
-              width={700}
-              height={700} />
-            Click to watch a video in what ATS is.
-          </a>
-  
+        <div className="Video">
+          <iframe 
+            width="560" 
+            height="315"
+            src="https://www.youtube.com/embed/fHpVPkIGVyY?si=9L9JBYH8sWTEZYe6" 
+            title="YouTube video player" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+            referrerPolicy="strict-origin-when-cross-origin" 
+            allowFullScreen
+          ></iframe>
+          <p>Watch to Learn about ATS</p>
         </div>
         <div className = "Buttons">
-          <Link href="/interview" className = "interview-button"> Interview Page </Link>
-          <Link href="/jobdes"  className = "jobdes-button"> Job Description </Link>
-          <Link href="/res-review"  className = "res-button"> Resume Review </Link>
+          <Link href="/interview" className="button" style={{ visibility: 'hidden' }}> Interview Page </Link>
+          <Link href="/jobdes"  className = "button"> Job Description </Link>
+          <Link href="/res-review"  className = "button"> Resume Review </Link>
         </div>
       </main>
 
