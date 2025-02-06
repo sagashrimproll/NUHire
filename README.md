@@ -1,3 +1,11 @@
+Febuary 5th 2024:
+page.tsx edited -
+  - Added in a function to create buttons which will be used later in order to develop a feature where homepage buttons are hidden until that page is reached in the process.
+  - Embedded ATS youtube video into the page.
+  - Linked the buttons to their respective pages.
+
+gloabal.css edited -
+  - Made the front page design adding in a nav bar and style to the home page.
 
 FEBUARY 4TH 2024:
 page.tsx edited - 
