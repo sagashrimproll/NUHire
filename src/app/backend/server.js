@@ -10,7 +10,7 @@ app.use(express.json()); // Allows JSON body parsing
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "password",
+  password: "Sivakavi@178306",
   database: "test_db",
 });
 
@@ -23,8 +23,8 @@ db.connect((err) => {
 });
 
 // API Route to Fetch Data
-app.get("/Students", (req, res) => {
-  db.query("SELECT * FROM Students", (err, result) => {
+app.get("/test_db.Students", (req, res) => {
+  db.query("SELECT * FROM test_db.Students", (err, result) => {
     if (err) {
       return res.status(500).json({ error: err.message });
     }
@@ -33,11 +33,11 @@ app.get("/Students", (req, res) => {
 });
 
 // API Route to Insert Data
-app.post("/users", (req, res) => {
-  const {email, first_name, last_name, password, type, nu_id} = req.body;
+app.post("/test_db.Students", (req, res) => {
+  const {email, f_name, l_name, password, type, nu_id} = req.body;
   db.query(
-    "INSERT INTO Students (email, f_name, l_name, password,  type, nu_id) VALUES (?, ?, ?, ?, ?, ?)",
-    [email, first_name, last_name, password, type, nu_id],
+    "INSERT INTO Students (email, f_name, l_name, password, type, nu_id) VALUES (?, ?, ?, ?, ?, ?)",
+    [email, f_name, l_name, password, type, nu_id],
     (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
       res.json({ message: "User added!", userId: result.insertId });
@@ -45,7 +45,29 @@ app.post("/users", (req, res) => {
   );
 });
 
+// API Route to Update Data
+app.put("/test_db.Students/:id", (req, res) => {
+  const { id } = req.params;
+  const { email, f_name, l_name, password, type, nu_id } = req.body;
+  db.query(
+    "UPDATE Students SET email = ?, f_name = ?, l_name = ?, password = ?, type = ?, nu_id = ? WHERE id = ?",
+    [email, f_name, l_name, password, type, nu_id, id],
+    (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ message: "User updated!" });
+    }
+  );
+});
+
+app.delete("/test_db.Students/:id", (req, res) => {
+  const { id } = req.params;
+  db.query("DELETE FROM Students WHERE id = ?", [id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: "User deleted!" });
+  });
+});
+
 // Start Server
 app.listen(3000, () => {
-  console.log("Server running on http://localhost:3000");
+  console.log("Server running on http://localhost:3000/test_db.Students");
 });
