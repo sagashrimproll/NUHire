@@ -10,7 +10,7 @@ app.use(express.json()); // Allows JSON body parsing
 const db = mysql.createConnection({
   host: "localhost",
   user: "root",
-  password: "Sivakavi@178306",
+  password: "password",
   database: "test_db",
 });
 
@@ -59,6 +59,7 @@ app.put("/test_db.Students/:id", (req, res) => {
   );
 });
 
+// API Route to Delete Data
 app.delete("/test_db.Students/:id", (req, res) => {
   const { id } = req.params;
   db.query("DELETE FROM Students WHERE id = ?", [id], (err) => {
