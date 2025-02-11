@@ -1,4 +1,9 @@
-Febuary 5th 2024:
+Febuary 10th 2025: 
+Server.js edited - 
+- Added restApi endpoints and tested them for user sign-up authentication 
+- Written but yet to test for PUT and DELETE endpoints 
+
+Febuary 5th 2025:
 page.tsx edited -
   - Added in a function to create buttons which will be used later in order to develop a feature where homepage buttons are hidden until that page is reached in the process.
   - Embedded ATS youtube video into the page.
@@ -7,7 +12,7 @@ page.tsx edited -
 gloabal.css edited -
   - Made the front page design adding in a nav bar and style to the home page.
 
-FEBUARY 4TH 2024:
+FEBUARY 4TH 2025:
 page.tsx edited - 
   - Page represents the landing page of the website (The home page)
   - Added in the basic skeleton of the page. This being 4 buttons which will lead to the Interview page, the Job Description page, the Resume Review page, and back to the home page.
