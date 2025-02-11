@@ -19,21 +19,7 @@ export default function Home() {
       
       </div>  
       <main className="Options">
-        <div className="Video">
-          <iframe 
-            width="1020"
-            height="630"
-            src="https://www.youtube.com/embed/fHpVPkIGVyY?si=9L9JBYH8sWTEZYe6" 
-            title="YouTube video player" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-            referrerPolicy="strict-origin-when-cross-origin" 
-            allowFullScreen
-            className ="ATS-IMG"
-            style={{ display: 'block', margin: '0 auto' }}
-          ></iframe>
-          Watch to Learn about ATS
-        </div>
-         <CreateButtons />
+         
       </main>
 
 
@@ -59,18 +45,4 @@ export default function Home() {
   );
 }
 
-function CreateButtons() {
-  return (
-    <div className = "Buttons">
-          <Link href="/interview" className ="button">
-           Interview
-          </Link>
-          <Link href="/jobdes" className ="button">
-           Job Description
-          </Link>
-          <Link href="/res-review" className ="button">
-           Resume-Review 
-          </Link>
-    </div>
-  );
-}
+
