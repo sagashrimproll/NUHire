@@ -1,4 +1,9 @@
-Febuary 5th 2024:
+Febuary 10th 2025: 
+Server.js edited - 
+- Added restApi endpoints and tested them for user sign-up authentication 
+- Written but yet to test for PUT and DELETE endpoints 
+
+Febuary 5th 2025:
 page.tsx edited -
   - Added in a function to create buttons which will be used later in order to develop a feature where homepage buttons are hidden until that page is reached in the process.
   - Embedded ATS youtube video into the page.

@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+<<<<<<< HEAD
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.20.3",
     "express": "^4.21.2",
@@ -19,6 +20,10 @@
     "oauth2orize": "^1.12.0",
     "passport": "^0.7.0",
     "passport-http": "^0.3.0",
+=======
+    "express": "^4.21.2",
+    "next": "^15.1.6",
+>>>>>>> bd9135b038fd2e4dc6f3172608d116425cd8789d
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.5",

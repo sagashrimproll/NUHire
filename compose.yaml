@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  backend:
+    build: backend/. # Uses backend/Dockerfile
+    ports:
+      - "5001:5000"
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=localhost
+      - DB_USER=root
+      - DB_PASSWORD=Helloworld@panployer.1234
+      - DB_NAME=test_db
+
+  frontend:
+    build: .  # Uses frontend/Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  db:
+    image: mysql:latest  # Uses official MySQL image
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: Helloworld@panployer.1234
+      MYSQL_DATABASE: test_db
+    ports:
+      - "3306:3306"
