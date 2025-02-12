@@ -1,4 +1,8 @@
-adfdfsdf
+Febuary 12th 2024:
+  - Add in code for OAuth for when we publish to the web to uncomment and be able to use.
+  - Finished up the home page with everything linked and all.
+  - Started on the sign up page which needs to be connected on the database.
+
 Febuary 5th 2024:
 page.tsx edited -
   - Added in a function to create buttons which will be used later in order to develop a feature where homepage buttons are hidden until that page is reached in the process.
