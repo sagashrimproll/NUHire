@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import "./styles/homepage.css";
 
 export default function Home() {
   return (
@@ -8,32 +9,15 @@ export default function Home() {
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
-      <div className="Header" >
-        <a href = "#" className= "nav">
-          <div className="one"></div>
-          <div className="two"></div>
-          <div className="three"></div>
-        </a>
+      <div className="loginbar" >
       
-        <Link href="/"  className = "home-button"> Pandployer </Link>
-      
+        <Link href="/signup"  className = "navbutton"> Signup </Link>
+        <Link href="/login"  className = "navbutton-login"> Login </Link>
       </div>  
-      <main className="Options">
-        <div className="Video">
-          <iframe 
-            width="1020"
-            height="630"
-            src="https://www.youtube.com/embed/fHpVPkIGVyY?si=9L9JBYH8sWTEZYe6" 
-            title="YouTube video player" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-            referrerPolicy="strict-origin-when-cross-origin" 
-            allowFullScreen
-            className ="ATS-IMG"
-            style={{ display: 'block', margin: '0 auto' }}
-          ></iframe>
-          Watch to Learn about ATS
-        </div>
-         <CreateButtons />
+      <main className="mainbody">
+         <div className ="welcome">Welcome to Pandployer!</div>
+         <div className ="description">Where you can be your own employer!</div>
+         <Link href="/signup" className = "signupbutton">Click Here to Get Started</Link>
       </main>
 
 
@@ -59,18 +43,4 @@ export default function Home() {
   );
 }
 
-function CreateButtons() {
-  return (
-    <div className = "Buttons">
-          <Link href="/interview" className ="button">
-           Interview
-          </Link>
-          <Link href="/jobdes" className ="button">
-           Job Description
-          </Link>
-          <Link href="/res-review" className ="button">
-           Resume-Review 
-          </Link>
-    </div>
-  );
-}
+
