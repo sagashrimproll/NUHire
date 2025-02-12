@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import "./styles/homepage.css";
 
 export default function Home() {
   return (
@@ -8,18 +9,15 @@ export default function Home() {
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
-      <div className="Header" >
-        <a href = "#" className= "nav">
-          <div className="one"></div>
-          <div className="two"></div>
-          <div className="three"></div>
-        </a>
+      <div className="loginbar" >
       
-        <Link href="/"  className = "home-button"> Pandployer </Link>
-      
+        <Link href="/signup"  className = "navbutton"> Signup </Link>
+        <Link href="/login"  className = "navbutton-login"> Login </Link>
       </div>  
-      <main className="Options">
-         
+      <main className="mainbody">
+         <div className ="welcome">Welcome to Pandployer!</div>
+         <div className ="description">Where you can be your own employer!</div>
+         <Link href="/signup" className = "signupbutton">Click Here to Get Started</Link>
       </main>
 
 
