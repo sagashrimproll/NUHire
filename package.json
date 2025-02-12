@@ -3,18 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "vite --host 0.0.0",
+    "dev": "next dev --turbo",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
     "express": "^4.21.2",
-    "next": "^15.1.6",
+    "next": "^15.1.7",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.5",
-    "react-youtube": "^10.1.0"
+    "react-youtube": "^10.1.0",
+    "vite": "^6.1.0"
   },
   "devDependencies": {
     "@types/node": "^20",
