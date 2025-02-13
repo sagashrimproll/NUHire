@@ -1,8 +1,10 @@
 version: "3.8"
 
 services:
-  backend:
-    build: backend/. # Uses backend/Dockerfile
+  api:
+    build: ./api # Uses api/Dockerfile
+    container_name: api_container
+    volumes: ['./api:/apicode']
     ports:
       - "5001:5001"
     depends_on:
@@ -14,11 +16,13 @@ services:
       - DB_NAME=Signup_schema
 
   frontend:
-    build: .  # Uses frontend/Dockerfile
+    build: ./frontend/src  # Uses frontend/Dockerfile
+    container_name: frontend_container
+    volumes: ['./frontend/src:/frontendcode']
     ports:
       - "3000:3000"
     depends_on:
-      - backend
+      - api
 
   db:
     image: mysql:latest  # Uses official MySQL image
@@ -34,3 +38,5 @@ services:
   
 volumes:
   db_data:
+  apicode:
+  frontendcode:
