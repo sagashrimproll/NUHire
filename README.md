@@ -1,3 +1,9 @@
+Febuary 10th 2025: 
+Server.js edited - 
+- Added restApi endpoints and tested them for user sign-up authentication 
+- Written but yet to test for PUT and DELETE endpoints 
+
+Febuary 5th 2025:
 Febuary 12th 2024:
   - Add in code for OAuth for when we publish to the web to uncomment and be able to use.
   - Finished up the home page with everything linked and all.
