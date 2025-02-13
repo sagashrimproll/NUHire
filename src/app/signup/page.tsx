@@ -1,4 +1,4 @@
-import { signInWithGoogle } from '../backend/OAuth';
+/*import { signInWithGoogle } from '../backend/OAuth';*/
 import Link from 'next/link';
 import '../styles/signup.css';
 

@@ -104,18 +104,6 @@ CREATE TABLE `resumepage2` (
 );
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-DROP TABLE IF EXISTS `groups`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `groups` (
-  `id` integer PRIMARY KEY,
-  `student1` integer,
-  `student2` integer,
-  `student3` integer,
-  `student4` integer,
-  `student5` integer
-);
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 DROP TABLE IF EXISTS `interviewpage`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
