@@ -1,3 +1,8 @@
+Febuary 12th 2024:
+  - Add in code for OAuth for when we publish to the web to uncomment and be able to use.
+  - Finished up the home page with everything linked and all.
+  - Started on the sign up page which needs to be connected on the database.
+
 Febuary 10th 2025: 
 Server.js edited - 
 - Added restApi endpoints and tested them for user sign-up authentication 
