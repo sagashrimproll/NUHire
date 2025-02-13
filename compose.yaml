@@ -16,9 +16,9 @@ services:
       - DB_NAME=Signup_schema
 
   frontend:
-    build: ./frontend/src  # Uses frontend/Dockerfile
+    build: ./frontend  # Uses frontend/Dockerfile
     container_name: frontend_container
-    volumes: ['./frontend/src:/frontendcode']
+    volumes: ['./frontend:/app']
     ports:
       - "3000:3000"
     depends_on:
