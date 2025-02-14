@@ -1,6 +1,22 @@
 version: "3.8"
 
 services:
+  db:
+    image: mysql:latest  # Uses official MySQL image
+    container_name: panployer-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: PanPloyer@1234
+      MYSQL_DATABASE: Signup_schema
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pexample"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db_data:/var/lib/mysql
   api:
     build: ./api # Uses api/Dockerfile
     container_name: api_container
@@ -8,7 +24,8 @@ services:
     ports:
       - "5001:5001"
     depends_on:
-      - db
+      db: 
+        condition: service_healthy
     environment:
       - DB_HOST=panployer-mysql
       - DB_USER=root
@@ -23,18 +40,6 @@ services:
       - "3000:3000"
     depends_on:
       - api
-
-  db:
-    image: mysql:latest  # Uses official MySQL image
-    container_name: panployer-mysql
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: PanPloyer@1234
-      MYSQL_DATABASE: Signup_schema
-    ports:
-      - "3307:3306"
-    volumes:
-      - db_data:/var/lib/mysql
   
 volumes:
   db_data:
