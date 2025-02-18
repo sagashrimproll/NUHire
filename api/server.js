@@ -4,7 +4,7 @@ const mysql = require("mysql2");
 const cors = require("cors");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
 // Middleware
 app.use(cors());
@@ -12,7 +12,7 @@ app.use(express.json());
 
 // MySQL Connection
 const db = mysql.createConnection({
-  host: "localhost",
+  host: 'localhost',
   user: "root", // MySQL username from your script
   password: "Pandployer12345!", // MySQL password
   database: "pandployer",
@@ -26,14 +26,12 @@ db.connect((err) => {
   }
 });
 
-
 app.get("/users", (req, res) => {
   db.query("SELECT * FROM Users", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
 });
-
 
 // Get user by ID
 app.get("/users/:id", (req, res) => {
