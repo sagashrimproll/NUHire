@@ -1,10 +1,9 @@
-// import { signInWithGoogle } from '../../../../api/OAuth';
+'use client';
 import { useState } from 'react';
 import Link from 'next/link';
 import '../styles/signup.css';
 
-
-export default function SignupPage() { 
+export default function SignupPage() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -21,6 +20,8 @@ export default function SignupPage() {
       Affiliation: affiliation,
     };
 
+    console.log('Submitting user:', user); // Add logging
+
     try {
       const response = await fetch('http://localhost:5000/users', {
         method: 'POST',
@@ -30,6 +31,8 @@ export default function SignupPage() {
         body: JSON.stringify(user),
       });
 
+      console.log('Response:', response); // Add logging
+
       if (response.ok) {
         setMessage('User added successfully!');
       } else {
@@ -37,6 +40,7 @@ export default function SignupPage() {
         setMessage(errorData.message || 'Failed to add user');
       }
     } catch (error) {
+      console.error('Error:', error);
       setMessage('Failed to add user');
     }
   };
@@ -66,7 +70,7 @@ export default function SignupPage() {
               onChange={(e) => setLastName(e.target.value)}
             />
           </h2>
-          </div>
+        </div>
         <h2 className="email">
           Email:
           <input
@@ -94,7 +98,7 @@ export default function SignupPage() {
           Sign Up
         </button>
       </form>
-      {message && <p>{message}</p>}  
+      {message && <p>{message}</p>}
       <p>
         Already have an account?
         <Link href="/login"> Click here!</Link>
@@ -103,5 +107,5 @@ export default function SignupPage() {
         Seems like you already have an account. <Link href="/login">Click here to login.</Link>
       </p>
     </div>
-  )
+  );
 }
