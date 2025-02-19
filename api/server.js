@@ -27,14 +27,12 @@ db.connect((err) => {
   }
 });
 
-
 app.get("/users", (req, res) => {
   db.query("SELECT * FROM Users", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
 });
-
 
 // Get user by ID
 app.get("/users/:id", (req, res) => {
@@ -49,14 +47,24 @@ app.get("/users/:id", (req, res) => {
 // Add a new user
 app.post("/users", (req, res) => {
   const { First_name, Last_name, Email, Affiliation } = req.body;
-  db.query(
-    "INSERT INTO Users (First_name, Last_name, Email, Affiliation) VALUES (?, ?, ?, ?)",
-    [First_name, Last_name, Email, Affiliation],
-    (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.status(201).json({ id: result.insertId, First_name, Last_name, Email, Affiliation });
+
+  // Check if the user already exists
+  db.query("SELECT * FROM Users WHERE Email = ?", [Email], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (results.length > 0) {
+      return res.status(409).json({ message: "User already exists" });
     }
-  );
+
+    // If user does not exist, insert the new user
+    db.query(
+      "INSERT INTO Users (First_name, Last_name, Email, Affiliation) VALUES (?, ?, ?, ?)",
+      [First_name, Last_name, Email, Affiliation],
+      (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json({ id: result.insertId, First_name, Last_name, Email, Affiliation });
+      }
+    );
+  });
 });
 
 // Update user
