@@ -21,10 +21,10 @@ USE `pandployer` ;
 -- Table `pandployer`.`Notes`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `pandployer`.`Notes` (
-  `id` INT GENERATED ALWAYS AS () STORED,
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
   `content` LONGTEXT NULL,
   `student` INT NOT NULL,
-  `last_edited` DATETIME GENERATED ALWAYS AS () STORED,
+  `last_edited` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `student_UNIQUE` (`student` ASC) VISIBLE,
   UNIQUE INDEX `last_edited_UNIQUE` (`last_edited` ASC) VISIBLE)
@@ -35,8 +35,8 @@ ENGINE = InnoDB;
 -- Table `pandployer`.`homepage`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `pandployer`.`homepage` (
-  `id` INT GENERATED ALWAYS AS () VIRTUAL,
-  `visited` INT GENERATED ALWAYS AS () STORED,
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `visited` INT DEFAULT 0,
   `student` INT NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `student_UNIQUE` (`student` ASC) VISIBLE)
@@ -47,10 +47,10 @@ ENGINE = InnoDB;
 -- Table `pandployer`.`jobdes`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `pandployer`.`jobdes` (
-  `id` INT GENERATED ALWAYS AS () VIRTUAL,
-  `visited` INT GENERATED ALWAYS AS () VIRTUAL,
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `visited` INT DEFAULT 0,
   `student` INT NOT NULL,
-  `timespent` INT GENERATED ALWAYS AS () STORED,
+  `timespent` INT DEFAULT 0,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `sttudent_UNIQUE` (`student` ASC) VISIBLE)
 ENGINE = InnoDB;
@@ -60,10 +60,10 @@ ENGINE = InnoDB;
 -- Table `pandployer`.`resumepage`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `pandployer`.`resumepage` (
-  `id` INT GENERATED ALWAYS AS () VIRTUAL,
-  `visited` INT GENERATED ALWAYS AS () VIRTUAL,
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `visited` INT DEFAULT 0,
   `student` INT NOT NULL,
-  `timespent` INT GENERATED ALWAYS AS (),
+  `timespent` INT DEFAULT 0,
   `yes` INT NOT NULL,
   `no` INT NOT NULL,
   `unanswered` VARCHAR(45) NOT NULL,
@@ -145,7 +145,7 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `pandployer`.`interviewpage` (
   `student` INT NOT NULL,
-  `id` INT GENERATED ALWAYS AS () VIRTUAL,
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
   `question1` INT NOT NULL,
   `question2` INT NOT NULL,
   `question3` INT NOT NULL,
@@ -166,12 +166,12 @@ ENGINE = InnoDB;
 -- Table `pandployer`.`Users`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `pandployer`.`Users` (
-  `id` INT GENERATED ALWAYS AS () VIRTUAL,
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
   `First_name` VARCHAR(45) NOT NULL,
   `Last_name` VARCHAR(45) NOT NULL,
   `Email` VARCHAR(45) NOT NULL,
   `Affiliation` ENUM('student', 'advisor') NOT NULL,
-  `created_at` DATETIME GENERATED ALWAYS AS () VIRTUAL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `Group` INT NULL,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `Email_UNIQUE` (`Email` ASC) VISIBLE,
@@ -218,7 +218,7 @@ ENGINE = InnoDB;
 -- Table `pandployer`.`makeofferpage`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `pandployer`.`makeofferpage` (
-  `id` INT GENERATED ALWAYS AS () VIRTUAL,
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
   `selected` INT NOT NULL,
   `timespent` INT NOT NULL,
   `group` INT NOT NULL,
@@ -242,8 +242,9 @@ CREATE USER 'Sage' IDENTIFIED BY 'password';
 GRANT ALL ON `pandployer`.* TO 'Sage';
 GRANT SELECT, INSERT, TRIGGER ON TABLE `pandployer`.* TO 'Sage';
 GRANT SELECT, INSERT, TRIGGER, UPDATE, DELETE ON TABLE `pandployer`.* TO 'Sage';
-GRANT EXECUTE ON ROUTINE `pandployer`.* TO 'Sage';
+GRANT EXECUTE ON `pandployer`.* TO 'Sage'@'%';
 
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
+SHOW COLUMNS FROM Users;
