@@ -15,7 +15,7 @@ const db = mysql.createConnection({
   host: "db",
   user: "root", // MySQL username from your script
   password: "PanPloyer@1234", // MySQL password
-  database: "Pandployer",
+  database: "pandployer",
   port: 3306,
 });
 
@@ -57,7 +57,7 @@ app.post("/users", (req, res) => {
 
     // If user does not exist, insert the new user
     db.query(
-      "INSERT INTO Users (email, f_name, l_name, affiliation) VALUES (?, ?, ?, ?)",
+      "INSERT INTO Users (First_name, Last_name, Email, Affiliation) VALUES (?, ?, ?, ?)",
       [Email, First_name, Last_name, Affiliation],
       (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
