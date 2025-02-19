@@ -1,3 +1,8 @@
+Febuary 19th 2025:
+- Connected API, Database, and Signup pages together in order for a user to sign up for the platform.
+- Designed the sign up page.
+- Sign up page is now fully functional
+
 Febuary 10th 2025: 
 Server.js edited - 
 - Added restApi endpoints and tested them for user sign-up authentication 
