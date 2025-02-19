@@ -21,10 +21,10 @@ USE `pandployer` ;
 -- Table `pandployer`.`Notes`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `pandployer`.`Notes` (
-  `id` INT GENERATED ALWAYS AS () STORED,
+  `id` INT NOT NULL AUTO_INCREMENT,
   `content` LONGTEXT NULL,
   `student` INT NOT NULL,
-  `last_edited` DATETIME GENERATED ALWAYS AS () STORED,
+  `last_edited` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP ,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `student_UNIQUE` (`student` ASC) VISIBLE,
   UNIQUE INDEX `last_edited_UNIQUE` (`last_edited` ASC) VISIBLE)
@@ -35,7 +35,7 @@ ENGINE = InnoDB;
 -- Table `pandployer`.`homepage`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `pandployer`.`homepage` (
-  `id` INT GENERATED ALWAYS AS () VIRTUAL,
+  `id` INT NOT NULL AUTO_INCREMENT,
   `visited` INT GENERATED ALWAYS AS () STORED,
   `student` INT NOT NULL,
   PRIMARY KEY (`id`),
