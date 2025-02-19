@@ -15,7 +15,7 @@ const db = mysql.createConnection({
   host: "db",
   user: "root", // MySQL username from your script
   password: "PanPloyer@1234", // MySQL password
-  database: "pandployer",
+  database: "Pandployer",
   port: 3306,
 });
 
@@ -46,10 +46,10 @@ app.get("/users/:id", (req, res) => {
 
 // Add a new user
 app.post("/users", (req, res) => {
-  const { First_name, Last_name, Email, Affiliation } = req.body;
+  const {Email, First_name, Last_name, Affiliation } = req.body;
 
   // Check if the user already exists
-  db.query("SELECT * FROM Users WHERE Email = ?", [Email], (err, results) => {
+  db.query("SELECT * FROM Users WHERE email = ?", [Email], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     if (results.length > 0) {
       return res.status(409).json({ message: "User already exists" });
@@ -57,11 +57,11 @@ app.post("/users", (req, res) => {
 
     // If user does not exist, insert the new user
     db.query(
-      "INSERT INTO Users (First_name, Last_name, Email, Affiliation) VALUES (?, ?, ?, ?)",
-      [First_name, Last_name, Email, Affiliation],
+      "INSERT INTO Users (email, f_name, l_name, affiliation) VALUES (?, ?, ?, ?)",
+      [Email, First_name, Last_name, Affiliation],
       (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ id: result.insertId, First_name, Last_name, Email, Affiliation });
+        res.status(201).json({ id: result.insertId, Email, First_name, Last_name, Affiliation });
       }
     );
   });
