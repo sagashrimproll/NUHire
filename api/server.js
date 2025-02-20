@@ -111,6 +111,36 @@ app.delete("/users/:id", (req, res) => {
   db.query("DELETE FROM Users WHERE id = ?", [id], (err) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "User deleted successfully" });
+  }); 
+});
+
+app.get("/notes", (req, res) => {
+  db.query("SELECT * FROM Notes", (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
+  });
+});
+
+// Add a new note
+app.post("/notes", (req, res) => {
+  const {Note} = req.body;
+
+  // Check if the student has already made a note already exists
+  db.query("SELECT * FROM Users WHERE email = ?", [Email], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (results.length > 0) {
+      return res.status(409).json({ message: "User already exists" });
+    }
+
+    // If user does not exist, insert the new user
+    db.query(
+      "INSERT INTO Users (email, f_name, l_name, affiliation) VALUES (?, ?, ?, ?)",
+      [Email, First_name, Last_name, Affiliation],
+      (err, result) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.status(201).json({ id: result.insertId, Email, First_name, Last_name, Affiliation });
+      }
+    );
   });
 });
 

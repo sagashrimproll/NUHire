@@ -1,3 +1,8 @@
+Febuary 19th 2025:
+- Connected API, Database, and Signup pages together in order for a user to sign up for the platform.
+- Designed the sign up page.
+- Sign up page is now fully functional
+
 Febuary 20th 2025: 
 Database working, edited and tested login-page for redirection and retrieval of users already existing in the database. Made another post request to identify user by their email. Waiting on server connection to develop O-Auth for users to signup.
 
