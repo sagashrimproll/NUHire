@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
+require("dotenv").config();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -13,10 +14,10 @@ app.use(express.json());
 // MySQL Connection
 const db = mysql.createConnection({
   host: "db",
-  user: "root", // MySQL username from your script
-  password: "PanPloyer@1234", // MySQL password
-  database: "pandployer",
-  port: 3306,
+  user: process.env.DB_USER, // MySQL username from your script
+  password: process.env.DB_PASSWORD, // MySQL password
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
 });
 
 db.connect((err) => {
@@ -69,7 +70,7 @@ app.post("/users/email", (req, res) => {
 
 // Add a new user
 app.post("/users", (req, res) => {
-  const {Email, First_name, Last_name, Affiliation } = req.body;
+  const {First_name, Last_name, Email, Affiliation } = req.body;
 
   // Check if the user already exists
   db.query("SELECT * FROM Users WHERE email = ?", [Email], (err, results) => {
@@ -80,11 +81,11 @@ app.post("/users", (req, res) => {
 
     // If user does not exist, insert the new user
     db.query(
-      "INSERT INTO Users (email, f_name, l_name, affiliation) VALUES (?, ?, ?, ?)",
-      [Email, First_name, Last_name, Affiliation],
+      "INSERT INTO Users (First_name, Last_name, Email, Affiliation) VALUES (?, ?, ?, ?)",
+      [First_name, Last_name, Email, Affiliation],
       (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ id: result.insertId, Email, First_name, Last_name, Affiliation });
+        res.status(201).json({ id: result.insertId, First_name, Last_name, Email, Affiliation });
       }
     );
   });

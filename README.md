@@ -1,3 +1,6 @@
+Febuary 20th 2025: 
+Database working, edited and tested login-page for redirection and retrieval of users already existing in the database. Made another post request to identify user by their email. Waiting on server connection to develop O-Auth for users to signup.
+
 Febuary 10th 2025: 
 Server.js edited - 
 - Added restApi endpoints and tested them for user sign-up authentication 
