@@ -35,9 +35,14 @@ export default function SignupPage() {
 
       if (response.ok) {
         setMessage('User added successfully!');
+        window.location.href = '../dashboard'; // Redirect to the welcome page
       } else {
         const errorData = await response.json();
-        setMessage(errorData.message || 'Failed to add user');
+        if (errorData.message === 'User already exists') {
+          setMessage('Seems like you already have an account under this email. Please log in.');
+        } else {
+          setMessage(errorData.message || 'Failed to add user');
+        }
       }
     } catch (error) {
       console.error('Error:', error);
@@ -47,9 +52,12 @@ export default function SignupPage() {
 
   return (
     <div>
-      <h1>Sign Up</h1>
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
+      <h1 className = "signup">Sign Up</h1>
       <form onSubmit={handleSubmit}>
-        <div className="name">
+        <div className="body">
           <h2 className="firstname">
             First Name:
             <input
@@ -70,7 +78,6 @@ export default function SignupPage() {
               onChange={(e) => setLastName(e.target.value)}
             />
           </h2>
-        </div>
         <h2 className="email">
           Email:
           <input
@@ -82,7 +89,7 @@ export default function SignupPage() {
           />
         </h2>
         <h2 className="affiliation">
-          Northeastern Affiliation:
+          Northeastern Affiliation: 
           <select
             id="affiliation"
             name="affiliation"
@@ -94,17 +101,15 @@ export default function SignupPage() {
             <option value="advisor">Faculty</option>
           </select>
         </h2>
-        <button type="submit" className="OAuth">
+        <button type="submit" className="Oauth">
           Sign Up
         </button>
+        </div>
       </form>
       {message && <p>{message}</p>}
       <p>
         Already have an account?
         <Link href="/login"> Click here!</Link>
-      </p>
-      <p>
-        Seems like you already have an account. <Link href="/login">Click here to login.</Link>
       </p>
     </div>
   );
