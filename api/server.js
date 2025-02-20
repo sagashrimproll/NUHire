@@ -44,6 +44,29 @@ app.get("/users/:id", (req, res) => {
   });
 });
 
+// gets the users by their email: done so because frontend can query with a body
+app.post("/users/email", (req, res) => {
+  let {email} = req.body;
+
+  if(!email) {
+    return res.status(400).json({error: "Email is required"});
+  }
+
+  email = email.toLowerCase().trim();
+
+  // Check if the user already exists
+  db.query("SELECT * FROM Users WHERE email = ?", [email], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (results.length === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(results[0]);
+
+  });
+});
+
+
+
 // Add a new user
 app.post("/users", (req, res) => {
   const {Email, First_name, Last_name, Affiliation } = req.body;
