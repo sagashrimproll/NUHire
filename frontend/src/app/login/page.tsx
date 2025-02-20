@@ -2,13 +2,11 @@
 import Link from 'next/link';
 import '../styles/signup.css';
 import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
 
 
 export default function LoginPage() { 
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
-  const [redirect, setRedirect] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +31,7 @@ export default function LoginPage() {
       if (response.ok) {
         const data = await response.json();
         setMessage('Logging in!');
-        setRedirect(true);
+        window.location.href = '../dashboard'; // Redirect to the welcome page
       } else {
         const errorData = await response.json();
         setMessage(errorData.message || 'Failed to Login');
@@ -43,10 +41,6 @@ export default function LoginPage() {
       setMessage('Failed to Log in');
     }
   };
-
-  if (redirect){
-    return <Navigate to= "/dashboard"/>;
-  }
   
   return (
     <div> 
