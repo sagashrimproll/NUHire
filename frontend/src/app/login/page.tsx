@@ -2,36 +2,38 @@
 import Link from 'next/link';
 import '../styles/signup.css';
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 
 
 export default function LoginPage() { 
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const [redirect, setRedirect] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const user = {
-      Email: email,
-      Password: password
+      Email: email
     };
 
     console.log('Retreving User:', user);
 
     try {
-      const response = await fetch('http://localhost:5000/users', {
-        method: 'GET',
+      const response = await fetch('http://localhost:5000/users/email', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(user),
+        body: JSON.stringify(user)
       });
 
       console.log('Response:', response);
 
       if (response.ok) {
-        setMessage('Loggin in!');
+        const data = await response.json();
+        setMessage('Logging in!');
+        setRedirect(true);
       } else {
         const errorData = await response.json();
         setMessage(errorData.message || 'Failed to Login');
@@ -41,6 +43,10 @@ export default function LoginPage() {
       setMessage('Failed to Log in');
     }
   };
+
+  if (redirect){
+    return <Navigate to= "/dashboard"/>;
+  }
   
   return (
     <div> 
@@ -48,21 +54,15 @@ export default function LoginPage() {
       <form onSubmit={handleSubmit}>
       <div className = "email">
         <h2 className = "email">Email:
-        <input type="text" id="email" name="email"
-        onChange={e => setEmail(e.target.value)}/>
+        <input type="email" id="email" name="email" value = {email}
+        onChange={e => setEmail(e.target.value)} required/>
         </h2>
     </div>
-    <div className = "password">
-        <h2 className = "password">Password: 
-        <input type="text" id="password" name="password"
-        onChange={e => setPassword(e.target.value)}/>
-        </h2>
-    </div>
+    <button type="submit">Login</button>
     {message && <p>{message}</p>}
     </form>
-    <button /* onClick={signInWithGoogle} */ className = "OAuth">Sign up with Google</button>
     <p>You don't have an account?
-    <Link href="/signup"> Click here to signup!</Link>
+    <button /* onClick={signInWithGoogle} */ className = "OAuth">Sign up with Google</button>
     </p>
     <p>Forgot password. <Link href="/forgotPassword">Click here to reset your password.</Link></p>
     </div> 
