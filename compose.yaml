@@ -6,7 +6,8 @@ services:
     container_name: panployer-mysql
     restart: always
     environment: 
-      - .env
+      MYSQL_ROOT_PASSWORD: Pandployer12345!
+      MYSQL_DATABASE: pandployer
     ports:
       - "3307:3306"
     healthcheck:
@@ -26,7 +27,10 @@ services:
       db: 
         condition: service_healthy
     environment:
-      - .env
+      DB_HOST: panployer-mysql
+      DB_USER: Sage
+      DB_PASSWORD: Pandployer12345!
+      DB_NAME: pandployer
 
   frontend:
     build: ./frontend  # Uses frontend/Dockerfile

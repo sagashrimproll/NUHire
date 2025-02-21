@@ -2,6 +2,47 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 
+import React, { useEffect, useState } from "react";
+
+/*
+const Dashboard = () => {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch("http://localhost:5001/auth/user", { credentials: "include" });
+        const userData = await response.json();
+        if (response.ok) {
+          setUser(userData);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  return (
+    <div>
+      {user ? (
+        <h1>Welcome, {user.f_name} {user.l_name}</h1>
+      ) : (
+        <p>Please log in</p>
+      )}
+      <button onClick={() => window.location.href = "http://localhost:5001/auth/logout"}>
+        Logout
+      </button>
+    </div>
+  );
+};
+
+export default Dashboard;
+*/
+
 export default function Home() {
   return (
     <div className="Homepage">

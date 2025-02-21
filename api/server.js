@@ -1,20 +1,8 @@
-require("dotenv").config();
-const express = require("express");
-const mysql = require("mysql2");
-const cors = require("cors");
-
-const app = express();
-const PORT = process.env.PORT || 5001;
-
-// Middleware
-app.use(cors());
-app.use(express.json());
-
 // MySQL Connection
 const db = mysql.createConnection({
   host: "localhost",
-  user: "root", // MySQL username from your script
-  password: "Pandployer12345!", // MySQL password
+  user: "root",
+  password: "Pandployer12345!",
   database: "pandployer",
   port: 3306,
 });
@@ -143,7 +131,89 @@ app.post("/notes", (req, res) => {
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+// Configure Passport
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: "/auth/google/callback"
+}, async (accessToken, refreshToken, profile, done) => {
+  try {
+    const email = profile.emails[0].value.toLowerCase();
+
+    // Check if user exists in MySQL database
+    db.query("SELECT * FROM Users WHERE email = ?", [email], (err, results) => {
+      if (err) return done(err);
+
+      if (results.length > 0) {
+        return done(null, results[0]); // User exists, return user data
+      } else {
+        // If user does not exist, return email to frontend for further user input
+        return done(null, { email });
+      }
+    });
+  } catch (error) {
+    return done(error);
+  }
+}));
+
+// Serialize user to session
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
+// Deserialize user
+passport.deserializeUser((id, done) => {
+    db.query("SELECT * FROM Users WHERE id = ?", [id], (err, results) => {
+        if (err) return done(err);
+        return done(null, results[0]);
+    });
+});
+
+// Route: Start Google OAuth login
+app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+
+// Google OAuth callback route
+app.get("/auth/google/callback",
+    passport.authenticate("google", { failureRedirect: "/" }),
+    (req, res) => {
+        res.redirect("/dashboard"); // Redirect user after login
+    }
+);
+
+// Dashboard route (only accessible when logged in)
+app.get("/dashboard", (req, res) => {
+    if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Unauthorized" });
+    }
+    res.json({ message: `Welcome, ${req.user.f_name} ${req.user.l_name}` });
+});
+
+// Logout route
+app.get("/logout", (req, res) => {
+    req.logout(() => {
+        res.redirect("/");
+    });
+});
+
+app.get("/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/" }),
+  (req, res) => {
+      // Redirect to frontend with session user info
+      res.redirect(`http://localhost:3000/dashboard?email=${req.user.email}`);
+  }
+);
+
+// Route to fetch authenticated user details
+app.get("/auth/user", (req, res) => {
+  if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+  }
+  res.json(req.user);
+});
+
+// Logout route
+app.get("/auth/logout", (req, res) => {
+  req.logout(() => {
+      res.redirect("http://localhost:3000");
+  });
 });
