@@ -18,7 +18,7 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - db_data:/var/lib/mysql
+      - ./database-files:/docker-entrypoint-initdb.d/:ro
   api:
     build: ./api # Uses api/Dockerfile
     container_name: api_container
