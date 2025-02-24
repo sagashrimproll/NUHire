@@ -1,9 +1,14 @@
+'use client';
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import "./styles/homepage.css";
 
 export default function Home() {
+  const handleGoogleLogin = () => {
+    window.location.href = "http://localhost:5001/auth/google"; // Redirect to OAuth
+  };
+  
   return (
     <div className="Homepage">
       <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -12,7 +17,7 @@ export default function Home() {
       <div className="loginbar" >
       
         <Link href="/signup"  className = "navbutton"> Signup </Link>
-        <Link href="/login"  className = "navbutton-login"> Login </Link>
+        <button onClick={handleGoogleLogin} className = "navbutton-login"> Login </button>
       </div>  
       <main className="mainbody">
          <div className ="welcome">Welcome to Pandployer!</div>
@@ -42,5 +47,3 @@ export default function Home() {
     </div>
   );
 }
-
-

@@ -19,7 +19,7 @@ app.use(bodyParser.urlencoded({ extended: true })); // Parses URL-encoded reques
 
 // Configure session middleware
 app.use(session({
-  secret: process.env.SESSION_SECRET || "your_secret_key",
+  secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true
 }));
@@ -98,18 +98,15 @@ app.post("/users/email", (req, res) => {
 
 
 
-// Add a new user
 app.post("/users", (req, res) => {
-  const {Email, First_name, Last_name, Affiliation } = req.body;
+  const { First_name, Last_name, Email, Affiliation } = req.body;
 
-  // Check if the user already exists
   db.query("SELECT * FROM Users WHERE email = ?", [Email], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     if (results.length > 0) {
       return res.status(409).json({ message: "User already exists" });
     }
 
-    // If user does not exist, insert the new user
     db.query(
       "INSERT INTO Users (email, f_name, l_name, affiliation) VALUES (?, ?, ?, ?)",
       [Email, First_name, Last_name, Affiliation],
@@ -216,13 +213,29 @@ passport.deserializeUser((identifier, done) => {
 // Route: Start Google OAuth login
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
-// Google OAuth callback route
 app.get("/auth/google/callback",
-    passport.authenticate("google", { failureRedirect: "/" }),
-    (req, res) => {
-        res.redirect("/dashboard"); // Redirect user after login
-    }
+  passport.authenticate("google", { failureRedirect: "/" }),
+  (req, res) => {
+    const email = req.user.email;
+
+    db.query("SELECT * FROM Users WHERE email = ?", [email], (err, results) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.redirect("/login?error=server");
+      }
+
+      if (results.length > 0) {
+        // ✅ User already exists → Redirect to dashboard
+        return res.redirect(`/dashboard`);
+      } else {
+        // 🆕 New user → Redirect to signup details form
+        return res.redirect(`http://localhost:3000/signupform?email=${email}`);
+      }
+    });
+  }
 );
+
+
 
 app.get("/dashboard", (req, res) => {
   if (!req.isAuthenticated()) {

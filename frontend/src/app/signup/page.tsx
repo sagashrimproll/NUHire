@@ -3,34 +3,22 @@ import { useState } from 'react';
 import Link from 'next/link';
 import '../styles/signup.css';
 
-const Signup = () => {
-  const [message, setMessage] = useState("");
-
+export default function SignupPage() {
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:5001/auth/google"; // Redirects to the backend OAuth flow
+    window.location.href = "http://localhost:5001/auth/google"; // Redirect to OAuth
   };
 
   return (
     <div>
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
-
       <h1 className="signup">Sign Up</h1>
-      
-      <div className="oauth-container">
-        <button onClick={handleGoogleLogin} className="oauth">
+      <div className="body">
+        <button onClick={handleGoogleLogin} className="Oauth">
           Sign in with Google
         </button>
       </div>
 
-      {message && <p>{message}</p>}
-      <p>
-        Already have an account?
-        <a href="/login"> Click here!</a>
-      </p>
+      <p>Already have an account? <Link href="/login"> Click here!</Link></p>
     </div>
   );
-};
+}
 
-export default Signup;
