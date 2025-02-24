@@ -21,10 +21,11 @@ USE `pandployer` ;
 -- Table `pandployer`.`Notes`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `pandployer`.`Notes` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `id` INT AUTO_INCREMENT,
   `content` LONGTEXT NULL,
   `student` INT NOT NULL,
   `last_edited` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
   UNIQUE INDEX `student_UNIQUE` (`student` ASC) VISIBLE,
   UNIQUE INDEX `last_edited_UNIQUE` (`last_edited` ASC) VISIBLE)
 ENGINE = InnoDB;
@@ -34,9 +35,10 @@ ENGINE = InnoDB;
 -- Table `pandployer`.`homepage`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `pandployer`.`homepage` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `id` INT AUTO_INCREMENT,
   `visited` INT DEFAULT 0,
   `student` INT NOT NULL,
+  PRIMARY KEY (`id`),
   UNIQUE INDEX `student_UNIQUE` (`student` ASC) VISIBLE)
 ENGINE = InnoDB;
 
@@ -45,10 +47,11 @@ ENGINE = InnoDB;
 -- Table `pandployer`.`jobdes`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `pandployer`.`jobdes` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `id` INT AUTO_INCREMENT,
   `visited` INT DEFAULT 0,
   `student` INT NOT NULL,
   `timespent` INT DEFAULT 0,
+  PRIMARY KEY (`id`),
   UNIQUE INDEX `sttudent_UNIQUE` (`student` ASC) VISIBLE)
 ENGINE = InnoDB;
 
@@ -57,13 +60,14 @@ ENGINE = InnoDB;
 -- Table `pandployer`.`resumepage`
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `pandployer`.`resumepage` (
-  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `id` INT AUTO_INCREMENT,
   `visited` INT DEFAULT 0,
   `student` INT NOT NULL,
   `timespent` INT DEFAULT 0,
   `yes` INT NOT NULL,
   `no` INT NOT NULL,
   `unanswered` VARCHAR(45) NOT NULL,
+  PRIMARY KEY (`id`),
   UNIQUE INDEX `student_UNIQUE` (`student` ASC) VISIBLE)
 ENGINE = InnoDB;
 
@@ -89,6 +93,7 @@ CREATE TABLE IF NOT EXISTS `pandployer`.`resumepage2` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
+
 -- -----------------------------------------------------
 -- Table `pandployer`.`resume`
 -- -----------------------------------------------------
@@ -98,15 +103,25 @@ CREATE TABLE IF NOT EXISTS `pandployer`.`resume` (
   `student` INT NOT NULL,
   `timespent` INT NOT NULL,
   `resume_id` INT NOT NULL,
-  PRIMARY KEY (`id`, `resume_id`), 
-  UNIQUE (`id`),
-  UNIQUE INDEX `student_UNIQUE` (`student` ASC),
-  CONSTRAINT `fk_resume_resumepage`
-    FOREIGN KEY (`resume_id`)
-    REFERENCES `pandployer`.`resumepage2` (`id`)
+  PRIMARY KEY (`id`, `resume_id`),
+  UNIQUE INDEX `student_UNIQUE` (`student` ASC) VISIBLE,
+  CONSTRAINT `fk_resume_resumepage21`
+    FOREIGN KEY (`id`)
+    REFERENCES `pandployer`.`resumepage2` (`vote1`)
     ON DELETE NO ACTION
-    ON UPDATE NO ACTION
-) ENGINE = InnoDB;
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_resume_resumepage22`
+    FOREIGN KEY (`id`)
+    REFERENCES `pandployer`.`resumepage2` (`vote3`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_resume_resumepage23`
+    FOREIGN KEY (`id`)
+    REFERENCES `pandployer`.`resumepage2` (`vote4`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
 
 -- -----------------------------------------------------
 -- Table `pandployer`.`canidates`
@@ -137,6 +152,7 @@ CREATE TABLE IF NOT EXISTS `pandployer`.`interviewpage` (
   `question4` INT NOT NULL,
   `timespent` INT NOT NULL,
   `canidate` INT NOT NULL,
+  PRIMARY KEY (`id`),
   INDEX `fk_interviewpage_canidates1_idx` (`canidate` ASC) VISIBLE,
   CONSTRAINT `fk_interviewpage_canidates1`
     FOREIGN KEY (`canidate`)
@@ -145,8 +161,7 @@ CREATE TABLE IF NOT EXISTS `pandployer`.`interviewpage` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
-ALTER TABLE `pandployer`.`interviewpage`
-ADD UNIQUE (`student`);
+
 -- -----------------------------------------------------
 -- Table `pandployer`.`Users`
 -- -----------------------------------------------------
@@ -158,6 +173,7 @@ CREATE TABLE IF NOT EXISTS `pandployer`.`Users` (
   `Affiliation` ENUM('student', 'advisor') NOT NULL,
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
   `Group` INT NULL,
+  PRIMARY KEY (`id`),
   UNIQUE INDEX `Email_UNIQUE` (`Email` ASC) VISIBLE,
   INDEX `fk_Users_resumepage21_idx` (`Group` ASC) VISIBLE,
   CONSTRAINT `fk_Users_Notes`
@@ -197,6 +213,7 @@ CREATE TABLE IF NOT EXISTS `pandployer`.`Users` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
+
 -- -----------------------------------------------------
 -- Table `pandployer`.`makeofferpage`
 -- -----------------------------------------------------
@@ -205,6 +222,7 @@ CREATE TABLE IF NOT EXISTS `pandployer`.`makeofferpage` (
   `selected` INT NOT NULL,
   `timespent` INT NOT NULL,
   `group` INT NOT NULL,
+  PRIMARY KEY (`id`),
   INDEX `fk_makeofferpage_canidates1_idx` (`selected` ASC) VISIBLE,
   INDEX `fk_makeofferpage_Users1_idx` (`group` ASC) VISIBLE,
   CONSTRAINT `fk_makeofferpage_canidates1`
@@ -219,7 +237,15 @@ CREATE TABLE IF NOT EXISTS `pandployer`.`makeofferpage` (
     ON UPDATE NO ACTION)
 ENGINE = InnoDB;
 
+CREATE USER 'Sage' IDENTIFIED BY 'password';
+
+GRANT ALL ON `pandployer`.* TO 'Sage';
+GRANT SELECT, INSERT, TRIGGER ON TABLE `pandployer`.* TO 'Sage';
+GRANT SELECT, INSERT, TRIGGER, UPDATE, DELETE ON TABLE `pandployer`.* TO 'Sage';
+GRANT EXECUTE ON `pandployer`.* TO 'Sage'@'%';
+
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
 SHOW COLUMNS FROM Users;
+

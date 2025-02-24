@@ -15,7 +15,7 @@ export default function Home() {
         <Link href="/login"  className = "navbutton-login"> Login </Link>
       </div>  
       <main className="mainbody">
-         <div className ="welcome">Welcome to Pandployer!</div>
+         <div className ="welcome">Welcome to Employer For a Day 2.0!</div>
          <div className ="description">Where you can be your own employer!</div>
          <Link href="/signup" className = "signupbutton">Click Here to Get Started</Link>
       </main>

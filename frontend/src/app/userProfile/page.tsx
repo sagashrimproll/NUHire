@@ -1,10 +1,10 @@
 import Navbar from "../components/navbar"
 
-export default function JobDescriptionPage() { 
+export default function UserProfile() { 
 return (
     <div>
         <Navbar />
-        <h1> Job description Page </h1>
+        <h1> User Profile Page </h1>
         <p> Content will be stored here </p> 
         </div> 
 )

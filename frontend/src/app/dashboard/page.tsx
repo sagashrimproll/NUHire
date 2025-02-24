@@ -1,6 +1,8 @@
+'use client'
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import Navbar from "../components/navbar";
 
 export default function Home() {
   return (
@@ -8,16 +10,7 @@ export default function Home() {
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
-      <div className="Header" >
-        <a href = "#" className= "nav">
-          <div className="one"></div>
-          <div className="two"></div>
-          <div className="three"></div>
-        </a>
-      
-        <Link href="/"  className = "home-button"> Pandployer </Link>
-      
-      </div>  
+      <Navbar />
       <main className="Options">
         <div className="Video">
           <iframe 
@@ -35,7 +28,6 @@ export default function Home() {
         </div>
          <CreateButtons />
       </main>
-
 
       <footer>
         <a
