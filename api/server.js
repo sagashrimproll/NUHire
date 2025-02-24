@@ -1,11 +1,42 @@
-// MySQL Connection
+const express = require("express");       // Web framework for handling requests
+const mysql = require("mysql2");           // MySQL connection
+const passport = require("passport");     // Authentication middleware
+const session = require("express-session"); // Session handling for authentication
+const GoogleStrategy = require("passport-google-oauth20").Strategy; // Google OAuth
+const dotenv = require("dotenv");         // Load environment variables
+const cors = require("cors");             // Handle Cross-Origin Resource Sharing (CORS)
+const bodyParser = require("body-parser"); // Parse incoming request bodies
+
+
+dotenv.config(); // Load environment variables from .env file
+
+const app = express();
+
+// Middleware setup
+app.use(cors()); // Allows requests from different origins
+app.use(bodyParser.json()); // Parses JSON request bodies
+app.use(bodyParser.urlencoded({ extended: true })); // Parses URL-encoded request bodies
+
+// Configure session middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || "your_secret_key",
+  resave: false,
+  saveUninitialized: true
+}));
+
+// Initialize Passport for authentication
+app.use(passport.initialize());
+app.use(passport.session());
+
+
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "Pandployer12345!",
-  database: "pandployer",
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   port: 3306,
 });
+
 
 db.connect((err) => {
   if (err) {
@@ -14,6 +45,18 @@ db.connect((err) => {
     console.log("Connected to MySQL database.");
   }
 });
+
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
+
+
+app.use(cors({
+  origin: "http://localhost:3000", // Allow frontend requests
+  credentials: true // Enable cookies for authentication
+}));
+
 
 app.get("/users", (req, res) => {
   db.query("SELECT * FROM Users", (err, results) => {
@@ -158,16 +201,17 @@ passport.use(new GoogleStrategy({
 
 // Serialize user to session
 passport.serializeUser((user, done) => {
-  done(null, user.id);
+  done(null, user.id || user.email);
 });
 
-// Deserialize user
-passport.deserializeUser((id, done) => {
-    db.query("SELECT * FROM Users WHERE id = ?", [id], (err, results) => {
-        if (err) return done(err);
-        return done(null, results[0]);
-    });
+passport.deserializeUser((identifier, done) => {
+  const query = isNaN(identifier) ? "SELECT * FROM Users WHERE email = ?" : "SELECT * FROM Users WHERE id = ?";
+  db.query(query, [identifier], (err, results) => {
+    if (err) return done(err);
+    return done(null, results[0]);
+  });
 });
+
 
 // Route: Start Google OAuth login
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
@@ -180,12 +224,13 @@ app.get("/auth/google/callback",
     }
 );
 
-// Dashboard route (only accessible when logged in)
 app.get("/dashboard", (req, res) => {
-    if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Unauthorized" });
-    }
-    res.json({ message: `Welcome, ${req.user.f_name} ${req.user.l_name}` });
+  if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+  }
+  
+  // Redirect to frontend dashboard with user data
+  res.redirect(`http://localhost:3000/dashboard?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
 });
 
 // Logout route
@@ -194,14 +239,6 @@ app.get("/logout", (req, res) => {
         res.redirect("/");
     });
 });
-
-app.get("/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/" }),
-  (req, res) => {
-      // Redirect to frontend with session user info
-      res.redirect(`http://localhost:3000/dashboard?email=${req.user.email}`);
-  }
-);
 
 // Route to fetch authenticated user details
 app.get("/auth/user", (req, res) => {
