@@ -13,7 +13,7 @@ return (
         <h1> Job description Page </h1>
         <p> Content will be stored here </p>
         <p> Complete this section before moving on to the next </p>
-        <button onClick={completeJobDescription}> Next: Resume </button>
+        <button onClick={completeJobDescription}> Next: Individual Resume Review </button>
         </div> 
 )
 }

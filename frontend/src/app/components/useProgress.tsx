@@ -1,9 +1,12 @@
 import { useEffect } from "react";
 
 const allowedRoutes: Record<string, string[]> = {
-  "/jobdes": ["jobdes", "res-review", "interview"],
+  "/jobdes": ["jobdes", "res-review", "res-review-group", "interview", "makeOffer", "employerPannel"],
   "/res-review": ["res-review", "interview"],
-  "/interview": ["interview"],
+  "/res-review-group": ["res-review-group", "interview"],
+  "/interview": ["interview", "makeOffer"],
+  "/makeOffer": ["makeOffer", "employerPannel"],
+  "/employerPannel": ["employerPannel"],
 };
 
 export const useProgress = () => {
