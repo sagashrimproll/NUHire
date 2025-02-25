@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import '../styles/signup.css';
 
 export default function SignupDetails() {
   const [firstName, setFirstName] = useState('');
@@ -46,10 +47,13 @@ export default function SignupDetails() {
 
   return (
     <div>
-      <h1>Complete Your Signup</h1>
-      <form onSubmit={handleSubmit}>
-        <input type="text" placeholder="First Name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
-        <input type="text" placeholder="Last Name" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      <link href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
+      <h1 className="signup">Complete Your Signup</h1>
+      <form onSubmit={handleSubmit} className="body">
+        <input type="text" placeholder="First Name" className="firstname" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
+        <input type="text" placeholder="Last Name" className="lastname" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
         <input type="email" value={email} disabled /> {/* Email is autofilled */}
         <select value={affiliation} onChange={(e) => setAffiliation(e.target.value)} required>
           <option value="none">Select Affiliation</option>
