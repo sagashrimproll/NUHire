@@ -16,15 +16,14 @@ export default function Home() {
       <link href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
       <div className="loginbar" >
       
-        <Link href="/signup"  className = "navbutton"> Signup </Link>
-        <button onClick={handleGoogleLogin} className = "navbutton-login"> Login </button>
+        <button onClick={handleGoogleLogin} className="navbutton">Signup</button>
+        <button onClick={handleGoogleLogin} className="navbutton-login">Login</button>
       </div>  
       <main className="mainbody">
-         <div className ="welcome">Welcome to Employer For a Day 2.0!</div>
-         <div className ="description">Where you can be your own employer!</div>
-         <Link href="/signup" className = "signupbutton">Click Here to Get Started</Link>
+         <div className="welcome">Welcome to Employer For a Day 2.0!</div>
+         <div className="description">Where you can be your own employer!</div>
+         <button onClick={handleGoogleLogin} className="signupbutton">Click Here to Get Started</button>
       </main>
-
 
       <footer>
         <a
