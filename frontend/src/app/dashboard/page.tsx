@@ -37,8 +37,8 @@ const Dashboard = () => {
       }
     }, []);
     const steps = [
-      { key: "job-description", label: "Job Description", path: "/jobdes" },
-      { key: "resume", label: "Resume Review", path: "/res-review" },
+      { key: "jobdes", label: "Job Description", path: "/jobdes" },
+      { key: "res-review", label: "Resume Review", path: "/res-review" },
       { key: "interview", label: "Interview", path: "/interview" },
     ];
 
@@ -113,3 +113,5 @@ const Dashboard = () => {
     </div>
   );
 }
+
+export default Dashboard;

@@ -3,9 +3,32 @@
 import React from "react";
 import Link from "next/link";
 import { useState } from "react";
+import { useEffect } from "react";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  
+
+  // Code for user progress 
+  const [progress, setProgress] = useState<string>("job-description");
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedProgress = localStorage.getItem("progress") || "job-description";
+      setProgress(storedProgress);
+    }
+  }, []);
+  const steps = [
+    { key: "jobdes", label: "Job Description", path: "/jobdes" },
+    { key: "res-review", label: "Resume Review", path: "/res-review" },
+    { key: "interview", label: "Interview", path: "/interview" },
+  ];
+
+  const isStepUnlocked = (stepKey: string) => {
+    const completedSteps = steps.map(s => s.key);
+    return completedSteps.indexOf(stepKey) <= completedSteps.indexOf(progress);
+  };
+
+
   return (
     <nav className="navbar">
         <div className="hamburger" onClick={() => setIsOpen(!isOpen)}>
@@ -25,25 +48,23 @@ const Navbar = () => {
           <div className="user-icon"></div>
           </Link>
 
-        {isOpen && (
+        {isOpen && 
           <div className="dropdown" onClick={() => setIsOpen(!isOpen)}> 
           <Link href="/dashboard" className="dropdown-item"> 
           Dashboard
           </Link>
-          <Link href="/jobdes" className="dropdown-item">
-          Job Description
-          </Link>
-          <Link href="/res-review" className="dropdown-item">
-          Resume Review
-          </Link>
-          <Link href="/interview" className="dropdown-item">
-          Interview Page
-          </Link>
           <Link href="/userProfile" className="dropdown-item">
           Profile
           </Link>
+          {steps
+          .filter(step => isStepUnlocked(step.key))
+          .map((step) => (
+            <Link key={step.key} href={step.path} className="dropdown-item">
+              {step.label}
+              </Link>
+          ))}
           </div>
-        )}
+        }
 
         </nav>
   );

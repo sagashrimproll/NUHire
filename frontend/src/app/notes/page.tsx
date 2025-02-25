@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from 'react';
 import { useCollapse } from 'react-collapsed';
 import axios from 'axios';
