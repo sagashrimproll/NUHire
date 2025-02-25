@@ -108,11 +108,11 @@ app.post("/users", (req, res) => {
     }
 
     db.query(
-      "INSERT INTO Users (email, f_name, l_name, affiliation) VALUES (?, ?, ?, ?)",
-      [Email, First_name, Last_name, Affiliation],
+      "INSERT INTO Users (First_name, Last_name, Email, Affiliation) VALUES (?, ?, ?, ?)",
+      [First_name, Last_name, Email, Affiliation],
       (err, result) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ id: result.insertId, Email, First_name, Last_name, Affiliation });
+        res.status(201).json({ id: result.insertId, First_name, Last_name, Email, Affiliation });
       }
     );
   });

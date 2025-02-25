@@ -53,6 +53,7 @@ main {
   text-align: center;
   font-size: 35;
   gap: 50px;
+  
 }
 
 
@@ -87,6 +88,26 @@ main {
   opacity: 0.5;
 }
 
+.webpage-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: hsl(228, 61%, 32%);
+  color: white;
+  width: 100%;
+  height: auto;
+  border-radius: 2px;
+  padding-top: 100px;
+  padding-left: 16px;
+  padding-right: 16px;
+  padding-bottom: 100px;
+  font-family: "Poiret One", serif;
+  font-weight: 400;
+  font-size: 20px;
+  text-align: center;
+}
+
 
 .Video {
   display: flex;
@@ -94,7 +115,7 @@ main {
   background-color:  hsl(228, 61%, 32%);
   flex-direction: column;
   color: white;
-  width: 100%;
+  width: 70%;
   height: auto;
   border-radius: 2px;
   padding-top: 100px;
@@ -126,7 +147,7 @@ main {
 
 .nav div {
   height: 4px;
-  background-color: hsl(228, 61%, 32%);
+  background-color: white;
   margin: 5px 0px; 
   border-radius: 25px;
   transition: 0.3s;
@@ -134,7 +155,7 @@ main {
 
 .nav {
   width: 30px;
-  display: black;
+  display: white;
   margin: 1em 0 0 1em;
 }
 
@@ -151,6 +172,83 @@ main {
   width: 30px;
 }
 
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #1c2a63;
+  padding: 15px;
+  position: relative;
+  color: white;
+}
+
+.home-button {
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  text-decoration: none;
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.dropdown {
+  position: absolute;
+  top: 50px;
+  left: 10px;
+  background: white;
+  width: 200px;
+  border-radius: 5px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+  padding: 10px;
+}
+
+.dropdown-item {
+  display: block;
+  padding: 10px;
+  color: #1c2a63;
+  text-decoration: none;
+}
+
+.dropdown-item:hover {
+  background-color: #ddd;
+}
+
+
+.user-profile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #ccc; 
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  text-decoration: none;
+  position: relative;
+}
+
+.user-profile:hover {
+  background-color: #bbb;
+}
+
+.user-icon {
+  width: 24px;
+  height: 24px;
+  background-image: url("https://cdn-icons-png.flaticon.com/512/847/847969.png");
+  background-size: cover;
+  background-position: center;
+  border-radius: 50%;
+}
+
 footer {
   font-family: "Poiret One", serif;
   font-weight: 600;
@@ -159,4 +257,14 @@ footer {
   background-color: white;
   display: flex;
   justify-content: center;
+}
+
+
+.discord-icon {
+  width: 50px;
+  height: 50px;
+  background-image: url("https://static.vecteezy.com/system/resources/previews/018/930/500/non_2x/discord-logo-discord-icon-transparent-free-png.png");
+  background-size: cover;
+  background-position: center;
+  border-radius: 50%;
 }

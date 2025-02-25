@@ -20,7 +20,7 @@ export default function Home() {
         <button onClick={handleGoogleLogin} className = "navbutton-login"> Login </button>
       </div>  
       <main className="mainbody">
-         <div className ="welcome">Welcome to Pandployer!</div>
+         <div className ="welcome">Welcome to Employer For a Day 2.0!</div>
          <div className ="description">Where you can be your own employer!</div>
          <Link href="/signup" className = "signupbutton">Click Here to Get Started</Link>
       </main>
