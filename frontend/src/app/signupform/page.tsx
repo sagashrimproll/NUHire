@@ -54,13 +54,13 @@ export default function SignupDetails() {
       <form onSubmit={handleSubmit} className="body">
         <input type="text" placeholder="First Name" className="firstname" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
         <input type="text" placeholder="Last Name" className="lastname" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
-        <input type="email" value={email} disabled /> {/* Email is autofilled */}
-        <select value={affiliation} onChange={(e) => setAffiliation(e.target.value)} required>
+        <input type="email" className="email" value={email} disabled /> {/* Email is autofilled */}
+        <select value={affiliation} className="affiliation" onChange={(e) => setAffiliation(e.target.value)} required>
           <option value="none">Select Affiliation</option>
           <option value="student">Student</option>
           <option value="advisor">Faculty</option>
         </select>
-        <button type="submit">Submit</button>
+        <button className="Oauth" type="submit">Submit</button>
       </form>
       {message && <p>{message}</p>}
     </div>

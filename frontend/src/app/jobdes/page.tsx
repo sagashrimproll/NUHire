@@ -1,6 +1,7 @@
 'use client'
 
 import Navbar from "../components/navbar"
+import NotesPage from "../components/note";
 
 export default function JobDescriptionPage() { 
     const completeJobDescription = () => {
@@ -10,6 +11,7 @@ export default function JobDescriptionPage() {
 return (
     <div>
         <Navbar />
+        <NotesPage />
         <h1> Job description Page </h1>
         <p> Content will be stored here </p>
         <p> Complete this section before moving on to the next </p>
