@@ -1,63 +1,112 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
+import '../styles/notes.css';
 
 const NotesPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [note, setNote] = useState("");
   const [notes, setNotes] = useState([]);
-  const userEmail = "testuser@example.com"; // Replace with actual user email from authentication
+  const [userEmail, setUserEmail] = useState("");
+  
+    useEffect(() => {
+      const fetchUserEmail = async () => {
+        try {
+          const response = await fetch("http://localhost:5001/auth/user", { credentials: "include" });
+          const userData = await response.json();
+          if (response.ok) {
+            setUserEmail(userData.email);
+          } else {
+            console.error("Error fetching user");
+          }
+          console.log(userData.email);
+        } catch (error) {
+          console.error("Error fetching user:", error);
+        }
+      };
+  
+      fetchUserEmail();
+    }, []);
 
-  // Fetch saved notes on component load
+  
   useEffect(() => {
-    fetch(`http://localhost:5001/notes/${userEmail}`)
-      .then((res) => res.json())
-      .then((data) => setNotes(data))
-      .catch((err) => console.error("Error fetching notes:", err));
-  }, []);
+    if (!userEmail) return;
 
-  // Save a new note
+    const fetchNotes = async () => {
+      try {
+        const response = await fetch("http://localhost:5001/notes", {
+          credentials: "include",
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch notes");
+
+        const data = await response.json();
+        setNotes(data);
+      } catch (error) {
+        console.error("Error fetching notes:", error);
+      }
+    };
+
+    fetchNotes();
+  }, [userEmail]);
+
   const saveNote = async () => {
     if (!note.trim()) return;
 
-    const response = await fetch("http://localhost:5001/notes", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: userEmail, noteContent: note }),
-    });
+    try {
+      const response = await fetch("http://localhost:5001/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({user_email: userEmail, content: note }),
+      });
 
-    if (response.ok) {
+      if (!response.ok) throw new Error("Failed to save note:", userEmail);
+
       const newNote = await response.json();
-      setNotes([...notes, { id: newNote.id, content: note }]); // Update UI
+      setNotes([...notes, newNote]); // ✅ Add new note to UI
       setNote(""); // Clear input
+      window.location.reload();
+    } catch (error) {
+      console.error("Error saving note:", error);
     }
   };
 
   return (
     <div className="relative p-4">
-      {/* Button to toggle notes */}
-      <button 
-        className="p-2 bg-gray-800 text-white rounded-md"
+      <button
+        className="notes"
         onClick={() => setIsOpen(!isOpen)}
       >
         ☰ Notes
       </button>
 
-      {/* Dropdown for notes */}
       {isOpen && (
-        <div className="absolute left-0 mt-2 w-64 bg-white border border-gray-300 shadow-lg p-4">
+        <div className="notearea">
+          <div className="writenote">
           <textarea
             placeholder="Enter your notes..."
-            className="w-full h-40 p-2 border rounded-md"
+            className="textarea"
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
           <button
             onClick={saveNote}
-            className="mt-2 w-full bg-blue-500 text-white p-2 rounded"
+            className="savebutton"
           >
             Save Note
           </button>
+          </div>
+
+          <div className="saved-notes">
+            <h2 className="font-bold">Saved Notes:</h2>
+            {notes.length > 0 ? (
+            notes.map((n) => (
+            <p key={n.id} className="p-2 border mt-2">{n.content}</p>
+            ))
+           ) : (
+          <p className="text-gray-500">No notes found.</p>
+        )}
+      </div>
         </div>
       )}
 
@@ -66,4 +115,3 @@ const NotesPage = () => {
 };
 
 export default NotesPage;
-

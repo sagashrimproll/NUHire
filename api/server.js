@@ -1,34 +1,59 @@
-const express = require("express");       // Web framework for handling requests
-const mysql = require("mysql2");           // MySQL connection
-const passport = require("passport");     // Authentication middleware
-const session = require("express-session"); // Session handling for authentication
-const GoogleStrategy = require("passport-google-oauth20").Strategy; // Google OAuth
-const dotenv = require("dotenv");         // Load environment variables
-const cors = require("cors");             // Handle Cross-Origin Resource Sharing (CORS)
-const bodyParser = require("body-parser"); // Parse incoming request bodies
+const express = require("express");
+const mysql = require("mysql2");
+const passport = require("passport");
+const session = require("express-session");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const dotenv = require("dotenv");
+const cors = require("cors");
+const bodyParser = require("body-parser");
 
-
-dotenv.config(); // Load environment variables from .env file
-
+dotenv.config();
 const app = express();
 
-// Middleware setup
-app.use(cors()); // Allows requests from different origins
-app.use(bodyParser.json()); // Parses JSON request bodies
-app.use(bodyParser.urlencoded({ extended: true })); // Parses URL-encoded request bodies
+// ✅ CORS Middleware (Allow credentials for session cookies)
+app.use(cors({
+  origin: "http://localhost:3000",
+  credentials: true
+}));
 
-// Configure session middleware
+// ✅ Body Parser Middleware
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// ✅ Session Store Configuration
+const MySQLStore = require("express-mysql-session")(session);
+const sessionStore = new MySQLStore({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME
+});
+
+// ✅ Express Session (Must come before Passport!)
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: false,
+  store: sessionStore,
+  cookie: { 
+    secure: false, // 🔴 Set `true` if using HTTPS
+    httpOnly: true, 
+    sameSite: "lax"
+  }
 }));
 
-// Initialize Passport for authentication
+// ✅ Initialize Passport (Must be after session middleware)
 app.use(passport.initialize());
 app.use(passport.session());
 
+// ✅ Debugging Middleware
+app.use((req, res, next) => {
+  console.log("Session Data:", req.session);
+  console.log("Authenticated User:", req.user);
+  next();
+});
 
+// ✅ MySQL Connection
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -36,7 +61,6 @@ const db = mysql.createConnection({
   database: process.env.DB_NAME,
   port: 3306,
 });
-
 
 db.connect((err) => {
   if (err) {
@@ -46,18 +70,92 @@ db.connect((err) => {
   }
 });
 
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+// ✅ Passport Google Strategy
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: "/auth/google/callback"
+}, (accessToken, refreshToken, profile, done) => {
+  const email = profile.emails[0].value.toLowerCase();
 
-
-app.use(cors({
-  origin: "http://localhost:3000", // Allow frontend requests
-  credentials: true // Enable cookies for authentication
+  db.query("SELECT * FROM Users WHERE email = ?", [email], (err, results) => {
+    if (err) return done(err);
+    if (results.length > 0) {
+      return done(null, results[0]); // ✅ User exists
+    } else {
+      return done(null, { email }); // ✅ New user, return only email
+    }
+  });
 }));
 
+// ✅ Passport Serialization
+passport.serializeUser((user, done) => {
+  done(null, user.id || user.email);
+});
 
+// ✅ Passport Deserialization
+passport.deserializeUser((identifier, done) => {
+  console.log("Deserializing user:", identifier);
+  const query = isNaN(identifier)
+    ? "SELECT * FROM Users WHERE email = ?"
+    : "SELECT * FROM Users WHERE id = ?";
+
+  db.query(query, [identifier], (err, results) => {
+    if (err) return done(err);
+    if (results.length === 0) return done(null, false);
+    console.log("User found:", results[0]);
+    return done(null, results[0]);
+  });
+});
+
+// ✅ Google OAuth Routes
+app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+
+app.get("/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/" }),
+  (req, res) => {
+    const email = req.user.email;
+
+    db.query("SELECT * FROM Users WHERE email = ?", [email], (err, results) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.redirect("/login?error=server");
+      }
+      if (results.length > 0) {
+        return res.redirect(`http://localhost:3000/dashboard?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
+      } else {
+        return res.redirect(`http://localhost:3000/signupform?email=${email}`);
+      }
+    });
+  }
+);
+
+// ✅ User Authentication Check Route
+app.get("/auth/user", (req, res) => {
+  console.log("Checking authentication for user:", req.user);
+
+  if (!req.session.passport || !req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  res.json(req.user);
+});
+
+// ✅ Debugging Session Route
+app.get("/debug/session", (req, res) => {
+  res.json({ session: req.session, user: req.user });
+});
+
+// ✅ Logout Route (Updated for Passport v0.6+)
+app.get("/auth/logout", (req, res, next) => {
+  req.logout(function(err) {
+    if (err) return next(err);
+    req.session.destroy(() => {
+      res.redirect("http://localhost:3000");
+    });
+  });
+});
+
+// ✅ Users API Routes
 app.get("/users", (req, res) => {
   db.query("SELECT * FROM Users", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -65,38 +163,13 @@ app.get("/users", (req, res) => {
   });
 });
 
-// Get user by ID
 app.get("/users/:id", (req, res) => {
-  const { id } = req.params;
-  db.query("SELECT * FROM Users WHERE id = ?", [id], (err, results) => {
+  db.query("SELECT * FROM Users WHERE id = ?", [req.params.id], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     if (results.length === 0) return res.status(404).json({ message: "User not found" });
     res.json(results[0]);
   });
 });
-
-// gets the users by their email: done so because frontend can query with a body
-app.post("/users/email", (req, res) => {
-  let {email} = req.body;
-
-  if(!email) {
-    return res.status(400).json({error: "Email is required"});
-  }
-
-  email = email.toLowerCase().trim();
-
-  // Check if the user already exists
-  db.query("SELECT * FROM Users WHERE email = ?", [email], (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
-    if (results.length === 0) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    res.status(200).json(results[0]);
-
-  });
-});
-
-
 
 app.post("/users", (req, res) => {
   const { First_name, Last_name, Email, Affiliation } = req.body;
@@ -118,148 +191,24 @@ app.post("/users", (req, res) => {
   });
 });
 
-// Update user
-app.put("/users/:id", (req, res) => {
-  const { id } = req.params;
-  const { First_name, Last_name, Email, Affiliation } = req.body;
-  db.query(
-    "UPDATE Users SET First_name = ?, Last_name = ?, Email = ?, Affiliation = ? WHERE id = ?",
-    [First_name, Last_name, Email, Affiliation, id],
-    (err) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ message: "User updated successfully" });
-    }
-  );
-});
-
-// Delete user
-app.delete("/users/:id", (req, res) => {
-  const { id } = req.params;
-  db.query("DELETE FROM Users WHERE id = ?", [id], (err) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ message: "User deleted successfully" });
-  }); 
-});
-
-// Configure Passport
-passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "/auth/google/callback"
-}, async (accessToken, refreshToken, profile, done) => {
-  try {
-    const email = profile.emails[0].value.toLowerCase();
-
-    // Check if user exists in MySQL database
-    db.query("SELECT * FROM Users WHERE email = ?", [email], (err, results) => {
-      if (err) return done(err);
-
-      if (results.length > 0) {
-        return done(null, results[0]); // User exists, return user data
-      } else {
-        // If user does not exist, return email to frontend for further user input
-        return done(null, { email });
-      }
-    });
-  } catch (error) {
-    return done(error);
-  }
-}));
-
-// Serialize user to session
-passport.serializeUser((user, done) => {
-  done(null, user.id || user.email);
-});
-
-passport.deserializeUser((identifier, done) => {
-  const query = isNaN(identifier) ? "SELECT * FROM Users WHERE email = ?" : "SELECT * FROM Users WHERE id = ?";
-  db.query(query, [identifier], (err, results) => {
-    if (err) return done(err);
-    return done(null, results[0]);
-  });
-});
-
-
-// Route: Start Google OAuth login
-app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-
-app.get("/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/" }),
-  (req, res) => {
-    const email = req.user.email;
-
-    db.query("SELECT * FROM Users WHERE email = ?", [email], (err, results) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res.redirect("/login?error=server");
-      }
-
-      if (results.length > 0) {
-        // ✅ User already exists → Redirect to dashboard
-        return res.redirect(`/dashboard`);
-      } else {
-        // 🆕 New user → Redirect to signup details form
-        return res.redirect(`http://localhost:3000/signupform?email=${email}`);
-      }
-    });
-  }
-);
-
-
-
-app.get("/dashboard", (req, res) => {
-  if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
-  }
-  
-  // Redirect to frontend dashboard with user data
-  res.redirect(`http://localhost:3000/dashboard?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
-});
-
-// Logout route
-app.get("/logout", (req, res) => {
-    req.logout(() => {
-        res.redirect("/");
-    });
-});
-
-// Route to fetch authenticated user details
-app.get("/auth/user", (req, res) => {
-  if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
-  }
-  res.json(req.user);
-});
-
-// Fetch all notes for a user
+// ✅ Notes API Routes
 app.get("/notes", (req, res) => {
-  const { email } = req.params;
-  db.query("SELECT * FROM Notes", [email], (err, results) => {
+  db.query("SELECT * FROM Notes", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
 });
 
-// Fetch all notes for a user
-app.get("/notes/:email", (req, res) => {
-  const { email } = req.params;
-  db.query("SELECT * FROM Notes WHERE user_email = ?", [email], (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(results);
-  });
-});
-
-// Add a new note
 app.post("/notes", (req, res) => {
-  const { email, noteContent } = req.body;
+  const { user_email, content } = req.body;
 
-  if (!email || !noteContent) {
+  if (!user_email || !content) {
     return res.status(400).json({ error: "Email and note content are required" });
   }
 
   db.query(
     "INSERT INTO Notes (user_email, content, created_at) VALUES (?, ?, NOW())",
-    [email, noteContent],
+    [user_email, content],
     (err, result) => {
       if (err) return res.status(500).json({ error: err.message });
       res.status(201).json({ message: "Note saved successfully", id: result.insertId });
@@ -267,9 +216,8 @@ app.post("/notes", (req, res) => {
   );
 });
 
-// Logout route
-app.get("/auth/logout", (req, res) => {
-  req.logout(() => {
-      res.redirect("http://localhost:3000");
-  });
+// ✅ Start Server
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });

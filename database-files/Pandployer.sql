@@ -20,14 +20,14 @@ USE `pandployer` ;
 -- -----------------------------------------------------
 -- Table `pandployer`.`Notes`
 -- -----------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS `pandployer`.`Notes` (
-  `id` INT AUTO_INCREMENT,
-  `content` LONGTEXT NULL,
-  `student` Users NOT NULL,
-  `last_edited` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE INDEX `student_UNIQUE` (`student` ASC) VISIBLE,
-  UNIQUE INDEX `last_edited_UNIQUE` (`last_edited` ASC) VISIBLE)
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_email VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_email) REFERENCES Users(email) ON DELETE CASCADE
+)
 ENGINE = InnoDB;
 
 
