@@ -58,7 +58,7 @@ const Dashboard = () => {
       return <div>Loading...</div>; // Show a loading message while checking authentication
     }
   
-    if (!user) {
+    if (!user || user.affiliation !== "student") {
       return null; // Prevent rendering the page if unauthorized
     }
     

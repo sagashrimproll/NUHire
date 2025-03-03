@@ -108,7 +108,6 @@ passport.deserializeUser((identifier, done) => {
   });
 });
 
-// ✅ Google OAuth Routes
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
 app.get("/auth/google/callback",
@@ -122,13 +121,22 @@ app.get("/auth/google/callback",
         return res.redirect("/login?error=server");
       }
       if (results.length > 0) {
-        return res.redirect(`http://localhost:3000/dashboard?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
+        const user = results[0];
+        const fullName = encodeURIComponent(`${user.First_name} ${user.Last_name}`);
+
+        // Check the Affiliation field
+        if (user.affiliation === "admin") {
+          return res.redirect(`http://localhost:3000/advisor-dashboard?name=${fullName}`);
+        } else {
+          return res.redirect(`http://localhost:3000/dashboard?name=${fullName}`);
+        }
       } else {
         return res.redirect(`http://localhost:3000/signupform?email=${email}`);
       }
     });
   }
 );
+
 
 // ✅ User Authentication Check Route
 app.get("/auth/user", (req, res) => {
@@ -181,7 +189,7 @@ app.post("/users", (req, res) => {
     }
 
     db.query(
-      "INSERT INTO Users (First_name, Last_name, Email, Affiliation) VALUES (?, ?, ?, ?)",
+      "INSERT INTO Users (f_name, l_name, email, affiliation) VALUES (?, ?, ?, ?)",
       [First_name, Last_name, Email, Affiliation],
       (err, result) => {
         if (err) return res.status(500).json({ error: err.message });

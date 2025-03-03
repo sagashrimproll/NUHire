@@ -35,7 +35,12 @@ export default function SignupDetails() {
 
       if (response.ok) {
         setMessage('User added successfully!');
-        router.push('/dashboard'); // Redirect after successful signup
+        if (affiliation === 'student') {
+          router.push('/dashboard'); // Redirect after successful signup
+        }
+        if (affiliation === 'admin') {
+          router.push('/advisor-dashboard'); // Redirect after successful signup
+        }
       } else {
         const errorData = await response.json();
         setMessage(errorData.message || 'Failed to add user');
@@ -58,7 +63,7 @@ export default function SignupDetails() {
         <select value={affiliation} className="affiliation" onChange={(e) => setAffiliation(e.target.value)} required>
           <option value="none">Select Affiliation</option>
           <option value="student">Student</option>
-          <option value="advisor">Faculty</option>
+          <option value="admin">Faculty</option>
         </select>
         <button className="Oauth" type="submit">Submit</button>
       </form>
