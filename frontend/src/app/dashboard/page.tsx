@@ -5,7 +5,7 @@ import React from "react";
 import { useState, useEffect } from "react";
 import Navbar from "../components/navbar";
 import { localservices } from "googleapis/build/src/apis/localservices";
-import "../styles/homepage.css";
+import NotesPage from "../components/note";
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -56,6 +56,7 @@ const Dashboard = () => {
       <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
       <Navbar />
+      <NotesPage />
       <div className="webpage-info">
           <h1> Welcome to the Employer For A Day 2.0 </h1>
           <p> This is a tool to help you prepare for your job search. </p>

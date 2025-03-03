@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import Navbar from "../components/navbar";
 import { useState, useEffect, JSX } from "react";
@@ -29,6 +29,7 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
     'pdfjs-dist/build/pdf.worker.min.mjs',
     import.meta.url,
 ).toString();
+import NotesPage from "../components/note";
 
 export default function JobDescriptionPage() { 
     const fileUrl = "carbonite-jobdes.pdf"; // URL of the PDF file

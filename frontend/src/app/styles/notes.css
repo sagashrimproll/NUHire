@@ -1,0 +1,30 @@
+.nav div {
+  height: 4px;
+  background-color: white;
+  margin: 5px 0px; 
+  border-radius: 25px;
+  transition: 0.3s;
+}
+
+.nav {
+  width: 30px;
+  display: white;
+  margin: 1em 0 0 1em;
+}
+
+.one{
+  width: 20px;
+}
+
+.notearea {
+  width: 80px;
+  height: 100px;
+  background-color: white;
+  font-family: "Poiret One", serif;
+  font-size: 25px;
+  font-weight: 400;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

@@ -23,7 +23,7 @@ USE `pandployer` ;
 CREATE TABLE IF NOT EXISTS `pandployer`.`Notes` (
   `id` INT AUTO_INCREMENT,
   `content` LONGTEXT NULL,
-  `student` INT NOT NULL,
+  `student` Users NOT NULL,
   `last_edited` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `student_UNIQUE` (`student` ASC) VISIBLE,
