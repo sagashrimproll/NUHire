@@ -30,16 +30,17 @@ export default function JobDescriptionPage() {
    <div>
        <Navbar />
        <h1> Job description Page </h1>
-       <p> Complete this section before moving on to the next </p>
+       <p> Read the Job description carefully before moving on... </p>
 
 
        <div className="pdf-container">
-               <Document file={fileUrl} onLoadSuccess={({ numPages }) => setNumPages(numPages)}>
-                   {Array.from(new Array(numPages), (_, index) => (
-                       <Page key={index} pageNumber={index + 1} />
-                   ))}
+           <Document file={fileUrl} onLoadSuccess={({ numPages }) => setNumPages(numPages)}>
+                   <Page pageNumber={pageNumber}
+                   renderTextLayer={true}
+                   renderAnnotationLayer={true}/>
                </Document>
-           </div>
+               </div>
+
       
            <div className="pagination">
                <button disabled={pageNumber <= 1} onClick={() => setPageNumber(pageNumber - 1)}>
