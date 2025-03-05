@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useCollapse } from 'react-collapsed';
 import axios from 'axios';
+import Navbar from '../components/navbar';
 
 const NotesPage: React.FC = () => {
   const [notes, setNotes] = useState<string[]>([]);
@@ -25,6 +26,7 @@ const NotesPage: React.FC = () => {
 
   return (
     <div>
+        <Navbar/>
       <h1>Notes</h1>
       <div {...getToggleProps()}>
         {isExpanded ? 'Collapse' : 'Expand'}

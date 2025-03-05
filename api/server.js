@@ -216,6 +216,13 @@ app.get("/dashboard", (req, res) => {
   res.redirect(`http://localhost:3000/dashboard?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
 });
 
+app.get("/jobdes"), (req, res) => { 
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  res.redirect(`http://localhost:3000/jobdes?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
+}
+
 // Logout route
 app.get("/logout", (req, res) => {
     req.logout(() => {

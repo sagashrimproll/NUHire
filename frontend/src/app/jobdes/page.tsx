@@ -1,11 +1,12 @@
 'use client'
 
 import Navbar from "../components/navbar";
-import { useState, useEffect, JSX } from "react";
+import { useState, useEffect, JSX, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css"
 import "../styles/jobdes.css";
+import NotesPage from "../components/note";
 import {
     PdfHighlighter,
     PdfLoader,
@@ -25,11 +26,12 @@ import type {
 
 // pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.worker.min.js`;
 
+
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
     'pdfjs-dist/build/pdf.worker.min.mjs',
     import.meta.url,
 ).toString();
-import NotesPage from "../components/note";
+
 
 export default function JobDescriptionPage() { 
     const fileUrl = "carbonite-jobdes.pdf"; // URL of the PDF file
@@ -38,6 +40,7 @@ export default function JobDescriptionPage() {
     const [highlights, setHighlights] = useState<IHighlight[]>([]);
     const [tool, setTool] = useState("pointer");
     const [comments, setComments] = useState<{x: number; y: number; text: string, page: number}[]>([]);
+    const [pdfLoaded, setPdfLoaded] = useState(false);
 
     const completeJobDescription = () => {
         localStorage.setItem("progress", "res-review");
@@ -66,15 +69,32 @@ export default function JobDescriptionPage() {
   };
 
   const handlePdfClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    if (tool === "comment") {
-        const rect = event.currentTarget.getBoundingClientRect();
-        const x = ((event.clientX - rect.left) / rect.width) * 110;
-        const y = ((event.clientY - rect.top) / rect.height) * 120;
-
-        const newComment = {x, y, text: "", page: pageNumber};
-        setComments([...comments, newComment]);
+    const pdfPage = document.querySelector(".react-pdf__Page") as HTMLElement | null; // Select the actual page
+    if (!pdfPage) {
+        console.log("PDF page not found.");
+        return;
     }
-  }; 
+
+    const pageRect = pdfPage.getBoundingClientRect();
+
+    const x = (event.clientX + pageRect.left) / 18.5;
+    const y = (event.clientY + pageRect.top) / 18.5;
+
+    
+    if (
+      event.clientX >= pageRect.left && 
+      event.clientX <= pageRect.right &&
+      event.clientY >= pageRect.top && 
+      event.clientY <= pageRect.bottom
+    ) {
+        if (tool === "comment") {
+            const newComment = { x, y, text: "", page: pageNumber };
+            setComments([...comments, newComment]);
+        }
+    } else {
+        console.log("Clicked outside the PDF page, comment not added.");
+    }
+};
 
   const updateComment = (index: number, text: string, pageNumber: number) => {
     const updatedComments = [...comments];
@@ -92,18 +112,39 @@ export default function JobDescriptionPage() {
     localStorage.setItem("pdf-comments", JSON.stringify(comments));
   }, [comments]);
 
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch("http://localhost:5001/auth/user", { credentials: "include" });
+        const userData = await response.json();
+        if (response.ok) {
+          setUser(userData);
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
       return (
     <div>
         <Navbar />
+        <NotesPage  />
         <div className="jobdes-container">
             <h1>Job Description</h1>
             </div>
             <div className="jobdes-toolbar">
-  <button onClick={() => setTool("pointer")} className={`toolbar-button ${tool === "pointer" ? "active" : ""}`}> ➤ </button>
-  <button onClick={() => setTool("comment")} className={`toolbar-button ${tool === "comment" ? "active" : ""}`}> 📌 </button> </div>
+  <button onClick={() => setTool("pointer")} className={`toolbar-button ${tool === "pointer" ? "active" : ""}`}> Cursor </button>
+  <button onClick={() => setTool("comment")} className={`toolbar-button ${tool === "comment" ? "active" : ""}`}> Comment </button> </div>
 
-            <div className={`pdf-container ${tool === "comment" ? "comment-mode" : ""}`} onClick={handlePdfClick}>
-            <Document file={fileUrl} onLoadSuccess={({ numPages }) => setNumPages(numPages)}>
+            <div id="pdf-container" className={`pdf-container ${tool === "comment" ? "comment-mode" : ""}`} onClick={handlePdfClick}>
+            <Document file={fileUrl} onLoadSuccess={({ numPages }) => {setNumPages(numPages); setPdfLoaded(true);}}>
                     <Page pageNumber={pageNumber} 
                     renderTextLayer={true}
                     renderAnnotationLayer={true}/>
@@ -156,7 +197,7 @@ export default function JobDescriptionPage() {
               highlights={highlights}
               onSelectionFinished={(position, content) =>
                 tool === "highlight" &&
-                addHighlight({ position, content, comment: { text: "Highlighted Text", emoji: "⭐" } })
+                addHighlight({ position, content, comment: { text: "Highlighted Text"} })
               }
               highlightTransform={(highlight, index, setTip, hideTip) => (
                 <AreaHighlight

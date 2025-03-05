@@ -59,6 +59,9 @@ const Navbar = () => {
           <Link href="/userProfile" className="dropdown-item">
           Profile
           </Link>
+          <Link href="/notes" className="dropdown-item">
+          Notes
+          </Link>
           {steps
           .filter(step => isStepUnlocked(step.key))
           .map((step) => (
