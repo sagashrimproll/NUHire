@@ -1,10 +1,10 @@
 "use client"
-
 import React from "react";
 import Link from "next/link";
 import { useState } from "react";
+import "../styles/navbar.css";
 
-const Navbar = () => {
+const NavbarAdmin = () => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <nav className="navbar">
@@ -20,7 +20,7 @@ const Navbar = () => {
           </div>
       
 
-        <Link href="/dashboard"  className = "home-button"> 
+        <Link href="/advisor-dashboard"  className = "home-button"> 
         Pandployer 
         </Link>
 
@@ -30,8 +30,8 @@ const Navbar = () => {
 
         {isOpen && (
           <div className="dropdown" onClick={() => setIsOpen(!isOpen)}> 
-          <Link href="/dashboard" className="dropdown-item"> 
-          Dashboard
+          <Link href="/grouping" className="dropdown-item"> 
+          Grouping
           </Link>
           <Link href="/jobdes" className="dropdown-item">
           Job Description
@@ -52,4 +52,4 @@ const Navbar = () => {
   );
 };
 
-export default Navbar;
+export default NavbarAdmin;

@@ -4,6 +4,7 @@ import Link from "next/link";
 import React from "react";
 import "./styles/homepage.css";
 
+
 export default function Home() {
   const handleGoogleLogin = () => {
     window.location.href = "http://localhost:5001/auth/google"; // Redirect to OAuth

@@ -61,7 +61,7 @@ const Dashboard = () => {
       <main className="Options">
 
         <div className="Buttons">
-          <Link href="/grouping">Create and View Groups</Link>
+          <Link href="/grouping" className = "button">Create and View Groups</Link>
         </div>
       </main>
     </div>

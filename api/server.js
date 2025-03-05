@@ -224,6 +224,61 @@ app.post("/notes", (req, res) => {
   );
 });
 
+app.post("/update-group", (req, res) => {
+  const { groupId, students } = req.body;
+
+  if (!groupId || students.length === 0) {
+    return res.status(400).json({ error: "Group ID and students are required." });
+  }
+
+  const queries = students.map(email => {
+    return new Promise((resolve, reject) => {
+      db.query("UPDATE Users SET `group` = ? WHERE email = ?", [groupId, email], (err, result) => {
+        if (err) reject(err);
+        resolve(result);
+      });
+    });
+  });
+
+  Promise.all(queries)
+    .then(() => res.json({ message: "Group updated successfully!" }))
+    .catch(error => res.status(500).json({ error: error.message }));
+});
+
+app.get("/groups", async (req, res) => {
+  db.query("SELECT f_name, l_name, email, `group` FROM Users WHERE `group` IS NOT NULL", (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (results.length === 0) return res.status(404).json({ message: "No users found in any group" });
+
+    // ✅ Group users by `group`
+    const groups = {};
+    results.forEach(user => {
+      if (!groups[user.group]) {
+        groups[user.group] = [];
+      }
+      groups[user.group].push({
+        name: `${user.f_name} ${user.l_name}`,
+        email: user.email
+      });
+    });
+
+    res.json(groups);
+  });
+});
+
+app.get("/students", async (req, res) => {
+  db.query("SELECT f_name, l_name, email FROM Users WHERE affiliation != 'admin'", (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (results.length === 0) return res.status(404).json({ message: "No students found" });
+
+    res.json(results); // ✅ Just return the filtered users
+  });
+});
+
+
+
+
+
 // ✅ Start Server
 const PORT = process.env.PORT || 5001;
 app.listen(PORT, () => {
