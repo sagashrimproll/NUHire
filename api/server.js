@@ -154,14 +154,17 @@ app.get("/debug/session", (req, res) => {
 });
 
 // ✅ Logout Route (Updated for Passport v0.6+)
-app.get("/auth/logout", (req, res, next) => {
-  req.logout(function(err) {
+app.post("/auth/logout", (req, res, next) => {
+  req.logout((err) => {
     if (err) return next(err);
+
     req.session.destroy(() => {
-      res.redirect("http://localhost:3000");
+      res.clearCookie("connect.sid"); // ✅ Clears session cookie
+      res.status(200).json({ message: "Logged out successfully" }); // ✅ Sends JSON response
     });
   });
 });
+
 
 // ✅ Users API Routes
 app.get("/users", (req, res) => {
