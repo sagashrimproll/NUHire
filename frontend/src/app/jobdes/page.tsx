@@ -24,7 +24,7 @@ import type {
 } from "react-pdf-highlighter";
 
 
-// pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.8.69/pdf.worker.min.js`;
+
 
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
