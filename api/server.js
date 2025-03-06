@@ -285,6 +285,8 @@ app.post("/update-currentpage", (req, res) => {
       return res.status(500).json({ error: "Failed to update current page." });
     }
     res.json({ message: "Page updated successfully!" });
+  });
+});      
 
 // Update when a user visits the resume review page
 app.post("/resume/vote", (req, res) => {
@@ -306,7 +308,7 @@ app.post("/resume/vote", (req, res) => {
     res.status(200).json({ message: "Resume review updated successfully" });
   });
 
-})
+});
 
 app.get("/resume/:student_id", (req, res) => {
   const { student_id } = req.params;
