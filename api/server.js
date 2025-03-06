@@ -228,15 +228,15 @@ app.post("/notes", (req, res) => {
 });
 
 app.post("/update-group", (req, res) => {
-  const { groupId, students } = req.body;
+  const { group_id, students } = req.body;
 
-  if (!groupId || students.length === 0) {
+  if (!group_id || students.length === 0) {
     return res.status(400).json({ error: "Group ID and students are required." });
   }
 
   const queries = students.map(email => {
     return new Promise((resolve, reject) => {
-      db.query("UPDATE Users SET `group` = ? WHERE email = ?", [groupId, email], (err, result) => {
+      db.query("UPDATE Users SET `group_id` = ? WHERE email = ?", [group_id, email], (err, result) => {
         if (err) reject(err);
         resolve(result);
       });
@@ -248,20 +248,38 @@ app.post("/update-group", (req, res) => {
     .catch(error => res.status(500).json({ error: error.message }));
 });
 
+app.post("/update-currentpage", (req, res) => {
+  const { page, user_email } = req.body;
+
+  if (!page || !user_email) {
+    return res.status(400).json({ error: "Page and email are required." });
+  }
+
+  db.query("UPDATE Users SET `current_page` = ? WHERE email = ?", [page, user_email], (err, result) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({ error: "Failed to update current page." });
+    }
+    res.json({ message: "Page updated successfully!" });
+  });
+});
+
+
 app.get("/groups", async (req, res) => {
-  db.query("SELECT f_name, l_name, email, `group` FROM Users WHERE `group` IS NOT NULL", (err, results) => {
+  db.query("SELECT f_name, l_name, email, current_page, `group_id` FROM Users WHERE `group_id` IS NOT NULL", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     if (results.length === 0) return res.status(404).json({ message: "No users found in any group" });
 
     // ✅ Group users by `group`
     const groups = {};
     results.forEach(user => {
-      if (!groups[user.group]) {
-        groups[user.group] = [];
+      if (!groups[user.group_id]) {
+        groups[user.group_id] = [];
       }
-      groups[user.group].push({
+      groups[user.group_id].push({
         name: `${user.f_name} ${user.l_name}`,
-        email: user.email
+        email: user.email,
+        current_page: user.current_page
       });
     });
 

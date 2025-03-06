@@ -10,7 +10,7 @@ const Grouping = () => {
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState([]);
   const [selectedStudents, setSelectedStudents] = useState([]);
-  const [groupId, setGroupId] = useState("");
+  const [group_id, setGroupId] = useState("");
   const [groups, setGroups] = useState({});
   const router = useRouter();
 
@@ -69,7 +69,7 @@ const Grouping = () => {
 
   // ✅ Handle group assignment
   const handleAssignGroup = async () => {
-    if (!groupId || selectedStudents.length === 0) {
+    if (!group_id || selectedStudents.length === 0) {
       alert("Please enter a valid group ID and select at least one student.");
       return;
     }
@@ -79,7 +79,7 @@ const Grouping = () => {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          groupId,
+          group_id,
           students: selectedStudents.map(student => student.email)
         }),
       });
@@ -132,7 +132,7 @@ const Grouping = () => {
       <input 
         type="text" 
         placeholder="Enter Group ID" 
-        value={groupId}
+        value={group_id}
         onChange={(e) => setGroupId(e.target.value)}
         className="groupinput"
       />
@@ -168,14 +168,14 @@ const Grouping = () => {
 
       {/* Groups Display Section */}
       {groups && Object.keys(groups).length > 0 ? (
-        Object.entries(groups).map(([groupId, students]) => (
-          <div key={groupId} className="group">
-            <h3 className="groupnum">Group {groupId} :</h3>
+        Object.entries(groups).map(([group_id, students]) => (
+          <div key={group_id} className="group">
+            <h3 className="groupnum">Group {group_id} :</h3>
             <ul className="studentsingroup">
               {Array.isArray(students) && students.length > 0 ? (
                 students.map((student, index) => (
                   <li key={index}>
-                    {student.name} ({student.email})
+                    {student.name} ({student.email}) - {student.current_page}
                   </li>
                 ))
               ) : (

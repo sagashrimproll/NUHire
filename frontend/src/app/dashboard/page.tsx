@@ -1,7 +1,7 @@
 'use client';
 import Image from "next/image";
 import Link from "next/link";
-import React from "react";
+import React, { use } from "react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Navbar from "../components/navbar";
@@ -36,6 +36,29 @@ const Dashboard = () => {
 
     fetchUser();
   }, [router]);
+
+  useEffect(() => {
+    if (user && user.email) {
+      const updateCurrentPage = async () => {
+        try {
+          const response = await fetch("http://localhost:5001/update-currentpage", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ page: 'dashboard', user_email: user.email }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Failed to update current page:", errorData.error);
+          }
+        } catch (error) {
+          console.error("Error updating current page:", error);
+        }
+      };
+
+      updateCurrentPage();
+    }
+  }, [user]);
   
     useEffect(() => {
       if (typeof window !== "undefined") {
