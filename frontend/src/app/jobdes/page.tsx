@@ -41,6 +41,7 @@ export default function JobDescriptionPage() {
     const [tool, setTool] = useState("pointer");
     const [comments, setComments] = useState<{x: number; y: number; text: string, page: number}[]>([]);
     const [pdfLoaded, setPdfLoaded] = useState(false);
+    const [user, setUser] = useState(null);
 
     const completeJobDescription = () => {
         localStorage.setItem("progress", "res-review");
@@ -111,8 +112,6 @@ export default function JobDescriptionPage() {
   useEffect(() => {
     localStorage.setItem("pdf-comments", JSON.stringify(comments));
   }, [comments]);
-
-  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const fetchUser = async () => {

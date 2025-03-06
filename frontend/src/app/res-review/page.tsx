@@ -31,8 +31,6 @@ export default function ResumesPage() {
     "/test-resumes/sample10.pdf"
 ];
 
-
-
   const[resumes, setResumes] = useState(0);
   const[accepted, setAccepted] = useState(0);
   const[rejected, setRejected] = useState(0);
@@ -40,11 +38,55 @@ export default function ResumesPage() {
   const[timeRemaining, setTimeRemaining] = useState(30);
   const[currentResumeIndex, setCurrentResumeIndex] = useState(0);
   const [fadingEffect, setFadingEffect] = useState(false);
+  const [timeSpent, setTimeSpent] = useState(0);
 
   const totalDecisions = accepted + rejected + noResponse;
   const maxDecisions = totalDecisions >= 10;
 
   const resumeRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeSpent(prev => prev + 1);
+    }
+    , 1000);
+
+    return () => clearInterval(timer);
+  },  [currentResumeIndex]);
+
+  const studentId = 1; 
+
+  const sendVoteToBackend = async (vote: "yes" | "no" | "unanswered") => {
+    
+    if(!studentId) {
+      console.error("Student ID not found");
+      return;
+    }
+    
+    try { 
+      const response = await fetch("http://localhost:5001/resume/vote", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          student_id: studentId,
+          timespent: timeSpent,
+          resume_number: currentResumeIndex + 1,
+          vote: vote,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error response from backend:", errorData);
+        throw new Error("Failed to save vote");
+    }
+    console.log("Vote saved successfully");
+    } catch (error) {
+      console.error("Error sending vote to backend:", error);
+    }
+  };
 
   const nextResume = () => { 
     if (currentResumeIndex < resumesList.length - 1){
@@ -52,6 +94,7 @@ export default function ResumesPage() {
       setTimeout(() => {
       setCurrentResumeIndex(currentResumeIndex + 1);
       setTimeRemaining(30);
+      setTimeSpent(0); 
       setFadingEffect(false);
 
       if (resumeRef.current) {
@@ -68,14 +111,14 @@ export default function ResumesPage() {
         }, 1000);
         return () => clearInterval(timer);
     } else if (timeRemaining === 0 && !maxDecisions) {
-      setNoResponse(prev => prev + 1);
-      nextResume();
+      handleNoResponse();
     }
 }, [timeRemaining]);
 
       // Handlers for button clicks
       const handleAccept = () => {
         if(maxDecisions) return;
+        sendVoteToBackend("yes");
         setAccepted(prev => prev + 1);
         setResumes(prev => prev + 1);
         nextResume(); 
@@ -83,6 +126,7 @@ export default function ResumesPage() {
 
     const handleReject = () => {
       if(maxDecisions) return;
+        sendVoteToBackend("no");
         setRejected(prev => prev + 1);
         setResumes(prev => prev + 1);
         nextResume();
@@ -90,6 +134,7 @@ export default function ResumesPage() {
 
     const handleNoResponse = () => {
       if(maxDecisions) return; 
+      sendVoteToBackend("unanswered");
       setNoResponse(prev => prev + 1);
         nextResume();
     };
@@ -139,9 +184,6 @@ export default function ResumesPage() {
             <Page pageNumber={1} scale={1.5} />
           </Document>
         </div>
-
-
-
 
 
         <div className="response-buttons">
