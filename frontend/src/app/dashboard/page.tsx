@@ -67,10 +67,14 @@ const Dashboard = () => {
       }
     }, []);
     const steps = [
-      { key: "job-description", label: "Job Description", path: "/jobdes" },
-      { key: "resume", label: "Resume Review", path: "/res-review" },
+      { key: "jobdes", label: "Job Description", path: "/jobdes" },
+      { key: "res-review", label: "Resume Review", path: "/res-review" },
+      { key: "res-review-group", label: "Resume Review Group", path: "/res-review-group" },
       { key: "interview", label: "Interview", path: "/interview" },
+      { key: "makeOffer", label: "Make an Offer", path: "/makeOffer" },
+      { key: "employerPannel", label: "Employer Panel", path: "/employerPannel" },
     ];
+  
 
     const isStepUnlocked = (stepKey: string) => {
       const completedSteps = steps.map(s => s.key);

@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 "use client";
 import { useRouter } from "next/navigation";
 import Navbar from "../components/navbar";
+=======
+'use client';
+import Navbar from "../components/navbar"
+>>>>>>> b27856c05e70fb163188d69b228cd0bbb226c7de
 
 export default function UserProfile() {
   const router = useRouter();

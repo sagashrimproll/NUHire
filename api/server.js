@@ -139,6 +139,30 @@ app.get("/auth/google/callback",
 
 
 // ✅ User Authentication Check Route
+app.get("/dashboard", (req, res) => {
+  if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Unauthorized" });
+  }
+  
+  // Redirect to frontend dashboard with user data
+  res.redirect(`http://localhost:3000/dashboard?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
+});
+
+app.get("/jobdes"), (req, res) => { 
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  res.redirect(`http://localhost:3000/jobdes?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
+}
+
+// Logout route
+app.get("/logout", (req, res) => {
+    req.logout(() => {
+        res.redirect("/");
+    });
+});
+
+// Route to fetch authenticated user details
 app.get("/auth/user", (req, res) => {
   console.log("Checking authentication for user:", req.user);
 
@@ -261,6 +285,57 @@ app.post("/update-currentpage", (req, res) => {
       return res.status(500).json({ error: "Failed to update current page." });
     }
     res.json({ message: "Page updated successfully!" });
+
+// Update when a user visits the resume review page
+app.post("/resume/vote", (req, res) => {
+  const {student_id, timespent, resume_number, vote } = req.body;
+  
+  if (!student_id || !resume_number || !timespent || !vote) {
+    return res.status(400).json({ error: "student_id, resume_number, timespent, and vote are required" });
+  }
+
+  const query = `INSERT INTO Resume (student_id, timespent, resume_number, vote) 
+  VALUES (?, ?, ?, ?)
+  ON DUPLICATE KEY UPDATE timespent = VALUES(timespent), vote = VALUES(vote);`;
+
+  db.query(query, [student_id, timespent, resume_number, vote], (err, result) => {
+    if (err){
+      console.error(err); 
+      return res.status(500).json({error: "Database error"});
+    }
+    res.status(200).json({ message: "Resume review updated successfully" });
+  });
+
+})
+
+app.get("/resume/:student_id", (req, res) => {
+  const { student_id } = req.params;
+  db.query("SELECT * FROM Resume WHERE student_id = ?", [student_id], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
+  });
+});
+
+app.get("/resume", (req, res) => {
+  db.query("SELECT * FROM Resume", (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
+  });
+});
+
+app.delete("resume/:student_id", (req, res) => {
+  const { student_id } = req.params;
+  db.query("DELETE FROM Resume WHERE student_id = ?", [student_id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: "Resume deleted successfully" });
+  }); 
+}
+);
+
+// Logout route
+app.get("/auth/logout", (req, res) => {
+  req.logout(() => {
+      res.redirect("http://localhost:3000");
   });
 });
 
