@@ -1,12 +1,8 @@
 'use client';
-import Image from "next/image";
-import Link from "next/link";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import Link from "next/link";
 import Navbar from "../components/navbar";
-import { localservices } from "googleapis/build/src/apis/localservices";
-import NotesPage from "../components/note";
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -23,11 +19,11 @@ const Dashboard = () => {
           setUser(userData);
         } else {
           setUser(null);
-          router.push("/login"); // 🔥 Redirect to login if unauthorized
+          router.push("/login"); // Redirect to login if unauthorized
         }
       } catch (error) {
         console.error("Error fetching user:", error);
-        router.push("/login"); // 🔥 Redirect on error
+        router.push("/login"); // Redirect on error
       } finally {
         setLoading(false);
       }
@@ -36,36 +32,30 @@ const Dashboard = () => {
     fetchUser();
   }, [router]);
 
-    const isStepUnlocked = (stepKey: string) => {
-      const completedSteps = steps.map(s => s.key);
-      return completedSteps.indexOf(stepKey) <= completedSteps.indexOf(progress);
-    };
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen text-xl">Loading...</div>;
+  }
 
-    if (loading) {
-      return <div>Loading...</div>; // Show a loading message while checking authentication
-    }
-  
-    if (!user || user.affiliation !== "admin") {
-      return null; // Prevent rendering the page if unauthorized
-    }
-    
+  if (!user || user.affiliation !== "admin") {
+    return null;
+  }
+
   return (
-    <div className="Homepage">
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
+    <div className="min-h-screen bg-gray-100 text-gray-900">
       <Navbar />
-      <div className="webpage-info">
-          <h1> Welcome to the Employer For A Day 2.0 </h1>
+      <div className="flex flex-col items-center justify-center py-12">
+        <h1 className="text-3xl font-bold text-blue-600">Welcome to Employer For A Day 2.0</h1>
+        
+        <main className="mt-8">
+          <div className="flex justify-center">
+            <Link href="/grouping" className="px-6 py-3 text-white bg-blue-500 rounded-lg shadow-lg hover:bg-blue-600 transition">
+              Create and View Groups
+            </Link>
+          </div>
+        </main>
       </div>
-      <main className="Options">
-
-        <div className="Buttons">
-          <Link href="/grouping" className = "button">Create and View Groups</Link>
-        </div>
-      </main>
     </div>
   );
-}
+};
 
 export default Dashboard;
