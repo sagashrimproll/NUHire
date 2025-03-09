@@ -2,9 +2,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useProgress } from "../components/useProgress";
 import Navbar from "../components/navbar";
-<<<<<<< HEAD
-import NotesPage from "../components/note";
-=======
 import "../styles/individualResReview.css";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css"
@@ -16,7 +13,6 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.mjs',
   import.meta.url,
 ).toString();
->>>>>>> b27856c05e70fb163188d69b228cd0bbb226c7de
 
 
 export default function ResumesPage() {
@@ -153,11 +149,6 @@ export default function ResumesPage() {
     return (
       <div>
         <Navbar />
-<<<<<<< HEAD
-        <NotesPage />
-        <h1>Resumes Page</h1>
-        <p>Content for the resumes page...</p>
-=======
         <Notes />
 
         <div className="resume-header-container">
@@ -202,7 +193,6 @@ export default function ResumesPage() {
         </div>
 
         <footer>
->>>>>>> b27856c05e70fb163188d69b228cd0bbb226c7de
         <button onClick={() => window.location.href = '/jobdes'}>Back to Job Description</button>
         <button onClick={completeResumes} disabled={totalDecisions<10}>Next: Group Resume Review</button>
         </footer>

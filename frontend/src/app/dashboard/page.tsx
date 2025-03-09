@@ -8,8 +8,13 @@ import Navbar from "../components/navbar";
 import { localservices } from "googleapis/build/src/apis/localservices";
 import NotesPage from "../components/note";
 
+interface User {
+  email: string;
+  affiliation: string;
+}
+
 const Dashboard = () => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const [progress, setProgress] = useState<string>("job-description"); // Default to first step
