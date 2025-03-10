@@ -5,7 +5,6 @@ import { useState, useEffect, JSX, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css"
-import "../styles/jobdes.css";
 import NotesPage from "../components/note";
 import {
     PdfHighlighter,

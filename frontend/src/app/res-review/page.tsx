@@ -2,7 +2,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useProgress } from "../components/useProgress";
 import Navbar from "../components/navbar";
-import "../styles/individualResReview.css";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css"
 import Notes from "../components/note";

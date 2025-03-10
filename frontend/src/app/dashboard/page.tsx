@@ -1,12 +1,10 @@
 'use client';
-import Image from "next/image";
-import Link from "next/link";
 import React, { use } from "react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Navbar from "../components/navbar";
-import { localservices } from "googleapis/build/src/apis/localservices";
 import NotesPage from "../components/note";
+import Footer from "../components/footer";
 
 interface User {
   email: string;
@@ -95,70 +93,72 @@ const Dashboard = () => {
     }
     
   return (
-    <div className="Homepage">
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
+    <div className="bg-[#d3dadc]">
       <Navbar />
-      <NotesPage />
-      <div className="webpage-info">
-          <h1> Welcome to the Employer For A Day 2.0 </h1>
-          <p> This is a tool to help you prepare for your job search. </p>
-          <p> We will guide you through the process of applying for a job, reviewing your resume, and preparing for an interview. </p>
-          <p><strong> BUT HERE'S THE TWIST </strong></p>
-          <p> You play employer, we provide applicants.</p>
+      <div className="flex items-right justify-end">
+        <NotesPage />
+      </div>
+
+      <div className="flex flex-col items-center font-rubik text-[#1c2a63] text-center space-y-7 mb-6">
+        <h1 className="text-4xl font-extrabold mb-4">
+          Welcome to the Employer For A Day 2.0
+        </h1>
+        <p className="text-lg text-gray-800">
+          This is a tool to help you prepare for your job search.
+        </p>
+        <p className="text-lg text-gray-800">
+          We will guide you through what happens after you apply for an job
+          position.
+        </p>
+        <p className="text-lg text-gray-800">
+          This includes what employers see when they get resumes, how they make
+          decisions and what they are looking for.
+        </p>
+        <p className="text-xl font-bold text-black">BUT HERE'S THE TWIST</p>
+        <p className="text-lg text-gray-800">
+          You play employer, we provide applicants.
+        </p>
       </div>
       <main className="Options">
-        <div className="Video">
-          <h1> Get started with learning about ATS </h1>
-          <iframe 
-            width="1020"
-            height="630"
-            src="https://www.youtube.com/embed/fHpVPkIGVyY?si=9L9JBYH8sWTEZYe6" 
-            title="YouTube video player" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-            referrerPolicy="strict-origin-when-cross-origin" 
-            allowFullScreen
-            className ="ATS-IMG"
-            style={{ display: 'block', margin: '0 auto' }}
-          ></iframe>
+        <div className="flex flex-col items-center text-center p-6">
+          <h1 className="text-2xl font-bold mb-4">
+            Get started with learning about ATS
+          </h1>
+
+          <div className="w-full max-w-5xl aspect-video border-4 border-[#1c2a63] rounded-lg shadow-lg">
+            <iframe
+              className="w-full h-full rounded-lg shadow-lg"
+              src="https://www.youtube.com/embed/fHpVPkIGVyY?si=9L9JBYH8sWTEZYe6"
+              title="YouTube video player"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            ></iframe>
+          </div>
         </div>
 
-        <div className="Buttons">
+        <div className="flex font-extrabold text-3xl font-rubik text-[#1c2a63] justify-center items-center text-center p-6">
+          <h3> Progress Bar</h3>
+        </div>
+        <div className="flex font-rubik flex-wrap gap-4 justify-center">
           {steps.map((step) => (
             <button
-            key={step.key}
-            onClick={() => window.location.replace(step.path)}
-            disabled={!isStepUnlocked(step.key)}
-            style={{
-              margin: "10px",
-              padding: "10px",
-              fontSize: "16px",
-              cursor: isStepUnlocked(step.key) ? "pointer" : "not-allowed",
-              backgroundColor: isStepUnlocked(step.key) ? "#1c2a63" : "#ccc",
-              color: "white",
-              border: "none",
-              borderRadius: "5px",
-              opacity: isStepUnlocked(step.key) ? 1 : 0.6,
-            }}
-          >
-            {step.label}
-          </button>
-      ))}
+              key={step.key}
+              onClick={() => window.location.replace(step.path)}
+              disabled={!isStepUnlocked(step.key)}
+              className={`px-4 py-2 text-lg rounded-md transition-all mb-4
+        ${
+          isStepUnlocked(step.key)
+            ? "bg-[#1c2a63] text-white cursor-pointer hover:bg-[#142050]"
+            : "bg-gray-300 text-gray-600 cursor-not-allowed opacity-60"
+        }`}
+            >
+              {step.label}
+            </button>
+          ))}
         </div>
       </main>
-
-      <footer>
-        <a
-          className="discord-link"
-          href="https://discord.gg/XNjg2VMR"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <div className="discord-icon"></div>
-          <p style = {{display: "inline"}}> Join our Discord</p>
-        </a>
-      </footer>
+      <Footer />
     </div>
   );
 }
