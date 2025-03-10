@@ -149,7 +149,7 @@ const Dashboard = () => {
               className={`px-4 py-2 text-lg rounded-md transition-all mb-4
         ${
           isStepUnlocked(step.key)
-            ? "bg-[#1c2a63] text-white cursor-pointer hover:bg-[#142050]"
+            ? "bg-[#455763] text-white cursor-pointer hover:bg-[#142050]"
             : "bg-gray-300 text-gray-600 cursor-not-allowed opacity-60"
         }`}
             >

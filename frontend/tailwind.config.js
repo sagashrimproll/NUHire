@@ -8,8 +8,18 @@ module.exports = {
     // Or if using `src` directory:
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-  theme: {
-    extend: {},
+theme: {
+    extend: {
+      colors: {
+        background: "#D3DADC",
+        foreground: "#E8E2DA",
+        springWater: "#D3DADC",
+        sand: "#E8E2DA",
+        wood: "#D6C9B4",
+        navy: "#455763",
+        navyHeader: "#1c2a63",
+      },
+    },
   },
   plugins: [],
 }
