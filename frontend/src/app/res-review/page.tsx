@@ -6,6 +6,8 @@ import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css"
 import Notes from "../components/note";
 import { Document, Page, pdfjs } from "react-pdf";
+import NotesPage from "../components/note";
+import Footer from "../components/footer";
 
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -148,53 +150,125 @@ export default function ResumesPage() {
     return (
       <div>
         <Navbar />
-        <Notes />
 
-        <div className="resume-header-container">
-          <h1>Resume Review pt.1</h1>
+        <div className="flex items-right justify-end">
+          <NotesPage />
         </div>
-        <div className="resume-instructions">
-        <h3> Review the resume and decide whether to accept, reject, or mark as no-response. </h3>
-        <h3> You may accept as many as you like out of the 10. </h3>
-        <h3> But you are prompted to go back and select only 4 to move onto the second stage the review process </h3>
-        <h3> Don't worry if you rejected or accepted a resume you agree/disagree with. This is why it's done in groups.</h3>
+
+        <div className="flex justify-center items-center font-rubik text-navyHeader text-3xl font-bold mb-3">
+          <h1>Resume Review Part 1</h1>
         </div>
-        <div className="info-container">
-          <div className="time-stats">
-          <h2>Time Remaining: {timeRemaining} seconds</h2>
+
+        <div className="flex flex-col items-center font-rubik text-navyHeader text-center space-y-5 mb-6">
+          <h3>
+            {" "}
+            Review the resume and decide whether to accept, reject, or mark as
+            no-response.{" "}
+          </h3>
+          <h3> You may accept as many as you like out of the 10. </h3>
+          <h3>
+            {" "}
+            But you are prompted to go back and select only 4 to move onto the
+            second stage the review process{" "}
+          </h3>
+          <h3>
+            {" "}
+            Don't worry if you rejected or accepted a resume you agree/disagree
+            with. This is why it's done in groups.
+          </h3>
+        </div>
+
+        <div className="flex justify-between w-full p-4">
+          <div className="bg-navy shadow-lg rounded-lg p-6 w-1/4 text-sand text-xl flex flex-col justify-between">
+            <h2 className="text-2xl">Time Remaining:</h2>
+            <h2 className="text-4xl text-center mt-auto">
+              {timeRemaining} sec
+            </h2>
           </div>
 
-          <div className="resume-stats">
-          <h2> Resume Number: {currentResumeIndex + 1} / {resumesList.length} </h2>
-          <h2> Accepted: {accepted} / 10 </h2>
-          <h2> Rejected: {rejected} / 10 </h2>
-          <h2> No-response: {noResponse} / 10 </h2>
+          <div className="bg-navy shadow-lg rounded-lg p-6 w-1/4 text-sand text-xl">
+            <div className="grid grid-cols-2 gap-2">
+              <span className="text-left">Resume Number:</span>{" "}
+              <span className="text-right">
+                {currentResumeIndex + 1} / {resumesList.length}
+              </span>
+              <span className="text-left">Accepted:</span>{" "}
+              <span className="text-right">{accepted} / 10</span>
+              <span className="text-left">Rejected:</span>{" "}
+              <span className="text-right">{rejected} / 10</span>
+              <span className="text-left">No-response:</span>{" "}
+              <span className="text-right">{noResponse} / 10</span>
+            </div>
           </div>
         </div>
 
-        {/*
-        <div className="display-resumes"> 
-          <h2> {resumesList[currentResumeIndex]} </h2>
+        <div className="flex justify-center items-center w-full h-screen bg-transparent">
+  <div 
+    className={`display-resumes ${fadingEffect ? "fade-out" : "fade-in"} 
+    shadow-lg rounded-lg bg-white p-4`}
+    ref={resumeRef}
+    style={{ 
+      maxWidth: "900px", // Keeps a reasonable width
+      maxHeight: "100vh", // Ensures it never overflows
+    }}
+  >
+    <Document
+      file={resumesList[currentResumeIndex]}
+      onLoadError={console.error}
+    >
+      <Page 
+        pageNumber={1} 
+        scale={window.innerWidth < 768 ? 0.8 : window.innerHeight < 800 ? 0.9 : 1.1} 
+      />
+    </Document>
+  </div>
+</div>
+
+        <div className="flex items-center justify-center space-x-4 mt-4">
+
+        <button
+            className="bg-red-500 text-white font-rubik px-6 py-2 rounded-lg shadow-md hover:bg-red-600 hover:scale-105 transition duration-300"
+            onClick={handleReject}
+            disabled={resumes > 10}
+          >
+            Reject
+          </button>
+
+          <button
+            className="bg-gray-500 text-white font-rubik px-6 py-2 rounded-lg shadow-md hover:bg-gray-600 hover:scale-105 transition duration-300"
+            onClick={handleNoResponse}
+            disabled={resumes > 10}
+          >
+            Skip
+          </button>
+
+        <button
+            className="bg-green-500 text-white font-rubik px-6 py-2 rounded-lg shadow-md hover:bg-green-600 hover:scale-105 transition duration-300"
+            onClick={handleAccept}
+            disabled={resumes > 10}
+          >
+            Accept
+          </button>
           </div>
-          */}
-        
-        <div className={`display-resumes ${fadingEffect ? 'fade-out' : 'fade-in'}`} ref={resumeRef}>
-          <Document file={resumesList[currentResumeIndex]} onLoadError={console.error}>
-            <Page pageNumber={1} scale={1.5} />
-          </Document>
-        </div>
-
-
-        <div className="response-buttons">
-          <button className="accept-button" onClick={handleAccept} disabled={resumes > 10}>Accept</button>
-          <button className="reject-button" onClick={handleReject} disabled={resumes > 10}>Reject</button> 
-          <button className="no-response-button" onClick={handleNoResponse} disabled={resumes > 10}>No-response</button>
-        </div>
 
         <footer>
-        <button onClick={() => window.location.href = '/jobdes'}>Back to Job Description</button>
-        <button onClick={completeResumes} disabled={totalDecisions<10}>Next: Group Resume Review</button>
+          <div className="flex justify-between mt-4 mb-4">
+            <button
+              onClick={() => (window.location.href = "/jobdes")}
+              className="px-4 py-2 bg-navyHeader text-white rounded-lg shadow-md hover:bg-blue-400 transition duration-300 font-rubik"
+            >
+              ← Back: Job Description
+            </button>
+            <button
+              onClick={completeResumes}
+              className="px-4 py-2 bg-navyHeader text-white rounded-lg shadow-md hover:bg-blue-400 transition duration-300 font-rubik"
+            >
+              Next: Resume Review pt. 1 →
+            </button>
+          </div>
         </footer>
+
+        <Footer />
       </div>
     );
   }
