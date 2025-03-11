@@ -9,7 +9,20 @@ module.exports = {
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        background: "#D3DADC",
+        foreground: "#E8E2DA",
+        springWater: "#D3DADC",
+        sand: "#E8E2DA",
+        wood: "#D6C9B4",
+        navy: "#455763"
+      },
+      fontFamily: {
+        rubik: ["Rubik", "sans-serif"]
+      }
+
+    },
   },
   plugins: [],
 }

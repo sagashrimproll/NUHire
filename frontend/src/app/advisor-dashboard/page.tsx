@@ -4,7 +4,7 @@ import Link from "next/link";
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import Navbar from "../components/navbar";
+import NavbarAdmin from "../components/navbar-admin";
 import { localservices } from "googleapis/build/src/apis/localservices";
 import NotesPage from "../components/note";
 
@@ -50,21 +50,27 @@ const Dashboard = () => {
     }
     
   return (
-    <div className="Homepage">
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
-      <Navbar />
-      <div className="webpage-info">
-          <h1> Welcome to the Employer For A Day 2.0 </h1>
-      </div>
-      <main className="Options">
+    <div className="flex flex-col min-h-screen bg-sand font-rubik">
+      <NavbarAdmin />
 
-        <div className="Buttons">
-          <Link href="/grouping" className = "button">Create and View Groups</Link>
+      <div className="flex justify-center items-center py-10">
+        <h1 className="text-4xl font-bold text-navy text-center">
+          Welcome to Employer For A Day 2.0
+        </h1>
+      </div>
+
+      <main className="flex flex-col items-center justify-center flex-grow">
+        <div className="mt-6">
+          <Link 
+            href="/grouping" 
+            className="px-10 py-10 bg-navy text-sand border-4 border-wood font-semibold rounded-lg shadow-md hover:bg-springWater transition"
+          >
+            Create and View Groups
+          </Link>
         </div>
       </main>
     </div>
+
   );
 }
 
