@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
 import NavbarAdmin from "../components/navbar-admin";
 import { localservices } from "googleapis/build/src/apis/localservices";
 import NotesPage from "../components/note";
