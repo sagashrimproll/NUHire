@@ -254,7 +254,7 @@ const [user, setUser] = useState<User | null>(null);
 
             <div className="flex items-center justify-center text-lg space-x-4 mt-4 sticky top-0">
               <button
-                className="bg-red-500 text-white font-rubik px-6 py-2 rounded-lg shadow-md hover:bg-red-600 hover:scale-105 transition duration-300"
+                className="bg-[#a2384f] text-white font-rubik px-6 py-2 rounded-lg shadow-md hover:bg-red-600 hover:scale-105 transition duration-300"
                 onClick={handleReject}
                 disabled={resumes > 10}
               >
@@ -270,7 +270,7 @@ const [user, setUser] = useState<User | null>(null);
               </button>
 
               <button
-                className="bg-green-500 text-white font-rubik px-6 py-2 rounded-lg shadow-md hover:bg-green-600 hover:scale-105 transition duration-300"
+                className="bg-[#367b62] text-white font-rubik px-6 py-2 rounded-lg shadow-md hover:bg-green-600 hover:scale-105 transition duration-300"
                 onClick={handleAccept}
                 disabled={resumes > 10}
               >

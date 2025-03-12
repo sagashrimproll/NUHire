@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import '../styles/signup.css';
 
 export default function SignupDetails() {
   const [firstName, setFirstName] = useState('');

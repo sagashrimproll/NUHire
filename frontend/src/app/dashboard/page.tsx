@@ -137,7 +137,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="flex font-extrabold text-3xl font-rubik text-[#1c2a63] justify-center items-center text-center p-6">
+        <div className="flex font-extrabold text-3xl font-rubik text-navyHeader justify-center items-center text-center p-6">
           <h3> Progress Bar</h3>
         </div>
         <div className="flex font-rubik flex-wrap gap-4 justify-center">

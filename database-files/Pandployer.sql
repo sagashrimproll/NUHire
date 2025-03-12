@@ -336,3 +336,4 @@ UNLOCK TABLES;
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sai A.', 'Dhanasiri', 'saianirudhsjps@gmail.com', 'student');
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sage', 'Batchelor', 'sagebatchelor@gmail.com', 'student');
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sage', 'Batchelor', 'sagashrimproll@gmail.com', 'admin');
+INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sai Anirudh', 'Dhanasiri', 'dhanasiri.s@husky.neu.edu', 'admin');
