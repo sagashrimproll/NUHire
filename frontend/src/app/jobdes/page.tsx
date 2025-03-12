@@ -5,7 +5,6 @@ import { useState, useEffect, JSX, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css"
-import "../styles/jobdes.css";
 import NotesPage from "../components/note";
 import {
     PdfHighlighter,
@@ -15,6 +14,7 @@ import {
     Popup,
     Tip,
 } from "react-pdf-highlighter";
+import Footer from "../components/footer";
 
 import type {
     IHighlight,
@@ -22,8 +22,7 @@ import type {
     ScaledPosition,
     Content
 } from "react-pdf-highlighter";
-
-
+import router from "next/router";
 
 
 
@@ -40,8 +39,13 @@ export default function JobDescriptionPage() {
     const [highlights, setHighlights] = useState<IHighlight[]>([]);
     const [tool, setTool] = useState("pointer");
     const [comments, setComments] = useState<{x: number; y: number; text: string, page: number}[]>([]);
+     const [loading, setLoading] = useState(true);
     const [pdfLoaded, setPdfLoaded] = useState(false);
-    const [user, setUser] = useState(null);
+    interface User {
+        email: string;
+        // Add other user properties if needed
+    }
+    const [user, setUser] = useState<User | null>(null);
 
     const completeJobDescription = () => {
         localStorage.setItem("progress", "res-review");
@@ -62,7 +66,7 @@ export default function JobDescriptionPage() {
 
   const addHighlight = (highlight: NewHighlight) => {
     const newHighlights = [...highlights, { id: String(Date.now()), ...highlight }];
-    saveHighlights(newHighlights);
+    saveHighlights(newHighlights);  
   };
 
   const resetHighlights = () => {
@@ -118,75 +122,163 @@ export default function JobDescriptionPage() {
       try {
         const response = await fetch("http://localhost:5001/auth/user", { credentials: "include" });
         const userData = await response.json();
+
         if (response.ok) {
           setUser(userData);
         } else {
           setUser(null);
+          router.push("/login"); 
         }
       } catch (error) {
         console.error("Error fetching user:", error);
+        router.push("/login"); 
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchUser();
-  }, []);
+  }, [router]);
+
+  useEffect(() => {
+    if (user && user.email) {
+      const updateCurrentPage = async () => {
+        try {
+          const response = await fetch("http://localhost:5001/update-currentpage", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ page: 'jobdes', user_email: user.email }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Failed to update current page:", errorData.error);
+          }
+        } catch (error) {
+          console.error("Error updating current page:", error);
+        }
+      };
+
+      updateCurrentPage();
+    }
+  }, [user]);
 
       return (
-    <div>
-        <Navbar />
-        <NotesPage  />
-        <div className="jobdes-container">
-            <h1>Job Description</h1>
-            </div>
-            <div className="jobdes-toolbar">
-  <button onClick={() => setTool("pointer")} className={`toolbar-button ${tool === "pointer" ? "active" : ""}`}> Cursor </button>
-  <button onClick={() => setTool("comment")} className={`toolbar-button ${tool === "comment" ? "active" : ""}`}> Comment </button> </div>
+        <div>
+          <Navbar />
+          <div className="flex items-right justify-end">
+            <NotesPage />
+          </div>
+          <div className="flex justify-center items-center font-rubik text-navyHeader text-4xl font-bold mb-4">
+            Job Description
+          </div>
+          <div className="flex justify-center space-x-4 my-4">
+            <button
+              onClick={() => setTool("pointer")}
+              className={`px-5 py-2 rounded bg-navy font-rubik text-white transition duration-300 ease-in-out 
+                ${
+                  tool === "pointer"
+                    ? "ring-2 ring-navy"
+                    : "hover:bg-navyHeader"
+                }`}
+            >
 
-            <div id="pdf-container" className={`pdf-container ${tool === "comment" ? "comment-mode" : ""}`} onClick={handlePdfClick}>
-            <Document file={fileUrl} onLoadSuccess={({ numPages }) => {setNumPages(numPages); setPdfLoaded(true);}}>
-                    <Page pageNumber={pageNumber} 
-                    renderTextLayer={true}
-                    renderAnnotationLayer={true}/>
-                </Document>
+              Cursor
+            </button>
+            <button
+              onClick={() => setTool("comment")}
+              className={`px-5 py-2 rounded bg-navy font-rubik text-white transition duration-300 ease-in-out 
+                ${
+                  tool === "comment"
+                    ? "ring-2 ring-navy"
+                    : "hover:bg-navyHeader"
+                }`}
+            >
+              Comment
+            </button>
+          </div>
+
+          <div
+            id="pdf-container"
+            className={`relative border border-gray-300 p-4 w-full mx-auto flex justify-center 
+    ${tool === "comment" ? "cursor-crosshair" : ""}`}
+            onClick={handlePdfClick}
+          >
+            <Document
+              file={fileUrl}
+              onLoadSuccess={({ numPages }) => {
+                setNumPages(numPages);
+                setPdfLoaded(true);
+              }}
+            >
+              <Page
+                pageNumber={pageNumber}
+                renderTextLayer={true}
+                renderAnnotationLayer={true}
+                className="flex justify-center"
+                scale={1.3}
+              />
+            </Document>
 
             {comments
-            .filter(comment => comment.page === pageNumber)
-            .map((comment, index) => (
-                <div key={index} className="comment-marker" style={{ left: `${comment.x}%`, top: `${comment.y}%`}}>
-
-                    {comment.text ? (
-                        <div className="comment-popup"> {comment.text}</div>
-                    ) : (
-                        <input
-                            type="text"
-                            placeholder="Enter comment..."
-                            autoFocus
-                            onBlur={(e) => updateComment(index, e.target.value, pageNumber)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                    updateComment(index, (e.target as HTMLInputElement).value, pageNumber);
-                                }
-                            }}
-                        />
-                    )}
+              .filter((comment) => comment.page === pageNumber)
+              .map((comment, index) => (
+                <div
+                  key={index}
+                  className="absolute bg-white shadow-md p-2 rounded-md"
+                  style={{ left: `${(comment.x / 1.3)}%`, top: `${(comment.y / 1.3)}%` }}
+                >
+                  {comment.text ? (
+                    <div className="bg-gray-200 text-sm p-2 rounded-md">
+                      {comment.text}
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Enter comment..."
+                      autoFocus
+                      className="border border-gray-400 rounded-md p-1 text-sm"
+                      onBlur={(e) =>
+                        updateComment(index, e.target.value, pageNumber)
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          updateComment(
+                            index,
+                            (e.target as HTMLInputElement).value,
+                            pageNumber
+                          );
+                        }
+                      }}
+                    />
+                  )}
                 </div>
-            ))}
-            
-            </div>
-            {/* Pagination Controls */}
-            <div className="pagination">
-                <button disabled={pageNumber <= 1} onClick={() => setPageNumber(pageNumber - 1)}>
-                    ← Previous
-                </button>
-                <span>Page {pageNumber} of {numPages}</span>
-                <button disabled={pageNumber >= (numPages || 1)} onClick={() => setPageNumber(pageNumber + 1)}>
-                    Next →
-                </button>
-            </div>
+              ))}
+          </div>
 
+          <div className="flex justify-center items-center gap-5 mt-5 mb-5 w-full">
+            <button
+              disabled={pageNumber <= 1}
+              onClick={() => setPageNumber(pageNumber - 1)}
+              className="px-4 py-2 rounded bg-navy font-rubik text-white transition duration-300 hover:bg-navyHeader disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              ← Previous
+            </button>
 
+            <span className="font-bold text-lg mx-4">
+              Page {pageNumber} of {numPages}
+            </span>
 
-            {/* HIGHLIGHTER STUFF BROKEN :/
+            <button
+              disabled={pageNumber >= (numPages || 1)}
+              onClick={() => setPageNumber(pageNumber + 1)}
+              className="px-4 py-2 rounded bg-navy font-rubik text-white transition duration-300 hover:bg-navyHeader disabled:bg-gray-300 disabled:cursor-not-allowed"
+            >
+              Next →
+            </button>
+          </div>
+
+          {/* HIGHLIGHTER STUFF BROKEN :/
         <div className="pdf-wrapper">
         <PdfLoader url={fileUrl} beforeLoad={<p>Loading PDF...</p>}>
           {(pdfDocument) => (
@@ -211,10 +303,19 @@ export default function JobDescriptionPage() {
           )}
         </PdfLoader>
       </div> */}
-      
-      <footer>
-        <button onClick={completeJobDescription}> Next: Individual Resume Review </button>
-        </footer>
-        </div> 
-)
+
+          <footer>
+            <div className="flex justify-end mt-4 mb-4 mr-4">
+              <button
+                onClick={completeJobDescription}
+                className="px-4 py-2 bg-navyHeader text-white rounded-lg shadow-md hover:bg-navy transition duration-300 font-rubik"
+              >
+                Next: Resume Review pt. 1 →
+              </button>
+            </div>
+          </footer>
+
+          <Footer />
+        </div>
+      );
 }

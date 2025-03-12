@@ -2,21 +2,19 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useProgress } from "../components/useProgress";
 import Navbar from "../components/navbar";
-<<<<<<< HEAD
-import NotesPage from "../components/note";
-=======
-import "../styles/individualResReview.css";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css"
 import Notes from "../components/note";
 import { Document, Page, pdfjs } from "react-pdf";
+import NotesPage from "../components/note";
+import Footer from "../components/footer";
+import router from "next/router";
 
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.mjs',
   import.meta.url,
 ).toString();
->>>>>>> b27856c05e70fb163188d69b228cd0bbb226c7de
 
 
 export default function ResumesPage() {
@@ -43,11 +41,65 @@ export default function ResumesPage() {
   const[currentResumeIndex, setCurrentResumeIndex] = useState(0);
   const [fadingEffect, setFadingEffect] = useState(false);
   const [timeSpent, setTimeSpent] = useState(0);
+  const [loading, setLoading] = useState(true);
+ 
+  interface User {
+    email: string;
+}
+const [user, setUser] = useState<User | null>(null);
+
 
   const totalDecisions = accepted + rejected + noResponse;
   const maxDecisions = totalDecisions >= 10;
 
   const resumeRef = useRef<HTMLDivElement | null>(null);
+
+
+    useEffect(() => {
+      const fetchUser = async () => {
+        try {
+          const response = await fetch("http://localhost:5001/auth/user", { credentials: "include" });
+          const userData = await response.json();
+  
+          if (response.ok) {
+            setUser(userData);
+          } else {
+            setUser(null);
+            router.push("/login"); 
+          }
+        } catch (error) {
+          console.error("Error fetching user:", error);
+          router.push("/login");
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchUser();
+    }, [router]);
+  
+    useEffect(() => {
+      if (user && user.email) {
+        const updateCurrentPage = async () => {
+          try {
+            const response = await fetch("http://localhost:5001/update-currentpage", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ page: 'resumepage', user_email: user.email }),
+            });
+  
+            if (!response.ok) {
+              const errorData = await response.json();
+              console.error("Failed to update current page:", errorData.error);
+            }
+          } catch (error) {
+            console.error("Error updating current page:", error);
+          }
+        };
+  
+        updateCurrentPage();
+      }
+    }, [user]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -153,59 +205,134 @@ export default function ResumesPage() {
     return (
       <div>
         <Navbar />
-<<<<<<< HEAD
-        <NotesPage />
-        <h1>Resumes Page</h1>
-        <p>Content for the resumes page...</p>
-=======
-        <Notes />
 
-        <div className="resume-header-container">
-          <h1>Resume Review pt.1</h1>
+        <div className="flex items-right justify-end">
+          <NotesPage />
         </div>
-        <div className="resume-instructions">
-        <h3> Review the resume and decide whether to accept, reject, or mark as no-response. </h3>
-        <h3> You may accept as many as you like out of the 10. </h3>
-        <h3> But you are prompted to go back and select only 4 to move onto the second stage the review process </h3>
-        <h3> Don't worry if you rejected or accepted a resume you agree/disagree with. This is why it's done in groups.</h3>
+
+        <div className="flex justify-center items-center font-rubik text-navyHeader text-3xl font-bold mb-3">
+          <h1>Resume Review Part 1</h1>
         </div>
-        <div className="info-container">
-          <div className="time-stats">
-          <h2>Time Remaining: {timeRemaining} seconds</h2>
+
+        <div className="flex flex-col items-center font-rubik text-navyHeader text-center space-y-5 mb-6">
+          <h3>
+            Review the resume and decide whether to accept, reject, or mark as
+            no-response.
+          </h3>
+          <h3> You may accept as many as you like out of the 10. </h3>
+          <h3>
+            But you are prompted to go back and select only 4 to move onto the
+            second stage the review process
+          </h3>
+          <h3>
+            Don't worry if you rejected or accepted a resume you agree/disagree
+            with. This is why it's done in groups.
+          </h3>
+        </div>
+
+        <div className="flex justify-between w-full p-6">
+          <div className="flex flex-col gap-4">
+            <div className="bg-navy shadow-lg rounded-lg p-6 text-sand text-lg text-center sticky top-0">
+              <h2 className="text-lg">Time Remaining:</h2>
+              <h2 className="text-3xl">{timeRemaining} sec</h2>
+            </div>
+
+            <div className="bg-navy shadow-lg rounded-lg p-6 text-sand text-lg">
+              <div className="grid grid-cols-2 gap-2">
+                <span className="text-left">Resume</span>
+                <span className="text-right">
+                  {currentResumeIndex + 1} / {resumesList.length}
+                </span>
+                <span className="text-left">Accepted</span>
+                <span className="text-right">{accepted} / 10</span>
+                <span className="text-left">Rejected</span>
+                <span className="text-right">{rejected} / 10</span>
+                <span className="text-left">No-response</span>
+                <span className="text-right">{noResponse} / 10</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center text-lg space-x-4 mt-4 sticky top-0">
+              <button
+                className="bg-red-500 text-white font-rubik px-6 py-2 rounded-lg shadow-md hover:bg-red-600 hover:scale-105 transition duration-300"
+                onClick={handleReject}
+                disabled={resumes > 10}
+              >
+                Reject
+              </button>
+
+              <button
+                className="bg-gray-500 text-white font-rubik px-6 py-2 rounded-lg shadow-md hover:bg-gray-600 hover:scale-105 transition duration-300"
+                onClick={handleNoResponse}
+                disabled={resumes > 10}
+              >
+                Skip
+              </button>
+
+              <button
+                className="bg-green-500 text-white font-rubik px-6 py-2 rounded-lg shadow-md hover:bg-green-600 hover:scale-105 transition duration-300"
+                onClick={handleAccept}
+                disabled={resumes > 10}
+              >
+                Accept
+              </button>
+            </div>
           </div>
 
-          <div className="resume-stats">
-          <h2> Resume Number: {currentResumeIndex + 1} / {resumesList.length} </h2>
-          <h2> Accepted: {accepted} / 10 </h2>
-          <h2> Rejected: {rejected} / 10 </h2>
-          <h2> No-response: {noResponse} / 10 </h2>
+          <div className="flex justify-center items-start w-4/5 h-screen overflow-auto bg-transparent">
+            <div
+              className={`display-resumes ${
+                fadingEffect ? "fade-out" : "fade-in"
+              } 
+              shadow-lg rounded-lg bg-white p-4`}
+              ref={resumeRef}
+              style={{
+                maxWidth: "1000px",
+                maxHeight: "100vh",
+              }}
+            >
+              <Document
+                file={resumesList[currentResumeIndex]}
+                onLoadError={console.error}
+              >
+                <Page
+                  pageNumber={1}
+                  scale={
+                    window.innerWidth < 768
+                      ? 0.8
+                      : window.innerHeight < 800
+                      ? 1.0
+                      : 1.4
+                  }
+                />
+              </Document>
+            </div>
           </div>
         </div>
-
-        {/*
-        <div className="display-resumes"> 
-          <h2> {resumesList[currentResumeIndex]} </h2>
-          </div>
-          */}
-        
-        <div className={`display-resumes ${fadingEffect ? 'fade-out' : 'fade-in'}`} ref={resumeRef}>
-          <Document file={resumesList[currentResumeIndex]} onLoadError={console.error}>
-            <Page pageNumber={1} scale={1.5} />
-          </Document>
-        </div>
-
-
-        <div className="response-buttons">
-          <button className="accept-button" onClick={handleAccept} disabled={resumes > 10}>Accept</button>
-          <button className="reject-button" onClick={handleReject} disabled={resumes > 10}>Reject</button> 
-          <button className="no-response-button" onClick={handleNoResponse} disabled={resumes > 10}>No-response</button>
-        </div>
-
         <footer>
->>>>>>> b27856c05e70fb163188d69b228cd0bbb226c7de
-        <button onClick={() => window.location.href = '/jobdes'}>Back to Job Description</button>
-        <button onClick={completeResumes} disabled={totalDecisions<10}>Next: Group Resume Review</button>
+          <div className="flex justify-between mb-4">
+            <button
+              onClick={() => (window.location.href = "/jobdes")}
+              className="px-4 py-2 bg-navyHeader text-white rounded-lg ml-4 shadow-md hover:bg-blue-400 transition duration-300 font-rubik"
+            >
+              ← Back: Job Description
+            </button>
+            <button
+              onClick={completeResumes}
+              className={`px-4 py-2 bg-navyHeader text-white rounded-lg mr-4 shadow-md hover:bg-blue-400 transition duration-300 font-rubik
+              ${
+                totalDecisions < 10
+                  ? "cursor-not-allowed opacity-50"
+                  : "cursor-pointer hover:bg-blue-400"
+              }`}
+              disabled={totalDecisions < 10}
+            >
+              Next: Resume Review pt. 2 →
+            </button>
+          </div>
         </footer>
+
+        <Footer />
       </div>
     );
   }

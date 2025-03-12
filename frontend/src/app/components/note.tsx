@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import '../styles/notes.css';
 
 const NotesPage = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -63,7 +62,7 @@ const NotesPage = () => {
       if (!response.ok) throw new Error("Failed to save note:", userEmail);
 
       const newNote = await response.json();
-      setNotes([...notes, newNote]); // ✅ Add new note to UI
+      setNotes([...notes, newNote]);
       setNote(""); // Clear input
       window.location.reload();
     } catch (error) {

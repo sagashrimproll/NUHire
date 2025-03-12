@@ -81,9 +81,9 @@ passport.use(new GoogleStrategy({
   db.query("SELECT * FROM Users WHERE email = ?", [email], (err, results) => {
     if (err) return done(err);
     if (results.length > 0) {
-      return done(null, results[0]); // ✅ User exists
+      return done(null, results[0]);
     } else {
-      return done(null, { email }); // ✅ New user, return only email
+      return done(null, { email });
     }
   });
 }));
@@ -285,10 +285,11 @@ app.post("/update-currentpage", (req, res) => {
       return res.status(500).json({ error: "Failed to update current page." });
     }
     res.json({ message: "Page updated successfully!" });
-  });
-});      
+  }
+  );
+});
 
-// Update when a user visits the resume review page
+
 app.post("/resume/vote", (req, res) => {
   const {student_id, timespent, resume_number, vote } = req.body;
   
@@ -325,7 +326,7 @@ app.get("/resume", (req, res) => {
   });
 });
 
-app.delete("resume/:student_id", (req, res) => {
+app.delete("/resume/:student_id", (req, res) => {
   const { student_id } = req.params;
   db.query("DELETE FROM Resume WHERE student_id = ?", [student_id], (err) => {
     if (err) return res.status(500).json({ error: err.message });
