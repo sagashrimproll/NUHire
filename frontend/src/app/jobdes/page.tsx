@@ -22,6 +22,7 @@ import type {
     ScaledPosition,
     Content
 } from "react-pdf-highlighter";
+import router from "next/router";
 
 
 
@@ -38,8 +39,13 @@ export default function JobDescriptionPage() {
     const [highlights, setHighlights] = useState<IHighlight[]>([]);
     const [tool, setTool] = useState("pointer");
     const [comments, setComments] = useState<{x: number; y: number; text: string, page: number}[]>([]);
+     const [loading, setLoading] = useState(true);
     const [pdfLoaded, setPdfLoaded] = useState(false);
-    const [user, setUser] = useState(null);
+    interface User {
+        email: string;
+        // Add other user properties if needed
+    }
+    const [user, setUser] = useState<User | null>(null);
 
     const completeJobDescription = () => {
         localStorage.setItem("progress", "res-review");
@@ -60,7 +66,7 @@ export default function JobDescriptionPage() {
 
   const addHighlight = (highlight: NewHighlight) => {
     const newHighlights = [...highlights, { id: String(Date.now()), ...highlight }];
-    saveHighlights(newHighlights);
+    saveHighlights(newHighlights);  
   };
 
   const resetHighlights = () => {
@@ -116,18 +122,46 @@ export default function JobDescriptionPage() {
       try {
         const response = await fetch("http://localhost:5001/auth/user", { credentials: "include" });
         const userData = await response.json();
+
         if (response.ok) {
           setUser(userData);
         } else {
           setUser(null);
+          router.push("/login"); 
         }
       } catch (error) {
         console.error("Error fetching user:", error);
+        router.push("/login"); 
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchUser();
-  }, []);
+  }, [router]);
+
+  useEffect(() => {
+    if (user && user.email) {
+      const updateCurrentPage = async () => {
+        try {
+          const response = await fetch("http://localhost:5001/update-currentpage", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ page: 'jobdes', user_email: user.email }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Failed to update current page:", errorData.error);
+          }
+        } catch (error) {
+          console.error("Error updating current page:", error);
+        }
+      };
+
+      updateCurrentPage();
+    }
+  }, [user]);
 
       return (
         <div>
@@ -135,91 +169,93 @@ export default function JobDescriptionPage() {
           <div className="flex items-right justify-end">
             <NotesPage />
           </div>
-          <div className="flex justify-center items-center font-rubik text-navyHeader text-3xl font-bold mb-4">
-            <h1>Job Description</h1>
+          <div className="flex justify-center items-center font-rubik text-navyHeader text-4xl font-bold mb-4">
+            Job Description
           </div>
           <div className="flex justify-center space-x-4 my-4">
             <button
               onClick={() => setTool("pointer")}
-              className={`px-5 py-2 rounded bg-[#008cea] font-rubik text-white transition duration-300 ease-in-out 
+              className={`px-5 py-2 rounded bg-navy font-rubik text-white transition duration-300 ease-in-out 
                 ${
                   tool === "pointer"
-                    ? "ring-2 ring-blue-500"
-                    : "hover:bg-blue-600"
+                    ? "ring-2 ring-navy"
+                    : "hover:bg-navyHeader"
                 }`}
             >
-              {" "}
-              Cursor{" "}
+
+              Cursor
             </button>
             <button
               onClick={() => setTool("comment")}
-              className={`px-5 py-2 rounded bg-[#008cea] font-rubik text-white transition duration-300 ease-in-out 
+              className={`px-5 py-2 rounded bg-navy font-rubik text-white transition duration-300 ease-in-out 
                 ${
                   tool === "comment"
-                    ? "ring-2 ring-blue-500"
-                    : "hover:bg-blue-600"
+                    ? "ring-2 ring-navy"
+                    : "hover:bg-navyHeader"
                 }`}
             >
-              {" "}
-              Comment{" "}
-            </button>{" "}
+              Comment
+            </button>
           </div>
 
-          <div 
-  id="pdf-container"
-  className={`relative border border-gray-300 p-4 w-4/5 mx-auto flex justify-center 
+          <div
+            id="pdf-container"
+            className={`relative border border-gray-300 p-4 w-full mx-auto flex justify-center 
     ${tool === "comment" ? "cursor-crosshair" : ""}`}
-  onClick={handlePdfClick}
->
-  <Document
-    file={fileUrl}
-    onLoadSuccess={({ numPages }) => {
-      setNumPages(numPages);
-      setPdfLoaded(true);
-    }}
-  >
-    <Page
-      pageNumber={pageNumber}
-      renderTextLayer={true}
-      renderAnnotationLayer={true}
-      className="flex justify-start"
-    />
-  </Document>
+            onClick={handlePdfClick}
+          >
+            <Document
+              file={fileUrl}
+              onLoadSuccess={({ numPages }) => {
+                setNumPages(numPages);
+                setPdfLoaded(true);
+              }}
+            >
+              <Page
+                pageNumber={pageNumber}
+                renderTextLayer={true}
+                renderAnnotationLayer={true}
+                className="flex justify-center"
+                scale={1.3}
+              />
+            </Document>
 
-  {comments
-    .filter((comment) => comment.page === pageNumber)
-    .map((comment, index) => (
-      <div
-        key={index}
-        className="absolute bg-white shadow-md p-2 rounded-md"
-        style={{ left: `${comment.x}%`, top: `${comment.y}%` }}
-      >
-        {comment.text ? (
-          <div className="bg-gray-200 text-sm p-2 rounded-md"> {comment.text}</div>
-        ) : (
-          <input
-            type="text"
-            placeholder="Enter comment..."
-            autoFocus
-            className="border border-gray-400 rounded-md p-1 text-sm"
-            onBlur={(e) =>
-              updateComment(index, e.target.value, pageNumber)
-            }
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                updateComment(
-                  index,
-                  (e.target as HTMLInputElement).value,
-                  pageNumber
-                );
-              }
-            }}
-          />
-        )}
-      </div>
-    ))}
-</div>
-          {/* Pagination Controls */}
+            {comments
+              .filter((comment) => comment.page === pageNumber)
+              .map((comment, index) => (
+                <div
+                  key={index}
+                  className="absolute bg-white shadow-md p-2 rounded-md"
+                  style={{ left: `${(comment.x / 1.3)}%`, top: `${(comment.y / 1.3)}%` }}
+                >
+                  {comment.text ? (
+                    <div className="bg-gray-200 text-sm p-2 rounded-md">
+                      {comment.text}
+                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      placeholder="Enter comment..."
+                      autoFocus
+                      className="border border-gray-400 rounded-md p-1 text-sm"
+                      onBlur={(e) =>
+                        updateComment(index, e.target.value, pageNumber)
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          updateComment(
+                            index,
+                            (e.target as HTMLInputElement).value,
+                            pageNumber
+                          );
+                        }
+                      }}
+                    />
+                  )}
+                </div>
+              ))}
+          </div>
+
           <div className="flex justify-center items-center gap-5 mt-5 mb-5 w-full">
             <button
               disabled={pageNumber <= 1}
@@ -269,7 +305,7 @@ export default function JobDescriptionPage() {
       </div> */}
 
           <footer>
-            <div className="flex justify-end mt-4 mb-4">
+            <div className="flex justify-end mt-4 mb-4 mr-4">
               <button
                 onClick={completeJobDescription}
                 className="px-4 py-2 bg-navyHeader text-white rounded-lg shadow-md hover:bg-navy transition duration-300 font-rubik"

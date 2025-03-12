@@ -99,7 +99,7 @@ const Dashboard = () => {
         <NotesPage />
       </div>
 
-      <div className="flex flex-col items-center font-rubik text-[#1c2a63] text-center space-y-7 mb-6">
+      <div className="flex flex-col items-center font-rubik text-navyHeader text-center space-y-7 mb-6">
         <h1 className="text-4xl font-extrabold mb-4">
           Welcome to the Employer For A Day 2.0
         </h1>
@@ -121,11 +121,11 @@ const Dashboard = () => {
       </div>
       <main className="Options">
         <div className="flex flex-col items-center text-center p-6">
-          <h1 className="text-2xl font-bold mb-4">
+          <h1 className="text-2xl font-rubik font-bold mb-4">
             Get started with learning about ATS
           </h1>
 
-          <div className="w-full max-w-5xl aspect-video border-4 border-[#1c2a63] rounded-lg shadow-lg">
+          <div className="w-full max-w-5xl aspect-video border-4 border-[#1c2a63] mb-5 rounded-lg shadow-lg">
             <iframe
               className="w-full h-full rounded-lg shadow-lg"
               src="https://www.youtube.com/embed/fHpVPkIGVyY?si=9L9JBYH8sWTEZYe6"
@@ -146,7 +146,7 @@ const Dashboard = () => {
               key={step.key}
               onClick={() => window.location.replace(step.path)}
               disabled={!isStepUnlocked(step.key)}
-              className={`px-4 py-2 text-lg rounded-md transition-all mb-4
+              className={`px-4 py-2 text-lg rounded-md transition-all mb-10
         ${
           isStepUnlocked(step.key)
             ? "bg-[#455763] text-white cursor-pointer hover:bg-[#142050]"
