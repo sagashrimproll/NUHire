@@ -77,44 +77,51 @@ const NotesPage = () => {
 
   return (
     <div className="relative p-4">
-      <button
-        className="notes"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        ☰ Notes
-      </button>
+  {/* Toggle Notes Button */}
+  <button
+    className="bg-wood text-navy px-4 py-2 rounded-md hover:bg-sand border-4 border-navy transition"
+    onClick={() => setIsOpen(!isOpen)}
+  >
+    ☰ Notes
+  </button>
 
-      {isOpen && (
-        <div className="notearea">
-          <div className="writenote">
-          <textarea
-            placeholder="Enter your notes..."
-            className="textarea"
-            value={note}
-            onChange={(e) => setNote(e.target.value)}
-          />
-          <button
-            onClick={saveNote}
-            className="savebutton"
-          >
-            Save Note
-          </button>
-          </div>
-
-          <div className="saved-notes">
-            <h2 className="font-bold">Saved Notes:</h2>
-            {notes.length > 0 ? (
-            notes.map((n) => (
-            <p key={n.id} className="p-2 border mt-2">{n.content}</p>
-            ))
-           ) : (
-          <p className="text-gray-500">No notes found.</p>
-        )}
+  {isOpen && (
+    <div className="absolute top-14 right-4 w-80 bg-sand shadow-lg rounded-lg p-4 border border-gray-300">
+      {/* Note Input Section */}
+      <div className="mb-4">
+        <textarea
+          placeholder="Enter your notes..."
+          className="w-full p-2 border border-wood bg-springWater rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+        />
+        <button
+          onClick={saveNote}
+          className="mt-2 w-full bg-wood border-4 border-navy text-navy py-2 rounded-md hover:bg-sand transition"
+        >
+          Save Note
+        </button>
       </div>
-        </div>
-      )}
 
+      {/* Display Saved Notes */}
+      <div className="mt-4">
+        <h2 className="font-bold text-navy">Saved Notes:</h2>
+        <div className="max-h-[50vh] overflow-y-auto">
+          {notes.length > 0 ? (
+            notes.map((n) => (
+              <p key={n.id} className="p-2 mt-2 border border-gray-200 rounded-md bg-springWater">
+          {n.content}
+              </p>
+            ))
+          ) : (
+            <p className="text-navy mt-2">No notes found.</p>
+          )}
+        </div>
+      </div>
     </div>
+  )}
+</div>
+
   );
 };
 

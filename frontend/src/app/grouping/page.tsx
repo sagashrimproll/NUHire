@@ -119,58 +119,64 @@ const Grouping = () => {
   }
 
   return (
-    <div >
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
-      <NavbarAdmin />
-    <div className="body">
-      <h1 className="header">Group Management</h1>
+    <div className="flex flex-col min-h-screen bg-sand font-rubik">
+  <NavbarAdmin />
+  
+  <div className="max-w-3xl mx-auto bg-navy justify-center items-center shadow-md rounded-lg p-6 mt-6">
+    <h1 className="text-3xl font-bold text-center text-sand mb-6">Group Management</h1>
 
-      {/* Group ID Input */}
-      <input 
-        type="text" 
-        placeholder="Enter Group ID" 
-        value={group_id}
-        onChange={(e) => setGroupId(e.target.value)}
-        className="groupinput"
-      />
+    {/* Group ID Input */}
+    <input 
+      type="text" 
+      placeholder="Enter Group ID" 
+      value={group_id}
+      onChange={(e) => setGroupId(e.target.value)}
+      className="w-full p-3 border border-wood bg-springWater rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
 
-      {/* Student Selection */}
-      <select onChange={handleStudentSelection} className="studentselect">
-        <option value="">Select a student</option>
-        {students.map(student => (
-          <option key={student.email} value={student.email}>
-            {student.f_name} {student.l_name} ({student.email})
-          </option>
-        ))}
-      </select>
+    {/* Student Selection */}
+    <select 
+      onChange={handleStudentSelection} 
+      className="w-full mt-4 p-3 border border-wood bg-springWater rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      <option value="">Select a student</option>
+      {students.map(student => (
+        <option key={student.email} value={student.email}>
+          {student.f_name} {student.l_name} ({student.email})
+        </option>
+      ))}
+    </select>
 
-      {/* Selected Students List */}
-      <div className="selectedlist">
-        {selectedStudents.map(student => (
-          <div key={student.email} className="selectedstudent">
-            <span>{student.f_name} {student.l_name} ({student.email})</span>
-            <button onClick={() => handleRemoveStudent(student.email)} className="removebutton">
-              Remove
-            </button>
-          </div>
-        ))}
-      </div>
+    {/* Selected Students List */}
+    <div className="mt-4 space-y-2">
+      {selectedStudents.map(student => (
+        <div key={student.email} className="flex items-center justify-between p-3 bg-springWater rounded-md">
+          <span className="text-navy">{student.f_name} {student.l_name} ({student.email})</span>
+          <button 
+            onClick={() => handleRemoveStudent(student.email)} 
+            className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition"
+          >
+            Remove
+          </button>
+        </div>
+      ))}
+    </div>
 
-      {/* Assign Group Button */}
-      <button 
-        onClick={handleAssignGroup} 
-        className="assignbutton">
-        Assign Group
-      </button>
+    {/* Assign Group Button */}
+    <button 
+      onClick={handleAssignGroup} 
+      className="w-full mt-4 bg-sand border-4 border-wood text-navy font-bold py-3 rounded-md hover:bg-blue-600 transition"
+    >
+      Assign Group
+    </button>
 
-      {/* Groups Display Section */}
+    {/* Groups Display Section */}
+    <div className="mt-6">
       {groups && Object.keys(groups).length > 0 ? (
         Object.entries(groups).map(([group_id, students]) => (
-          <div key={group_id} className="group">
-            <h3 className="groupnum">Group {group_id} :</h3>
-            <ul className="studentsingroup">
+          <div key={group_id} className="bg-springWater p-4 rounded-md mb-4 shadow">
+            <h3 className="text-xl font-semibold text-navy">Group {group_id} :</h3>
+            <ul className="list-disc pl-5 text-navy mt-2">
               {Array.isArray(students) && students.length > 0 ? (
                 students.map((student, index) => (
                   <li key={index}>
@@ -179,15 +185,17 @@ const Grouping = () => {
                 ))
               ) : (
                 <li>No students assigned</li>
-              )}  
+              )}
             </ul>
           </div>
         ))
       ) : (
-        <p>No groups assigned yet.</p>
+        <p className="text-gray-600 text-center">No groups assigned yet.</p>
       )}
     </div>
-    </div>
+  </div>
+</div>
+
   );
 };
 

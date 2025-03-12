@@ -2,7 +2,9 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Navbar from "../components/navbar";
+import NavbarAdmin from "../components/navbar-admin";
+import { localservices } from "googleapis/build/src/apis/localservices";
+import NotesPage from "../components/note";
 
 const Dashboard = () => {
   const [user, setUser] = useState(null);
@@ -41,20 +43,27 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 text-gray-900">
-      <Navbar />
-      <div className="flex flex-col items-center justify-center py-12">
-        <h1 className="text-3xl font-bold text-blue-600">Welcome to Employer For A Day 2.0</h1>
-        
-        <main className="mt-8">
-          <div className="flex justify-center">
-            <Link href="/grouping" className="px-6 py-3 text-white bg-blue-500 rounded-lg shadow-lg hover:bg-blue-600 transition">
-              Create and View Groups
-            </Link>
-          </div>
-        </main>
+    <div className="flex flex-col min-h-screen bg-sand font-rubik">
+      <NavbarAdmin />
+
+      <div className="flex justify-center items-center py-10">
+        <h1 className="text-4xl font-bold text-navy text-center">
+          Welcome to Employer For A Day 2.0
+        </h1>
       </div>
+
+      <main className="flex flex-col items-center justify-center flex-grow">
+        <div className="mt-6">
+          <Link 
+            href="/grouping" 
+            className="px-10 py-10 bg-navy text-sand border-4 border-wood font-semibold rounded-lg shadow-md hover:bg-springWater transition"
+          >
+            Create and View Groups
+          </Link>
+        </div>
+      </main>
     </div>
+
   );
 };
 

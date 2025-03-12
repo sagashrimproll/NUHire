@@ -50,23 +50,56 @@ export default function SignupDetails() {
   };
 
   return (
-    <div>
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      <link href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet" />
-      <h1 className="signup">Complete Your Signup</h1>
-      <form onSubmit={handleSubmit} className="body">
-        <input type="text" placeholder="First Name" className="firstname" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
-        <input type="text" placeholder="Last Name" className="lastname" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
-        <input type="email" className="email" value={email} disabled /> {/* Email is autofilled */}
-        <select value={affiliation} className="affiliation" onChange={(e) => setAffiliation(e.target.value)} required>
-          <option value="none">Select Affiliation</option>
-          <option value="student">Student</option>
-          <option value="admin">Faculty</option>
-        </select>
-        <button className="Oauth" type="submit">Submit</button>
-      </form>
-      {message && <p>{message}</p>}
-    </div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-sand font-rubik">
+      <h1 className="text-3xl font-bold text-navy mb-6">Complete Your Signup</h1>
+  
+      <form onSubmit={handleSubmit} className="w-full max-w-md bg-navy shadow-lg rounded-lg p-6 flex flex-col gap-4">
+        <input 
+          type="text" 
+          placeholder="First Name" 
+          className="w-full px-4 py-3 border border-wood bg-springWater rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={firstName} 
+          onChange={(e) => setFirstName(e.target.value)} 
+          required 
+        />
+
+        <input 
+          type="text" 
+          placeholder="Last Name" 
+          className="w-full px-4 py-3 border border-wood bg-springWater rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={lastName} 
+          onChange={(e) => setLastName(e.target.value)} 
+          required 
+        />
+
+        <input 
+          type="email" 
+          className="w-full px-4 py-3 border border-wood bg-springWater rounded-md bg-gray-200 cursor-not-allowed"
+          value={email} 
+          disabled 
+        />
+
+    <select 
+      value={affiliation} 
+      className="w-full px-4 py-3 border border-wood bg-springWater rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" 
+      onChange={(e) => setAffiliation(e.target.value)} 
+      required
+    >
+      <option value="none">Select Affiliation</option>
+      <option value="student">Student</option>
+      <option value="admin">Faculty</option>
+    </select>
+
+    <button 
+      type="submit" 
+      className="w-full bg-wood text-navy font-semibold px-4 py-3 rounded-md hover:bg-sand transition"
+    >
+      Submit
+    </button>
+  </form>
+
+  {message && <p className="mt-4 text-green-600">{message}</p>}
+</div>
+
   );
 }
