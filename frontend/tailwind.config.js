@@ -19,7 +19,6 @@ module.exports = {
         navy: "#455763",
         navyHeader: "#19242e",
       },
-      },
       fontFamily: {
         rubik: ["Rubik", "sans-serif"]
       }
