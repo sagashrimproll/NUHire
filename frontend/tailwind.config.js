@@ -8,7 +8,7 @@ module.exports = {
     // Or if using `src` directory:
     "./src/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-theme: {
+  theme: {
     extend: {
       colors: {
         background: "#D3DADC",
@@ -19,6 +19,11 @@ theme: {
         navy: "#455763",
         navyHeader: "#19242e",
       },
+      },
+      fontFamily: {
+        rubik: ["Rubik", "sans-serif"]
+      }
+
     },
   },
   plugins: [],
