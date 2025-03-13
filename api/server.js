@@ -9,6 +9,16 @@ const bodyParser = require("body-parser");
 
 dotenv.config();
 const app = express();
+const http = require("http");  
+const { Server } = require("socket.io");
+
+const server = http.createServer(app); // Use HTTP server for Socket.io
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000", // Allow frontend connection
+    credentials: true
+  }
+});
 
 // ✅ CORS Middleware (Allow credentials for session cookies)
 app.use(cors({
@@ -105,6 +115,23 @@ passport.deserializeUser((identifier, done) => {
     if (results.length === 0) return done(null, false);
     console.log("User found:", results[0]);
     return done(null, results[0]);
+  });
+});
+
+io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
+
+  // Example: Handle messages from clients
+  socket.on("message", (data) => {
+    console.log("Received message:", data);
+    
+    // Broadcast the message to all connected clients
+    io.emit("message", data);
+  });
+
+  // Example: Handle user disconnect
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
   });
 });
 
@@ -291,17 +318,17 @@ app.post("/update-currentpage", (req, res) => {
 
 
 app.post("/resume/vote", (req, res) => {
-  const {student_id, timespent, resume_number, vote } = req.body;
+  const {student_id, group_id, timespent, resume_number, vote } = req.body;
   
-  if (!student_id || !resume_number || !timespent || !vote) {
-    return res.status(400).json({ error: "student_id, resume_number, timespent, and vote are required" });
+  if (!student_id || !group_id || !resume_number || !timespent || !vote) {
+    return res.status(400).json({ error: "student_id, group_id, resume_number, timespent, and vote are required" });
   }
 
-  const query = `INSERT INTO Resume (student_id, timespent, resume_number, vote) 
-  VALUES (?, ?, ?, ?)
+  const query = `INSERT INTO Resume (student_id, group_id, timespent, resume_number, vote) 
+  VALUES (?, ?, ?, ?, ?)
   ON DUPLICATE KEY UPDATE timespent = VALUES(timespent), vote = VALUES(vote);`;
 
-  db.query(query, [student_id, timespent, resume_number, vote], (err, result) => {
+  db.query(query, [student_id, group_id, timespent, resume_number, vote], (err, result) => {
     if (err){
       console.error(err); 
       return res.status(500).json({error: "Database error"});
@@ -319,11 +346,19 @@ app.get("/resume/:student_id", (req, res) => {
   });
 });
 
+app.get("/resume/:group_id", (req, res) => {
+  const { group_id } = req.params;
+  db.query("SELECT * FROM Resume WHERE group_id = ?", [group_id], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
+  });
+});
+
 app.get("/resume", (req, res) => {
   db.query("SELECT * FROM Resume", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
-  });
+  }); 
 });
 
 app.delete("/resume/:student_id", (req, res) => {
@@ -378,8 +413,8 @@ app.get("/students", async (req, res) => {
 
 
 
-// ✅ Start Server
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+  

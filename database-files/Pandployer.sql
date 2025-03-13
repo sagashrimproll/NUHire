@@ -216,6 +216,7 @@ DROP TABLE IF EXISTS `Resume`;
 CREATE TABLE `Resume` (
   `id` int NOT NULL AUTO_INCREMENT,
   `student_id` int NOT NULL,
+  `group_id` int NOT NULL,
   `timespent` int NOT NULL,
   `resume_number` int NOT NULL,
   `vote` enum('yes','no','unanswered') NOT NULL,

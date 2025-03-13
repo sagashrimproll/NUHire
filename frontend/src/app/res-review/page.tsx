@@ -42,11 +42,7 @@ export default function ResumesPage() {
   const [fadingEffect, setFadingEffect] = useState(false);
   const [timeSpent, setTimeSpent] = useState(0);
   const [loading, setLoading] = useState(true);
- 
-  interface User {
-    email: string;
-}
-const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState(null);
 
 
   const totalDecisions = accepted + rejected + noResponse;
@@ -110,11 +106,9 @@ const [user, setUser] = useState<User | null>(null);
     return () => clearInterval(timer);
   },  [currentResumeIndex]);
 
-  const studentId = 1; 
-
   const sendVoteToBackend = async (vote: "yes" | "no" | "unanswered") => {
     
-    if(!studentId) {
+    if(!user.id || !user.group_id) {
       console.error("Student ID not found");
       return;
     }
@@ -126,7 +120,8 @@ const [user, setUser] = useState<User | null>(null);
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          student_id: studentId,
+          student_id: user.id,
+          group_id: user.group_id,
           timespent: timeSpent,
           resume_number: currentResumeIndex + 1,
           vote: vote,

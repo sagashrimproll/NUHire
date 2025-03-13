@@ -93,7 +93,7 @@ const Dashboard = () => {
     }
     
   return (
-    <div className="bg-[#d3dadc]">
+    <div className="bg-sand font-rubik">
       <Navbar />
       <div className="flex items-right justify-end">
         <NotesPage />
