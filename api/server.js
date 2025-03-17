@@ -129,11 +129,22 @@ io.on("connection", (socket) => {
     io.emit("message", data);
   });
 
+  socket.on("joinGroup", (group_id) => {
+    socket.join(group_id);
+});
+
+
+  socket.on("check", ({ group_id, resume_number, checked }) => {
+    socket.to(group_id).emit("checkboxUpdated", { resume_number, checked });
+});
+
+
   // Example: Handle user disconnect
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
   });
 });
+
 
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
@@ -338,7 +349,7 @@ app.post("/resume/vote", (req, res) => {
 
 });
 
-app.get("/resume/:student_id", (req, res) => {
+app.get("/resume/student/:student_id", (req, res) => {
   const { student_id } = req.params;
   db.query("SELECT * FROM Resume WHERE student_id = ?", [student_id], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
@@ -346,13 +357,14 @@ app.get("/resume/:student_id", (req, res) => {
   });
 });
 
-app.get("/resume/:group_id", (req, res) => {
+app.get("/resume/group/:group_id", (req, res) => {
   const { group_id } = req.params;
   db.query("SELECT * FROM Resume WHERE group_id = ?", [group_id], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
 });
+
 
 app.get("/resume", (req, res) => {
   db.query("SELECT * FROM Resume", (err, results) => {
@@ -369,6 +381,25 @@ app.delete("/resume/:student_id", (req, res) => {
   }); 
 }
 );
+app.post("/resume/check", async (req, res) => {
+  const { user_id, group_id, resume_number, checked } = req.body;
+
+  try {
+      await db.query(
+          "UPDATE resume_votes SET checked = $1 WHERE user_id = $2 AND group_id = $3 AND resume_number = $4",
+          [checked, user_id, group_id, resume_number]
+      );
+
+      // Emit the checkbox update to the group
+      io.to(group_id).emit("checkboxUpdated", { resume_number, checked });
+
+      res.json({ success: true });
+  } catch (error) {
+      console.error("Error updating checkbox:", error);
+      res.status(500).json({ success: false });
+  }
+});
+
 
 // Logout route
 app.get("/auth/logout", (req, res) => {

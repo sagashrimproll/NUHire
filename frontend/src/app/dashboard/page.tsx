@@ -70,7 +70,7 @@ const Dashboard = () => {
       }
     }, []);
     const steps = [
-      { key: "jobdes", label: "Job Description", path: "/jobdes" },
+      { key: "job-description", label: "Job Description", path: "/jobdes" },
       { key: "res-review", label: "Resume Review", path: "/res-review" },
       { key: "res-review-group", label: "Resume Review Group", path: "/res-review-group" },
       { key: "interview", label: "Interview", path: "/interview" },
