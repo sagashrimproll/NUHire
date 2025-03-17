@@ -36,7 +36,7 @@ app.use(session({
   saveUninitialized: false,
   store: sessionStore,
   cookie: { 
-    secure: false, // 🔴 Set `true` if using HTTPS
+    secure: false, // Set `true` if using HTTPS
     httpOnly: true, 
     sameSite: "lax"
   }

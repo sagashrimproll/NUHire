@@ -7,7 +7,12 @@ import { localservices } from "googleapis/build/src/apis/localservices";
 import NotesPage from "../components/note";
 
 const Dashboard = () => {
-  const [user, setUser] = useState(null);
+  interface User {
+    affiliation: string;
+    // Add other user properties here
+  }
+
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -53,17 +58,23 @@ const Dashboard = () => {
       </div>
 
       <main className="flex flex-col items-center justify-center flex-grow">
-        <div className="mt-6">
-          <Link 
-            href="/grouping" 
-            className="px-10 py-10 bg-navy text-sand border-4 border-wood font-semibold rounded-lg shadow-md hover:bg-springWater transition"
+        <div className="mt-6 gap-5 flex flex-col justify-center items-center">
+          <Link
+            href="/grouping"
+            className="px-10 py-10 bg-navy text-sand border-4 border-wood font-semibold rounded-lg shadow-md hover:bg-navyHeader transition"
           >
             Create and View Groups
+          </Link>
+
+          <Link
+            href="/sendpopups"
+            className="px-10 py-10 bg-navy text-sand border-4 border-wood font-semibold rounded-lg shadow-md hover:bg-navyHeader transition mt-6"
+          >
+            Send Popups
           </Link>
         </div>
       </main>
     </div>
-
   );
 };
 
