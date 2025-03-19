@@ -118,22 +118,68 @@ passport.deserializeUser((identifier, done) => {
   });
 });
 
+let onlineStudents = {};
+
 io.on("connection", (socket) => {
-  console.log("A user connected:", socket.id);
+    console.log(`User connected: ${socket.id}`);
 
-  // Example: Handle messages from clients
-  socket.on("message", (data) => {
-    console.log("Received message:", data);
-    
-    // Broadcast the message to all connected clients
-    io.emit("message", data);
-  });
+    socket.on("studentOnline", ({ studentId }) => {
+        onlineStudents[studentId] = socket.id;
 
-  // Example: Handle user disconnect
-  socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-  });
+        db.query(
+            "SELECT group_id, current_page FROM Users WHERE email = ?",
+            [studentId],
+            (err, result) => {
+                if (!err && result.length > 0) {
+                    const { group_id, current_page } = result[0];
+                    console.log(`Student ${studentId} (Group ${group_id}) is on ${current_page}`);
+
+                    io.emit("updateOnlineStudents", { studentId, group_id, current_page });
+                }
+            }
+        );
+    });
+
+    socket.on("studentPageChanged", ({ studentId, currentPage }) => {
+        if (onlineStudents[studentId]) {
+            console.log(`Student ${studentId} changed page to ${currentPage}`);
+            io.emit("studentPageChange", { studentId, currentPage });
+        }
+    });
+
+    socket.on("sendPopupToGroups", ({ groups, headline, message }) => {
+        if (!groups || groups.length === 0) return;
+
+        db.query(
+            "SELECT email FROM Users WHERE group_id IN (?) AND affiliation = 'student'",
+            [groups],
+            (err, results) => {
+                if (!err && results.length > 0) {
+                    results.forEach(({ email }) => {
+                        // FIX: Use 'email' to lookup in onlineStudents instead of 'id'
+                        const studentSocketId = onlineStudents[email];
+                        if (studentSocketId) {
+                            io.to(studentSocketId).emit("receivePopup", { headline, message });
+                        }
+                    });
+                    console.log(`Popup sent to Groups: ${groups.join(", ")}`);
+                } else {
+                    console.log("No online students in the selected groups.");
+                }
+            }
+        );
+    });
+
+    socket.on("disconnect", () => {
+        Object.keys(onlineStudents).forEach((studentId) => {
+            if (onlineStudents[studentId] === socket.id) {
+                console.log(`Student ${studentId} disconnected`);
+                delete onlineStudents[studentId];
+            }
+        });
+    });
 });
+
 
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
@@ -210,8 +256,8 @@ app.post("/auth/logout", (req, res, next) => {
     if (err) return next(err);
 
     req.session.destroy(() => {
-      res.clearCookie("connect.sid"); // ✅ Clears session cookie
-      res.status(200).json({ message: "Logged out successfully" }); // ✅ Sends JSON response
+      res.clearCookie("connect.sid");
+      res.status(200).json({ message: "Logged out successfully" }); 
     });
   });
 });
@@ -408,8 +454,6 @@ app.get("/students", async (req, res) => {
     res.json(results); // ✅ Just return the filtered users
   });
 });
-
-
 
 
 
