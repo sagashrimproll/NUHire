@@ -42,7 +42,13 @@ export default function ResumesPage() {
   const [fadingEffect, setFadingEffect] = useState(false);
   const [timeSpent, setTimeSpent] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
+  interface User {
+    id: string;
+    group_id: string;
+    email: string;
+  }
+
+  const [user, setUser] = useState<User | null>(null);
 
 
   const totalDecisions = accepted + rejected + noResponse;
@@ -108,7 +114,7 @@ export default function ResumesPage() {
 
   const sendVoteToBackend = async (vote: "yes" | "no" | "unanswered") => {
     
-    if(!user.id || !user.group_id) {
+    if(!user || !user.id || !user.group_id) {
       console.error("Student ID not found");
       return;
     }
@@ -297,7 +303,7 @@ export default function ResumesPage() {
                       ? 0.8
                       : window.innerHeight < 800
                       ? 1.0
-                      : 1.4
+                      : 1.2
                   }
                 />
               </Document>

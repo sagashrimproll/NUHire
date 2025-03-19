@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; 
 import NavbarAdmin from "../components/navbar-admin";
+import {io} from "socket.io-client";
+
+const socket = io("http://localhost:5001");
+
+
 
 const SendPopups = () => {  
     interface User {
@@ -14,11 +19,7 @@ const SendPopups = () => {
         students: string[];
     }
 
-    const presetPopups = [
-        {title: "Internal Refferal", headline: "Internal Referral", message: "This person has an internal referral for this position"},
-        {title: "No Show", headline: "Abandoned Interview", message: "This candidate did not show up for the interview."}
-    ];
-
+    
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const [groups, setGroups] = useState<Group[]>([]);
@@ -28,6 +29,12 @@ const SendPopups = () => {
     const [sending, setSending] = useState(false); // Track API request state
     const [selectedPreset, setSelectedPreset] = useState<string>(""); 
     const router = useRouter(); 
+    const [isConnected, setIsConntected] = useState(false); // Track WebSocket connection state
+    
+    const presetPopups = [
+        {title: "Internal Refferal", headline: "Internal Referral", message: "This person has an internal referral for this position"},
+        {title: "No Show", headline: "Abandoned Interview", message: "This candidate did not show up for the interview."}
+    ];
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -79,6 +86,7 @@ const SendPopups = () => {
                 : [...prevSelected, groupId]
         );
     }; 
+    
 
     const handlePresetSelection = (presetTitle: string) => {
         setSelectedPreset(presetTitle);
@@ -89,41 +97,35 @@ const SendPopups = () => {
         }
     };
 
-
-    // Implement feature after web sockets are established
-
-    /* 
     const sendPopups = async () => {
-        if (!headline || !message || selectedGroups.length === 0) {
-            alert("Please enter a headline, message, and select at least one group.");
-            return;
-        }
+      if (!headline || !message || selectedGroups.length === 0) {
+          alert("Please enter a headline, message, and select at least one group.");
+          return;
+      }
+  
+      setSending(true);
+  
+      try {
+          socket.emit("sendPopupToGroups", {
+              groups: selectedGroups,
+              headline,
+              message,
+          });
+  
+          alert("Popups sent successfully!");
+          
+          setHeadline("");
+          setMessage("");
+          setSelectedGroups([]);
+          setSelectedPreset("");
+      } catch (error) {
+          console.error("Error sending popups:", error);
+          alert("Failed to send popups. Please try again.");
+      } finally {
+          setSending(false); 
+      }
+  };
 
-        setSending(true);
-
-        try {
-            const response = await fetch("http://localhost:5001/send-popups", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ headline, message, groups: selectedGroups }),
-            });
-
-            if (response.ok) {
-                alert("Popups sent successfully!");
-                setHeadline("");
-                setMessage("");
-                setSelectedGroups([]);
-            } else {
-                alert("Failed to send popups. Please try again.");
-            }
-        } catch (error) {
-            console.error("Error sending popups:", error);
-            alert("An error occurred while sending popups.");
-        } finally {
-            setSending(false);
-        }
-    };
-    */
 
     return (
       <div className="flex flex-col min-h-screen bg-sand font-rubik">
@@ -232,7 +234,7 @@ const SendPopups = () => {
           </div>
 
           <button
-            // onClick={sendPopups}
+            onClick={sendPopups}
             disabled={sending || selectedGroups.length === 0}
             className={`mt-6 px-6 py-3 font-semibold rounded-md transition 
                         ${
