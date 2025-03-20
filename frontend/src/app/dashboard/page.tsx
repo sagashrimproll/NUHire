@@ -7,6 +7,7 @@ import NotesPage from "../components/note";
 import Footer from "../components/footer";
 import io from "socket.io-client";
 import { usePathname } from "next/navigation";
+import Popup from "../components/popup";
 
 const socket = io("http://localhost:5001"); 
 
@@ -19,7 +20,7 @@ const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [popup, setPopup] = useState<{ headline: string; message: string } | null>(null);
-  const [progress, setProgress] = useState<string>("job-description"); 
+  const [progress, setProgress] = useState<string>("jobdes"); 
   const pathname = usePathname(); 
   const router = useRouter();
 
@@ -57,7 +58,7 @@ const Dashboard = () => {
           await fetch("http://localhost:5001/update-currentpage", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ page: pathname, user_email: user.email }),
+            body: JSON.stringify({ page: 'dashboard', user_email: user.email }),
           });
         } catch (error) {
           console.error("Error updating current page:", error);
@@ -82,7 +83,7 @@ const Dashboard = () => {
  
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const storedProgress = localStorage.getItem("progress") || "job-description";
+      const storedProgress = localStorage.getItem("progress") || "jobdes";
       setProgress(storedProgress);
     }
   }, []);
@@ -157,15 +158,12 @@ const Dashboard = () => {
       </main>
 
       {popup && (
-        <div className="fixed top-10 right-10 bg-blue-500 text-white p-4 rounded-md shadow-lg">
-          <h2 className="font-bold">{popup.headline}</h2>
-          <p>{popup.message}</p>
-          <button onClick={() => setPopup(null)} className="mt-2 px-4 py-2 bg-gray-800 text-white rounded">
-            Dismiss
-          </button>
-        </div>
+        <Popup
+        headline = {popup.headline}
+        message={popup.message}
+        onDismiss={() => setPopup(null)} 
+        />
       )}
-
       <Footer />
     </div>
   );

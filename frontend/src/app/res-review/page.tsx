@@ -9,6 +9,11 @@ import { Document, Page, pdfjs } from "react-pdf";
 import NotesPage from "../components/note";
 import Footer from "../components/footer";
 import router from "next/router";
+import Popup from "../components/popup";
+import { io } from "socket.io-client";
+import { usePathname } from "next/navigation";
+
+const socket = io("http://localhost:5001"); 
 
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -42,6 +47,8 @@ export default function ResumesPage() {
   const [fadingEffect, setFadingEffect] = useState(false);
   const [timeSpent, setTimeSpent] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [popup, setPopup] = useState<{headline: string; message: string} | null>(null)
+  const pathname = usePathname()
   interface User {
     id: string;
     group_id: string;
@@ -80,28 +87,37 @@ export default function ResumesPage() {
       fetchUser();
     }, [router]);
   
-    useEffect(() => {
-      if (user && user.email) {
-        const updateCurrentPage = async () => {
-          try {
-            const response = await fetch("http://localhost:5001/update-currentpage", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ page: 'resumepage', user_email: user.email }),
-            });
-  
-            if (!response.ok) {
-              const errorData = await response.json();
-              console.error("Failed to update current page:", errorData.error);
-            }
-          } catch (error) {
-            console.error("Error updating current page:", error);
-          }
-        };
-  
-        updateCurrentPage();
-      }
-    }, [user]);
+  useEffect(() => {
+    if (user && user.email) {
+      socket.emit("studentOnline", { studentId: user.email }); 
+
+      socket.emit("studentPageChanged", { studentId: user.email, currentPage: pathname });
+
+      const updateCurrentPage = async () => {
+        try {
+          await fetch("http://localhost:5001/update-currentpage", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ page: 'resumepage', user_email: user.email }),
+          });
+        } catch (error) {
+          console.error("Error updating current page:", error);
+        }
+      };
+
+      updateCurrentPage(); 
+    }
+  }, [user, pathname]);
+
+  useEffect(() => {
+    socket.on("receivePopup", ({ headline, message }) => {
+      setPopup({ headline, message });
+    });
+
+    return () => {
+      socket.off("receivePopup");
+    };
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -300,16 +316,25 @@ export default function ResumesPage() {
                   pageNumber={1}
                   scale={
                     window.innerWidth < 768
-                      ? 0.8
+                      ? 0.5
                       : window.innerHeight < 800
                       ? 1.0
-                      : 1.2
+                      : 1.0
                   }
                 />
               </Document>
             </div>
           </div>
         </div>
+
+        {popup && (
+        <Popup
+        headline = {popup.headline}
+        message={popup.message}
+        onDismiss={() => setPopup(null)} 
+        />
+      )}
+      
         <footer>
           <div className="flex justify-between mb-4">
             <button

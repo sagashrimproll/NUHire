@@ -32,7 +32,7 @@ const SendPopups = () => {
     const [isConnected, setIsConntected] = useState(false); // Track WebSocket connection state
     
     const presetPopups = [
-        {title: "Internal Refferal", headline: "Internal Referral", message: "This person has an internal referral for this position"},
+        {title: "Internal Refferal", headline: "Internal Referral", message: "This person has an internal referral for this position! You have to accept this candidate!"},
         {title: "No Show", headline: "Abandoned Interview", message: "This candidate did not show up for the interview."}
     ];
 

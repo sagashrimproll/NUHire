@@ -156,7 +156,6 @@ io.on("connection", (socket) => {
             (err, results) => {
                 if (!err && results.length > 0) {
                     results.forEach(({ email }) => {
-                        // FIX: Use 'email' to lookup in onlineStudents instead of 'id'
                         const studentSocketId = onlineStudents[email];
                         if (studentSocketId) {
                             io.to(studentSocketId).emit("receivePopup", { headline, message });
@@ -226,6 +225,13 @@ app.get("/jobdes"), (req, res) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
   res.redirect(`http://localhost:3000/jobdes?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
+}
+
+app.get("/res-review"), (req, res) => { 
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  res.redirect(`http://localhost:3000/res-review?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
 }
 
 // Logout route
@@ -451,7 +457,7 @@ app.get("/students", async (req, res) => {
     if (err) return res.status(500).json({ error: err.message });
     if (results.length === 0) return res.status(404).json({ message: "No students found" });
 
-    res.json(results); // ✅ Just return the filtered users
+    res.json(results); 
   });
 });
 

@@ -6,25 +6,17 @@ import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css"
 import NotesPage from "../components/note";
-import {
-    PdfHighlighter,
-    PdfLoader,
-    Highlight,
-    AreaHighlight,
-    Popup,
-    Tip,
-} from "react-pdf-highlighter";
+import Popup from "../components/popup";
 import Footer from "../components/footer";
-
+import router from "next/router";
 import type {
     IHighlight,
     NewHighlight,
-    ScaledPosition,
-    Content
 } from "react-pdf-highlighter";
-import router from "next/router";
+import { io } from "socket.io-client";
+import { usePathname } from "next/navigation";
 
-
+const socket = io("http://localhost:5001"); 
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
     'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -39,8 +31,10 @@ export default function JobDescriptionPage() {
     const [highlights, setHighlights] = useState<IHighlight[]>([]);
     const [tool, setTool] = useState("pointer");
     const [comments, setComments] = useState<{x: number; y: number; text: string, page: number}[]>([]);
-     const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);
+    const [popup, setPopup] = useState<{ headline: string; message: string } | null>(null);
     const [pdfLoaded, setPdfLoaded] = useState(false);
+    const pathname = usePathname(); 
     interface User {
         email: string;
         // Add other user properties if needed
@@ -140,28 +134,38 @@ export default function JobDescriptionPage() {
     fetchUser();
   }, [router]);
 
+
   useEffect(() => {
     if (user && user.email) {
+      socket.emit("studentOnline", { studentId: user.email }); 
+
+      socket.emit("studentPageChanged", { studentId: user.email, currentPage: pathname });
+
       const updateCurrentPage = async () => {
         try {
-          const response = await fetch("http://localhost:5001/update-currentpage", {
+          await fetch("http://localhost:5001/update-currentpage", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ page: 'jobdes', user_email: user.email }),
           });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            console.error("Failed to update current page:", errorData.error);
-          }
         } catch (error) {
           console.error("Error updating current page:", error);
         }
       };
 
-      updateCurrentPage();
+      updateCurrentPage(); 
     }
-  }, [user]);
+  }, [user, pathname]);
+       
+        useEffect(() => {
+          socket.on("receivePopup", ({ headline, message }) => {
+            setPopup({ headline, message });
+          });
+      
+          return () => {
+            socket.off("receivePopup");
+          };
+        }, []);
 
       return (
         <div>
@@ -182,7 +186,6 @@ export default function JobDescriptionPage() {
                     : "hover:bg-navyHeader"
                 }`}
             >
-
               Cursor
             </button>
             <button
@@ -200,7 +203,7 @@ export default function JobDescriptionPage() {
 
           <div
             id="pdf-container"
-            className={`relative border border-gray-300 p-4 w-full mx-auto flex justify-center 
+            className={`relative border border-sand p-4 w-full mx-auto flex justify-center rounded-lg
     ${tool === "comment" ? "cursor-crosshair" : ""}`}
             onClick={handlePdfClick}
           >
@@ -226,7 +229,10 @@ export default function JobDescriptionPage() {
                 <div
                   key={index}
                   className="absolute bg-white shadow-md p-2 rounded-md"
-                  style={{ left: `${(comment.x / 1.3)}%`, top: `${(comment.y / 1.3)}%` }}
+                  style={{
+                    left: `${comment.x / 1.3}%`,
+                    top: `${comment.y / 1.3}%`,
+                  }}
                 >
                   {comment.text ? (
                     <div className="bg-gray-200 text-sm p-2 rounded-md">
@@ -254,6 +260,14 @@ export default function JobDescriptionPage() {
                   )}
                 </div>
               ))}
+
+            {popup && (
+              <Popup
+                headline={popup.headline}
+                message={popup.message}
+                onDismiss={() => setPopup(null)}
+              />
+            )}
           </div>
 
           <div className="flex justify-center items-center gap-5 mt-5 mb-5 w-full">
@@ -303,6 +317,14 @@ export default function JobDescriptionPage() {
           )}
         </PdfLoader>
       </div> */}
+
+          {popup && (
+            <Popup
+              headline={popup.headline}
+              message={popup.message}
+              onDismiss={() => setPopup(null)}
+            />
+          )}
 
           <footer>
             <div className="flex justify-end mt-4 mb-4 mr-4">
