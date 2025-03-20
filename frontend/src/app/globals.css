@@ -18,3 +18,13 @@ html, body {
     padding: 0;
     background-color: #e7e2db;
   }
+
+.pdf-container .react-pdf__Page {
+  pointer-events: none;
+}
+
+
+.comment-overlay {
+  pointer-events: auto;
+  z-index: 1000; 
+}
