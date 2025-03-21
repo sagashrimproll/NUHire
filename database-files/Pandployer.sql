@@ -222,6 +222,7 @@ CREATE TABLE `Resume` (
   `vote` enum('yes','no','unanswered') NOT NULL,
   PRIMARY KEY (`id`),
   KEY `student_id` (`student_id`),
+  `checked` BOOLEAN DEFAULT FALSE,
   CONSTRAINT `Resume_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `Users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -336,6 +337,7 @@ UNLOCK TABLES;
 
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sai A.', 'Dhanasiri', 'saianirudhsjps@gmail.com', 'student');
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sage', 'Batchelor', 'sagebatchelor@gmail.com', 'student');
+INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sag', 'Bat', 'batchelor.sa@husky.neu.edu', 'student');
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sage', 'Batchelor', 'sagashrimproll@gmail.com', 'admin');
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sai Anirudh', 'Dhanasiri', 'dhanasiri.s@husky.neu.edu', 'admin');
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Penguin', 'The Last', 'ilovepenguinsandhowtheylook@gmail.com', 'student');
