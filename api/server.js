@@ -251,6 +251,23 @@ app.get("/res-review"), (req, res) => {
   res.redirect(`http://localhost:3000/res-review?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
 }
 
+app.get("/res-review-group"), (req, res) => {
+  if(!req.isAuthenticated()) {
+    return res.status(401).json({message: "Unauthorized"});
+  }
+
+  res.redirect(`http://localhost:3000/res-review-group?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
+}
+
+
+app.get("/interview-stage"), (req, res) => {
+  if(!req.isAuthenticated()) {
+    return res.status(401).json({message: "Unauthorized"});
+  }
+
+  res.redirect(`http://localhost:3000/interview-stage?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
+}
+
 // Logout route
 app.get("/logout", (req, res) => {
     req.logout(() => {

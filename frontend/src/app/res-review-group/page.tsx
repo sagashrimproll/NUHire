@@ -186,7 +186,8 @@ export default function ResReviewGroup() {
             alert("You must select exactly 4 resumes before proceeding.");
             return;
         }
-        window.location.href = "/interview-stage"; // Proceed to the next stage
+        localStorage.setItem("progress", "interview-stage")
+        window.location.href = "/interview-stage"; 
     };
     
     // Calculate selected resume count

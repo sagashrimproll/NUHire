@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 
 const allowedRoutes: Record<string, string[]> = {
-  "/jobdes": ["jobdes", "res-review", "res-review-group", "interview", "makeOffer", "employerPannel"],
-  "/res-review": ["res-review", "interview"],
-  "/res-review-group": ["res-review-group", "interview"],
-  "/interview": ["interview", "makeOffer"],
+  "/jobdes": ["jobdes", "res-review", "res-review-group", "interview-stage", "makeOffer", "employerPannel"],
+  "/res-review": ["res-review", "interview-stage"],
+  "/res-review-group": ["res-review-group", "interview-stage"],
+  "/interview-stage": ["interview-stage", "makeOffer"],
   "/makeOffer": ["makeOffer", "employerPannel"],
   "/employerPannel": ["employerPannel"],
 };
