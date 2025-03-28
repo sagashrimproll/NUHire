@@ -237,6 +237,30 @@ LOCK TABLES `Resume` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `Resume`
+--
+
+DROP TABLE IF EXISTS `Resume_pdfs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `Resume_pdfs` (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  file_path VARCHAR(255) NOT NULL, 
+  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `Resume_pdfs`
+--
+
+LOCK TABLES `Resume_pdfs` WRITE;
+/*!40000 ALTER TABLE `Resume_pdfs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `Resume_pdfs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `Resumepage`
 --
 
@@ -263,6 +287,31 @@ LOCK TABLES `Resumepage` WRITE;
 /*!40000 ALTER TABLE `Resumepage` DISABLE KEYS */;
 /*!40000 ALTER TABLE `Resumepage` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `job_descriptions`
+--
+
+DROP TABLE IF EXISTS `job_descriptions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `job_descriptions` (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    file_path VARCHAR(255) NOT NULL, 
+    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `job_descriptions`
+--
+
+LOCK TABLES `job_descriptions` WRITE;
+/*!40000 ALTER TABLE `job_descriptions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `job_descriptions` ENABLE KEYS */;
+UNLOCK TABLES;
+
 
 --
 -- Table structure for table `Resumepage2`
@@ -309,6 +358,7 @@ CREATE TABLE `Users` (
   `affiliation` enum('student','admin') NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `group_id` int DEFAULT NULL,
+  `job_des` varchar(100) DEFAULT NULL,
   `current_page` enum('dashboard','resumepage','resumepage2','jobdes','interviewpage','makeofferpage') DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
@@ -339,3 +389,19 @@ INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sai A.
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sage', 'Batchelor', 'sagebatchelor@gmail.com', 'student');
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sag', 'Bat', 'batchelor.sa@husky.neu.edu', 'student');
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sage', 'Batchelor', 'sagashrimproll@gmail.com', 'admin');
+INSERT INTO `job_descriptions` (`title`, `file_path`) VALUES ('Carbonite', 'uploads/jobdescription/carbonite-jobdes.pdf');
+INSERT INTO `job_descriptions` (`title`, `file_path`) VALUES ('Cygilant', 'uploads/jobdescription/Cygilant Security Research Job Description.pdf');
+INSERT INTO `job_descriptions` (`title`, `file_path`) VALUES ('Motionlogic', 'uploads/jobdescription/QA Coop Motionlogic (Berlin, Germany).pdf');
+INSERT INTO `job_descriptions` (`title`, `file_path`) VALUES ('Sample', 'uploads/jobdescription/sample-job-description.pdf');
+INSERT INTO `job_descriptions` (`title`, `file_path`) VALUES ('Source One', 'uploads/jobdescription/SourceOneJobDescription.pdf');
+INSERT INTO `job_descriptions` (`title`, `file_path`) VALUES ('Two Six Labs', 'uploads/jobdescription/Two Six Labs Data Visualization Co-op Job Description.pdf');
+INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample1', 'uploads/resumes/sample1.pdf');
+INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample2', 'uploads/resumes/sample2.pdf');
+INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample3', 'uploads/resumes/sample3.pdf');
+INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample4', 'uploads/resumes/sample4.pdf');
+INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample5', 'uploads/resumes/sample5.pdf');
+INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample6', 'uploads/resumes/sample6.pdf');
+INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample7', 'uploads/resumes/sample7.pdf');
+INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample8', 'uploads/resumes/sample8.pdf');
+INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample9', 'uploads/resumes/sample9.pdf');
+INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample10', 'uploads/resumes/sample10.pdf');

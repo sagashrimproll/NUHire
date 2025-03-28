@@ -60,6 +60,12 @@ const Dashboard = () => {
           >
             Create and View Groups
           </Link>
+          <Link 
+            href="/new-pdf" 
+            className="px-10 py-10 bg-navy text-sand border-4 border-wood font-semibold rounded-lg shadow-md hover:bg-springWater transition"
+          >
+            Upload Job Descriptions and Resumes
+          </Link>
         </div>
       </main>
     </div>

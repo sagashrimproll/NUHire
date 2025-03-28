@@ -33,7 +33,6 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 
 
 export default function JobDescriptionPage() { 
-    const fileUrl = "carbonite-jobdes.pdf"; // URL of the PDF file
     const [numPages, setNumPages] = useState<number | null>(null);
     const [pageNumber, setPageNumber] = useState(1);
     const [highlights, setHighlights] = useState<IHighlight[]>([]);
@@ -41,11 +40,8 @@ export default function JobDescriptionPage() {
     const [comments, setComments] = useState<{x: number; y: number; text: string, page: number}[]>([]);
      const [loading, setLoading] = useState(true);
     const [pdfLoaded, setPdfLoaded] = useState(false);
-    interface User {
-        email: string;
-        // Add other user properties if needed
-    }
-    const [user, setUser] = useState<User | null>(null);
+    const [fileUrl, setJob] = useState("");
+    const [user, setUser] = useState(null);
 
     const completeJobDescription = () => {
         localStorage.setItem("progress", "res-review");
@@ -140,6 +136,8 @@ export default function JobDescriptionPage() {
     fetchUser();
   }, [router]);
 
+
+
   useEffect(() => {
     if (user && user.email) {
       const updateCurrentPage = async () => {
@@ -162,6 +160,43 @@ export default function JobDescriptionPage() {
       updateCurrentPage();
     }
   }, [user]);
+
+  useEffect(() => {
+    const fetchJob = async () => {
+      if (!user || !user.job_des) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const response = await fetch(`http://localhost:5001/jobdes/title?title=${encodeURIComponent(user.job_des)}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+  
+        if (!response.ok) {
+          throw new Error("Failed to fetch job description");
+        }
+  
+        const job = await response.json();
+        setJob(job.file_path);
+      } catch (error) {
+        console.error("Error fetching job description:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchJob();
+  }, [user]); // ✅ Depend on `user`
+  
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-screen text-xl">Loading...</div>;
+  }
+
+  if (!user || user.affiliation !== "student" || user.group === null) {
+    return null;
+  }
 
       return (
         <div>

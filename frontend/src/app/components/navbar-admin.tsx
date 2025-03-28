@@ -45,7 +45,7 @@ const NavbarAdmin = () => {
           </div>
         )}
         <Link href="/advisor-dashboard" className="text-3xl font-rubik font-bold">
-          Pandployer
+          NUHire
         </Link>
 
         <Link
