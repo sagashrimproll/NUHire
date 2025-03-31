@@ -1,4 +1,5 @@
 "use client";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import React, { useState, useEffect } from "react";
 import { io, Socket } from "socket.io-client";
 import Navbar from "../components/navbar";
@@ -7,22 +8,8 @@ import { useProgress } from "../components/useProgress";
 import NotesPage from "../components/note";
 import Footer from "../components/footer";
 
-const SOCKET_URL = "http://localhost:5001"; 
+const SOCKET_URL = `${API_BASE_URL}`; 
 let socket: Socket | null = null; // Define socket with correct type
-
-const resumesList: string[] = [
-    "/test-resumes/sample1.pdf",
-    "/test-resumes/sample2.pdf",
-    "/test-resumes/sample3.pdf",
-    "/test-resumes/sample4.pdf",
-    "/test-resumes/sample5.pdf",
-    "/test-resumes/sample6.pdf",
-    "/test-resumes/sample7.pdf",
-    "/test-resumes/sample8.pdf",
-    "/test-resumes/sample9.pdf",
-    "/test-resumes/sample10.pdf"
-];
-
 
 export default function ResReviewGroup() {
     useProgress();
@@ -32,13 +19,14 @@ export default function ResReviewGroup() {
     const [loading, setLoading] = useState(true);
     const [isConnected, setIsConnected] = useState<boolean>(false);
     const [user, setUser] = useState(null);
+    const [resumes, setResumes] =  useState([]);
     const router = useRouter();
 
     // Fetch user authentication data
     useEffect(() => {
         const fetchUser = async () => {
           try {
-            const response = await fetch("http://localhost:5001/auth/user", { credentials: "include" });
+            const response = await fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" });
             const userData = await response.json();
     
             if (response.ok) {
@@ -58,12 +46,26 @@ export default function ResReviewGroup() {
         fetchUser();
     }, [router]);
 
+    const fetchResumes = async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/resume_pdf`);
+          const data = await response.json();
+          setResumes(data);
+        } catch (error) {
+          console.error("Error fetching resumes:", error);
+        }
+      };
+
+      useEffect(() => {
+        fetchResumes();
+      }, []);
+
     useEffect(() => {
     const fetchData = async () => {
         try {
             if (!user) return;
     
-            const response = await fetch(`http://localhost:5001/resume/group/${user.group_id}`);
+            const response = await fetch(`${API_BASE_URL}/resume/group/${user.group_id}`);
             const data: ResumeData[] = await response.json();
     
             const voteData: { [key: number]: VoteData } = {};
@@ -97,8 +99,6 @@ export default function ResReviewGroup() {
             fetchData();
         }
     }, [user]);
-
-  
 
     // Setup Socket.IO connection after user authentication
     useEffect(() => {
@@ -214,7 +214,7 @@ export default function ResReviewGroup() {
                     Please review the resumes below and as a group select 4 to move on to the next stage.
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {resumesList.map((resumePath, index) => {
+                    {resumes.map((resume, index) => {
                         const resumeNumber = index + 1;
                         const votes = voteCounts[resumeNumber] || { yes: 0, no: 0, undecided: 0 };
                         return (
@@ -223,7 +223,7 @@ export default function ResReviewGroup() {
                                     Resume {resumeNumber}
                                 </h3>
                                 <a
-                                    href={resumePath}
+                                    href={`${API_BASE_URL}/${resume.file_path}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-navy hover:underline"

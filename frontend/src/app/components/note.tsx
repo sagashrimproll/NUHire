@@ -1,4 +1,5 @@
 "use client";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import React, { useState, useEffect } from "react";
 
 const NotesPage = () => {
@@ -10,7 +11,7 @@ const NotesPage = () => {
     useEffect(() => {
       const fetchUserEmail = async () => {
         try {
-          const response = await fetch("http://localhost:5001/auth/user", { credentials: "include" });
+          const response = await fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" });
           const userData = await response.json();
           if (response.ok) {
             setUserEmail(userData.email);
@@ -32,7 +33,7 @@ const NotesPage = () => {
 
     const fetchNotes = async () => {
       try {
-        const response = await fetch("http://localhost:5001/notes", {
+        const response = await fetch(`${API_BASE_URL}/notes`, {
           credentials: "include",
         });
 
@@ -52,7 +53,7 @@ const NotesPage = () => {
     if (!note.trim()) return;
 
     try {
-      const response = await fetch("http://localhost:5001/notes", {
+      const response = await fetch(`${API_BASE_URL}/notes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

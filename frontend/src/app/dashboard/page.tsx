@@ -1,4 +1,5 @@
 'use client';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import React, { use } from "react";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -20,7 +21,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch("http://localhost:5001/auth/user", { credentials: "include" });
+        const response = await fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" });
         const userData = await response.json();
 
         if (response.ok) {
@@ -44,7 +45,7 @@ const Dashboard = () => {
     if (user && user.email) {
       const updateCurrentPage = async () => {
         try {
-          const response = await fetch("http://localhost:5001/update-currentpage", {
+          const response = await fetch(`${API_BASE_URL}/update-currentpage`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ page: 'dashboard', user_email: user.email }),

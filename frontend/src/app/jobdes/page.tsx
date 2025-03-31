@@ -1,5 +1,5 @@
 'use client'
-
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import Navbar from "../components/navbar";
 import { useState, useEffect, JSX, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -116,7 +116,7 @@ export default function JobDescriptionPage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch("http://localhost:5001/auth/user", { credentials: "include" });
+        const response = await fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" });
         const userData = await response.json();
 
         if (response.ok) {
@@ -142,7 +142,7 @@ export default function JobDescriptionPage() {
     if (user && user.email) {
       const updateCurrentPage = async () => {
         try {
-          const response = await fetch("http://localhost:5001/update-currentpage", {
+          const response = await fetch(`${API_BASE_URL}/update-currentpage`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ page: 'jobdes', user_email: user.email }),
@@ -169,7 +169,7 @@ export default function JobDescriptionPage() {
       }
       
       try {
-        const response = await fetch(`http://localhost:5001/jobdes/title?title=${encodeURIComponent(user.job_des)}`, {
+        const response = await fetch(`${API_BASE_URL}/jobdes/title?title=${encodeURIComponent(user.job_des)}`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         });
@@ -179,7 +179,7 @@ export default function JobDescriptionPage() {
         }
   
         const job = await response.json();
-        setJob(job.file_path);
+        setJob(`${API_BASE_URL}/${job.file_path}`);
       } catch (error) {
         console.error("Error fetching job description:", error);
       } finally {

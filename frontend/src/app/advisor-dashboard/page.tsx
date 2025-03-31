@@ -1,4 +1,5 @@
 'use client';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -14,22 +15,23 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch("http://localhost:5001/auth/user", { credentials: "include" });
-        const userData = await response.json();
-
-        if (response.ok) {
-          setUser(userData);
-        } else {
-          setUser(null);
-          router.push("/login"); // Redirect to login if unauthorized
+        const response = await fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" });
+        if (!response.ok) {
+          if (response.status === 401) {
+            router.push("/");
+          }
+          return;
         }
+    
+        const userData = await response.json();
+        setUser(userData);
       } catch (error) {
         console.error("Error fetching user:", error);
-        router.push("/login"); // Redirect on error
       } finally {
         setLoading(false);
       }
     };
+    
 
     fetchUser();
   }, [router]);

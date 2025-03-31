@@ -12,6 +12,7 @@ const path = require("path");  // ✅ Add this line at the top
 
 
 dotenv.config();
+const FRONT_URL = process.env.REACT_APP_FRONT_URL;
 const app = express();
 const http = require("http");  
 const { Server } = require("socket.io");
@@ -19,14 +20,14 @@ const { Server } = require("socket.io");
 const server = http.createServer(app); // Use HTTP server for Socket.io
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000", // Allow frontend connection
+    origin: `${FRONT_URL}`, // Allow frontend connection
     credentials: true
   }
 });
 
 
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: `${FRONT_URL}`,
   credentials: true
 }));
 
@@ -245,7 +246,7 @@ app.get("/auth/google/callback",
     db.query("SELECT * FROM Users WHERE email = ?", [email], (err, results) => {
       if (err) {
         console.error("Database error:", err);
-        return res.redirect("/login?error=server");
+        return res.redirect("/");
       }
       if (results.length > 0) {
         const user = results[0];
@@ -253,12 +254,12 @@ app.get("/auth/google/callback",
 
         // Check the Affiliation field
         if (user.affiliation === "admin") {
-          return res.redirect(`http://localhost:3000/advisor-dashboard?name=${fullName}`);
+          return res.redirect(`${FRONT_URL}/advisor-dashboard?name=${fullName}`);
         } else {
-          return res.redirect(`http://localhost:3000/dashboard?name=${fullName}`);
+          return res.redirect(`${FRONT_URL}/dashboard?name=${fullName}`);
         }
       } else {
-        return res.redirect(`http://localhost:3000/signupform?email=${email}`);
+        return res.redirect(`${FRONT_URL}/signupform?email=${email}`);
       }
     });
   }
@@ -272,14 +273,14 @@ app.get("/dashboard", (req, res) => {
   }
   
   // Redirect to frontend dashboard with user data
-  res.redirect(`http://localhost:3000/dashboard?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
+  res.redirect(`${FRONT_URL}/dashboard?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
 });
 
 app.get("/jobdes", (req, res) => { 
   if (!req.isAuthenticated()) {
     return res.status(401).json({ message: "Unauthorized" });
   }
-  res.redirect(`http://localhost:3000/jobdes?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
+  res.redirect(`${FRONT_URL}/jobdes?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
 });
 
 // Logout route
@@ -494,7 +495,7 @@ app.post("/resume/check", async (req, res) => {
 // Logout route
 app.get("/auth/logout", (req, res) => {
   req.logout(() => {
-      res.redirect("http://localhost:3000");
+      res.redirect(`${FRONT_URL}`);
   });
 });
 
@@ -563,15 +564,15 @@ app.get("/resume_pdf", (req, res) => {
 });
 
 app.post("/resume_pdf", async (req, res) => {
-  const { title, filePath } = req.body;
+  const { resTitle, filePath } = req.body;
 
-  if (!title || !filePath) {
+  if (!resTitle || !filePath) {
     return res.status(400).json({ error: "Missing title or filePath" });
   }
 
   try {
     const sql = "INSERT INTO Resume_pdfs (title, file_path) VALUES (?, ?)";
-    await db.query(sql, [title, filePath]);
+    await db.query(sql, [resTitle, filePath]);
     res.json({ message: "resume added successfully!" });
   } catch (error) {
     console.error("Error inserting into DB:", error);

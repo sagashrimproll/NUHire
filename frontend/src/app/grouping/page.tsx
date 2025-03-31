@@ -1,4 +1,5 @@
 'use client';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import NavbarAdmin from "../components/navbar-admin";
@@ -20,18 +21,18 @@ const Grouping = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch("http://localhost:5001/auth/user", { credentials: "include" });
+        const response = await fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" });
         const userData = await response.json();
 
         if (response.ok) {
           setUser(userData);
         } else {
           setUser(null);
-          router.push("/login");
+          router.push("/");
         }
       } catch (error) {
         console.error("Error fetching user:", error);
-        router.push("/login");
+        router.push("/");
       } finally {
         setLoading(false);
       }
@@ -44,7 +45,7 @@ const Grouping = () => {
   useEffect(() => {
     const fetchStudents = async () => {
       try { 
-        const response = await fetch("http://localhost:5001/students");
+        const response = await fetch(`${API_BASE_URL}/students`);
         const data = await response.json();
         setStudents(data);
       } catch (error) {
@@ -72,7 +73,7 @@ const Grouping = () => {
   useEffect(() => {
     const fetchJobs = async () => {
       try { 
-        const response = await fetch("http://localhost:5001/jobs");
+        const response = await fetch(`${API_BASE_URL}/jobs`);
         const data = await response.json();
         setJobs(data);
       } catch (error) {
@@ -105,7 +106,7 @@ const Grouping = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:5001/update-group", {
+      const response = await fetch(`${API_BASE_URL}/update-group`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -134,7 +135,7 @@ const Grouping = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:5001/update-job", {
+      const response = await fetch(`${API_BASE_URL}/update-job`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -159,7 +160,7 @@ const Grouping = () => {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const response = await fetch("http://localhost:5001/groups");
+        const response = await fetch(`${API_BASE_URL}/groups`);
         const data = await response.json();
         setGroups(data);
       } catch (error) {

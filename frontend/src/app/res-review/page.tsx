@@ -1,4 +1,5 @@
 'use client';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import React, { useEffect, useState, useRef } from "react";
 import { useProgress } from "../components/useProgress";
 import Navbar from "../components/navbar";
@@ -20,20 +21,8 @@ pdfjs.GlobalWorkerOptions.workerSrc = new URL(
 export default function ResumesPage() {
   useProgress();
 
-  const resumesList = [
-    "/test-resumes/sample1.pdf",
-    "/test-resumes/sample2.pdf",
-    "/test-resumes/sample3.pdf",
-    "/test-resumes/sample4.pdf",
-    "/test-resumes/sample5.pdf",
-    "/test-resumes/sample6.pdf",
-    "/test-resumes/sample7.pdf",
-    "/test-resumes/sample8.pdf",
-    "/test-resumes/sample9.pdf",
-    "/test-resumes/sample10.pdf"
-];
-
   const[resumes, setResumes] = useState(0);
+  const[resumesList, setResumesList] = useState<{file_path: string }[]>([]);
   const[accepted, setAccepted] = useState(0);
   const[rejected, setRejected] = useState(0);
   const[noResponse, setNoResponse] = useState(0);
@@ -54,7 +43,7 @@ export default function ResumesPage() {
     useEffect(() => {
       const fetchUser = async () => {
         try {
-          const response = await fetch("http://localhost:5001/auth/user", { credentials: "include" });
+          const response = await fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" });
           const userData = await response.json();
   
           if (response.ok) {
@@ -78,7 +67,7 @@ export default function ResumesPage() {
       if (user && user.email) {
         const updateCurrentPage = async () => {
           try {
-            const response = await fetch("http://localhost:5001/update-currentpage", {
+            const response = await fetch(`${API_BASE_URL}/update-currentpage`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ page: 'resumepage', user_email: user.email }),
@@ -96,6 +85,20 @@ export default function ResumesPage() {
         updateCurrentPage();
       }
     }, [user]);
+    
+      const fetchResumes = async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/resume_pdf`);
+          const data = await response.json();
+          setResumesList(data);
+        } catch (error) {
+          console.error("Error fetching resumes:", error);
+        }
+      };
+
+      useEffect(() => {
+      fetchResumes();
+    }, []);    
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -114,7 +117,7 @@ export default function ResumesPage() {
     }
     
     try { 
-      const response = await fetch("http://localhost:5001/resume/vote", {
+      const response = await fetch(`${API_BASE_URL}/resume/vote`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -286,21 +289,26 @@ export default function ResumesPage() {
                 maxHeight: "100vh",
               }}
             >
-              <Document
-                file={resumesList[currentResumeIndex]}
-                onLoadError={console.error}
-              >
-                <Page
-                  pageNumber={1}
-                  scale={
-                    window.innerWidth < 768
-                      ? 0.8
-                      : window.innerHeight < 800
-                      ? 1.0
-                      : 1.4
-                  }
-                />
-              </Document>
+              {resumesList.length > 0 && resumesList[currentResumeIndex] ? (
+  <Document
+    file={`${API_BASE_URL}/${resumesList[currentResumeIndex].file_path}`}
+    onLoadError={console.error}
+  >
+    <Page
+      pageNumber={1}
+      scale={
+        window.innerWidth < 768
+          ? 0.8
+          : window.innerHeight < 800
+          ? 1.0
+          : 1.4
+      }
+    />
+  </Document>
+) : (
+  <p>Loading resumes...</p>
+)}
+
             </div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 'use client';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
@@ -20,7 +21,7 @@ const Upload = () => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch("http://localhost:5001/auth/user", { credentials: "include" });
+        const response = await fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" });
         const userData = await response.json();
 
         if (response.ok) {
@@ -47,7 +48,7 @@ const Upload = () => {
 
   const fetchJobs = async () => {
     try {
-      const response = await fetch("http://localhost:5001/jobs");
+      const response = await fetch(`${API_BASE_URL}/jobs`);
       const data = await response.json();
       setJobs(data);
     } catch (error) {
@@ -57,7 +58,7 @@ const Upload = () => {
 
   const fetchResumes = async () => {
     try {
-      const response = await fetch("http://localhost:5001/resume_pdf");
+      const response = await fetch(`${API_BASE_URL}/resume_pdf`);
       const data = await response.json();
       setResumes(data);
     } catch (error) {
@@ -74,7 +75,7 @@ const Upload = () => {
     const fileName = filePath.split("/").pop(); // Extract just the filename
     
     try {
-      const response = await fetch(`http://localhost:5001/delete/resume/${fileName}`, {
+      const response = await fetch(`${API_BASE_URL}/delete/resume/${fileName}`, {
         method: "DELETE",
       });
   
@@ -96,7 +97,7 @@ const Upload = () => {
     const fileName = filePath.split("/").pop(); // Extract just the filename
     
     try {
-      const response = await fetch(`http://localhost:5001/delete/job/${fileName}`, {
+      const response = await fetch(`${API_BASE_URL}/delete/job/${fileName}`, {
         method: "DELETE",
       });
   
@@ -124,7 +125,7 @@ const Upload = () => {
       setUploading(true);
 
   
-      const response = await fetch(`http://localhost:5001/upload/${type}`, { 
+      const response = await fetch(`${API_BASE_URL}/upload/${type}`, { 
         method: "POST", 
         body: formData 
       });
@@ -133,14 +134,14 @@ const Upload = () => {
       const { filePath } = await response.json();
   
       if (type === "job") {
-        await fetch("http://localhost:5001/jobs", {
+        await fetch(`${API_BASE_URL}/jobs`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title, filePath }),
         });
         fetchJobs();
       } else if (type === "resume") {
-        await fetch("http://localhost:5001/resume_pdf", {
+        await fetch(`${API_BASE_URL}/resume_pdf`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ resTitle, filePath }),
@@ -178,7 +179,7 @@ const handleResumeSelection = (id) => {
           <ul>
             {jobs.length === 0 ? <p>No job descriptions uploaded yet.</p> : jobs.map((job) => (
               <li key={job.id} className="border-b py-2">
-                <strong>{job.title}</strong> - <a href={`http://localhost:5001/${job.file_path}`} target="_blank" className="text-blue-500">View PDF</a>
+                <strong>{job.title}</strong> - <a href={`${API_BASE_URL}/${job.file_path}`} target="_blank" className="text-blue-500">View PDF</a>
                 <div className="flex gap-2">
           <button 
             onClick={() => deleteJob(job.file_path)} 
@@ -206,7 +207,7 @@ const handleResumeSelection = (id) => {
       <li key={resume.id} className="border-b py-2 flex justify-between items-center">
         <div>
           <strong>{resume.title}</strong> - 
-          <a href={`http://localhost:5001/${resume.file_path}`} target="_blank" className="text-blue-500 ml-2">View</a>
+          <a href={`${API_BASE_URL}/${resume.file_path}`} target="_blank" className="text-blue-500 ml-2">View</a>
         </div>
         <div className="flex gap-2">
           <button 

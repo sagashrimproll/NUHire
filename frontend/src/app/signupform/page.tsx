@@ -1,4 +1,5 @@
 'use client';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -26,7 +27,7 @@ export default function SignupDetails() {
 
     const user = { First_name: firstName, Last_name: lastName, Email: email, Affiliation: affiliation };
     try {
-      const response = await fetch('http://localhost:5001/users', {
+      const response = await fetch(`${API_BASE_URL}/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(user),
