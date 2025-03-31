@@ -7,7 +7,6 @@ const NavbarAdmin = () => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <nav className="navbar">
-
       <div className="bg-[#455763] text-white flex items-center justify-between px-6 py-4 font-rubik">
         <div
           className="relative flex flex-col space-y-1 ml-4 cursor-pointer group"
@@ -19,11 +18,9 @@ const NavbarAdmin = () => {
         </div>
 
         {isOpen && (
-          <div
-            className="absolute top-12 left-2 bg-white w-48 rounded-md shadow-lg p-3 transition-all duration-300 ease-in-out"
-          >
+          <div className="absolute top-12 left-2 bg-white w-48 rounded-md shadow-lg p-3 transition-all duration-300 ease-in-out">
             <Link
-              href="/dashboard"
+              href="/advisor-dashboard"
               className="block px-4 py-2 font-rubik text-[#1c2a63] hover:bg-gray-200 rounded-md"
             >
               Dashboard
@@ -34,17 +31,26 @@ const NavbarAdmin = () => {
             >
               Profile
             </Link>
-    
+
             <Link
               href="/grouping"
               className="block px-4 py-2 text-[#1c2a63] hover:bg-gray-200 rounded-md"
             >
               Create and View Groups
             </Link>
-    
+
+            <Link
+              href="/sendpopups"
+              className="block px-4 py-2 text-[#1c2a63] hover:bg-gray-200 rounded-md"
+            >
+              Send Popups
+            </Link>
           </div>
         )}
-        <Link href="/advisor-dashboard" className="text-3xl font-rubik font-bold">
+        <Link
+          href="/advisor-dashboard"
+          className="text-3xl font-rubik font-bold"
+        >
           NUHire
         </Link>
 

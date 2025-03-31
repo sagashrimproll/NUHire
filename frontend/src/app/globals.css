@@ -8,9 +8,23 @@
   font-family: 'Rubik', sans-serif;
 }
 
+.font-montserrat {
+  font-family: 'Montserrat', sans-serif;
+}
+
 html, body {
     height: 100%;
     margin: 0;
     padding: 0;
-    background-color: #d3dadc; /* Adjust to match your Tailwind bg color */
+    background-color: #e7e2db;
   }
+
+.pdf-container .react-pdf__Page {
+  pointer-events: none;
+}
+
+
+.comment-overlay {
+  pointer-events: auto;
+  z-index: 1000; 
+}

@@ -6,12 +6,10 @@ import NavbarAdmin from "../components/navbar-admin";
 
 
 const Grouping = () => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<{ affiliation: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [students, setStudents] = useState([]);
-  const [selectedStudents, setSelectedStudents] = useState([]);
-  const [jobs, setJobs] = useState([]);
-  const [selectedJobs, setSelectedJobs] = useState([]);
+  const [students, setStudents] = useState<{ email: string; f_name: string; l_name: string }[]>([]);
+  const [selectedStudents, setSelectedStudents] = useState<{ email: string; f_name: string; l_name: string }[]>([]);
   const [group_id, setGroupId] = useState("");
   const [job_group_id, setGroupIdJob] = useState("");    
   const [groups, setGroups] = useState({});
@@ -56,7 +54,7 @@ const Grouping = () => {
   }, []);
 
   // ✅ Handle student selection
-  const handleStudentSelection = (event) => {
+  const handleStudentSelection = (event: { target: { value: any; }; }) => {
     const selectedEmail = event.target.value;
     const selectedStudent = students.find(student => student.email === selectedEmail);
 
@@ -66,7 +64,7 @@ const Grouping = () => {
   };
 
   // ✅ Handle removing a selected student
-  const handleRemoveStudent = (email) => {
+  const handleRemoveStudent = (email : string) => {
     setSelectedStudents(selectedStudents.filter(student => student.email !== email));
   };
 

@@ -47,17 +47,6 @@ const Navbar = () => {
 
   return (
     <nav className="navbar">
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      <link
-        rel="preconnect"
-        href="https://fonts.gstatic.com"
-        crossOrigin="anonymous"
-      />
-      <link
-        href="https://fonts.googleapis.com/css2?family=Poiret+One&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
-        rel="stylesheet"
-      />
-
       <div className="bg-[#455763] text-white flex items-center justify-between px-6 py-4">
         <div
           className="relative flex flex-col space-y-1 ml-4 cursor-pointer group"
@@ -65,7 +54,7 @@ const Navbar = () => {
         >
           <div className="absolute top-0 w-5 h-1 bg-white rounded-full transition-all group-hover:w-7"></div>
           <div className="absolute top-0.5 w-4 h-1 bg-white rounded-full transition-all group-hover:w-7"></div>
-          <div className="absolute top-2 w-3 h-1 bg-white rounded-full transition-all group-hover:w-7"></div>
+          <div className="absolute top-2 w-3 h-1 bg-white rounded-full transition-all mb-3 group-hover:w-7"></div>
         </div>
 
         {isOpen && (

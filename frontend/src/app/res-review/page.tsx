@@ -10,6 +10,11 @@ import { Document, Page, pdfjs } from "react-pdf";
 import NotesPage from "../components/note";
 import Footer from "../components/footer";
 import router from "next/router";
+import Popup from "../components/popup";
+import { io } from "socket.io-client";
+import { usePathname } from "next/navigation";
+
+const socket = io("http://localhost:5001"); 
 
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -31,7 +36,15 @@ export default function ResumesPage() {
   const [fadingEffect, setFadingEffect] = useState(false);
   const [timeSpent, setTimeSpent] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
+  const [popup, setPopup] = useState<{headline: string; message: string} | null>(null)
+  const pathname = usePathname()
+  interface User {
+    id: string;
+    group_id: string;
+    email: string;
+  }
+
+  const [user, setUser] = useState<User | null>(null);
 
 
   const totalDecisions = accepted + rejected + noResponse;
@@ -63,28 +76,37 @@ export default function ResumesPage() {
       fetchUser();
     }, [router]);
   
-    useEffect(() => {
-      if (user && user.email) {
-        const updateCurrentPage = async () => {
-          try {
-            const response = await fetch(`${API_BASE_URL}/update-currentpage`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ page: 'resumepage', user_email: user.email }),
-            });
-  
-            if (!response.ok) {
-              const errorData = await response.json();
-              console.error("Failed to update current page:", errorData.error);
-            }
-          } catch (error) {
-            console.error("Error updating current page:", error);
-          }
-        };
-  
-        updateCurrentPage();
-      }
-    }, [user]);
+  useEffect(() => {
+    if (user && user.email) {
+      socket.emit("studentOnline", { studentId: user.email }); 
+
+      socket.emit("studentPageChanged", { studentId: user.email, currentPage: pathname });
+
+      const updateCurrentPage = async () => {
+        try {
+          await fetch(`${API_BASE_URL}/update-currentpage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ page: 'resumepage', user_email: user.email }),
+          });
+        } catch (error) {
+          console.error("Error updating current page:", error);
+        }
+      };
+
+      updateCurrentPage(); 
+    }
+  }, [user, pathname]);
+
+  useEffect(() => {
+    socket.on("receivePopup", ({ headline, message }) => {
+      setPopup({ headline, message });
+    });
+
+    return () => {
+      socket.off("receivePopup");
+    };
+  }, []);
     
       const fetchResumes = async () => {
         try {
@@ -111,7 +133,7 @@ export default function ResumesPage() {
 
   const sendVoteToBackend = async (vote: "yes" | "no" | "unanswered") => {
     
-    if(!user.id || !user.group_id) {
+    if(!user || !user.id || !user.group_id) {
       console.error("Student ID not found");
       return;
     }
@@ -252,7 +274,7 @@ export default function ResumesPage() {
 
             <div className="flex items-center justify-center text-lg space-x-4 mt-4 sticky top-0">
               <button
-                className="bg-red-500 text-white font-rubik px-6 py-2 rounded-lg shadow-md hover:bg-red-600 hover:scale-105 transition duration-300"
+                className="bg-[#a2384f] text-white font-rubik px-6 py-2 rounded-lg shadow-md hover:bg-red-600 hover:scale-105 transition duration-300"
                 onClick={handleReject}
                 disabled={resumes > 10}
               >
@@ -268,7 +290,7 @@ export default function ResumesPage() {
               </button>
 
               <button
-                className="bg-green-500 text-white font-rubik px-6 py-2 rounded-lg shadow-md hover:bg-green-600 hover:scale-105 transition duration-300"
+                className="bg-[#367b62] text-white font-rubik px-6 py-2 rounded-lg shadow-md hover:bg-green-600 hover:scale-105 transition duration-300"
                 onClick={handleAccept}
                 disabled={resumes > 10}
               >
@@ -312,6 +334,15 @@ export default function ResumesPage() {
             </div>
           </div>
         </div>
+
+        {popup && (
+        <Popup
+        headline = {popup.headline}
+        message={popup.message}
+        onDismiss={() => setPopup(null)} 
+        />
+      )}
+      
         <footer>
           <div className="flex justify-between mb-4">
             <button

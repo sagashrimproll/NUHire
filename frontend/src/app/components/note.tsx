@@ -5,7 +5,12 @@ import React, { useState, useEffect } from "react";
 const NotesPage = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [note, setNote] = useState("");
-  const [notes, setNotes] = useState([]);
+  interface Note {
+    id: string;
+    content: string;
+  }
+
+  const [notes, setNotes] = useState<Note[]>([]);
   const [userEmail, setUserEmail] = useState("");
   
     useEffect(() => {
@@ -60,7 +65,7 @@ const NotesPage = () => {
         body: JSON.stringify({user_email: userEmail, content: note }),
       });
 
-      if (!response.ok) throw new Error("Failed to save note:", userEmail);
+      if (!response.ok) throw new Error(`Failed to save note: ${userEmail}`);
 
       const newNote = await response.json();
       setNotes([...notes, newNote]);
