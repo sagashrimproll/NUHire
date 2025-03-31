@@ -498,6 +498,23 @@ app.post("/interview/vote", async (req, res) => {
     });
   });
 
+  app.get("/interview", (req, res) => {
+    db.query("SELECT * FROM InterviewPage", (err, results) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json(results);
+    }); 
+  });
+
+  // just to test something with postman 
+  app.delete("/interview/:student_id", (req,res) => {
+    const { student_id } = req.params;
+    db.query("DELETE FROM Interview WHERE student_id = ?", [student_id], (err) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ message: "Interview vote deleted successfully" });
+    }); 
+  }
+);
+
 
 // Logout route
 app.get("/auth/logout", (req, res) => {
