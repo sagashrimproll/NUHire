@@ -188,7 +188,7 @@ export default function ResumesPage() {
     }
 }, [timeRemaining]);
 
-      // Handlers for button clicks
+
       const handleAccept = () => {
         if(maxDecisions) return;
         sendVoteToBackend("yes");
@@ -219,7 +219,7 @@ export default function ResumesPage() {
 
 
 
-    return (
+  return (
       <div>
         <Navbar />
 

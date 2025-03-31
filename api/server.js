@@ -456,6 +456,7 @@ app.delete("/resume/:student_id", (req, res) => {
   }); 
 }
 );
+
 app.post("/resume/check", async (req, res) => {
   const { user_id, group_id, resume_number, checked } = req.body;
 
@@ -474,6 +475,28 @@ app.post("/resume/check", async (req, res) => {
       res.status(500).json({ success: false });
   }
 });
+
+
+app.post("/interview/vote", async (req, res) => {
+
+  const {student_id, group_id, question1, question2, question3, question4, timespent, candidate_id} = req.body; 
+  
+  if (!student_id || !group_id || !question1 || !question2 || !question3 || !question4 || !timespent || !candidate_id) {
+    return res.status(400).json({error: "Missing required fields"}); 
+  }
+
+    const query = `INSERT INTO InterviewPage 
+        (student_id, group_id, question1, question2, question3, question4, timespent, candidate_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`; 
+
+    db.query(query, [student_id, group_id, question1, question2, question3, question4, timespent, candidate_id], (err, result) => {
+      if (err) {
+        console.error(err)
+        return res.status(500).json({error: "Database error"}); 
+      }
+      res.status(200).json({message: "Interview result update successfully"}); 
+    });
+  });
 
 
 // Logout route

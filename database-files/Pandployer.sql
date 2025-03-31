@@ -102,17 +102,17 @@ DROP TABLE IF EXISTS `InterviewPage`;
 CREATE TABLE `InterviewPage` (
   `id` int NOT NULL AUTO_INCREMENT,
   `student_id` int NOT NULL,
-  `question1` text NOT NULL,
-  `question2` text NOT NULL,
-  `question3` text NOT NULL,
-  `question4` text NOT NULL,
+  `group_id` int NOT NULL,
+  `question1` int NOT NULL,
+  `question2` int NOT NULL,
+  `question3` int NOT NULL,
+  `question4` int NOT NULL,
   `timespent` int NOT NULL,
   `candidate_id` int NOT NULL,
   PRIMARY KEY (`id`),
   KEY `student_id` (`student_id`),
   KEY `candidate_id` (`candidate_id`),
-  CONSTRAINT `InterviewPage_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `Users` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `InterviewPage_ibfk_2` FOREIGN KEY (`candidate_id`) REFERENCES `Candidates` (`id`) ON DELETE CASCADE
+  CONSTRAINT `InterviewPage_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `Users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

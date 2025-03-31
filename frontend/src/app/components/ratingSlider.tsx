@@ -25,14 +25,14 @@ export default function RatingSlider({ onChange }: RatingSliderProps) {
   return (
     <div className="flex flex-col items-center w-full max-w-xl">
       <div className="flex flex-row justify-between w-full text-xl mb-2">
-        {[...Array(11)].map((_, i) => (
-          <span key={i}>{i}</span>
+        {[...Array(10)].map((_, i) => (
+          <span key={i}>{i + 1}</span>
         ))}
       </div>
 
       <input
         type="range"
-        min={0}
+        min={1}
         max={10}
         step={1}
         value={value}

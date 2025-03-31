@@ -203,6 +203,7 @@ export default function JobDescriptionPage() {
             setNumPages(numPages);
             setPdfLoaded(true);
           }}
+          className={`relative`}
         >
           <Page
             pageNumber={pageNumber}
@@ -211,7 +212,6 @@ export default function JobDescriptionPage() {
             className="flex justify-center"
             scale={1.3}
           />
-        </Document>
 
         {comments
           .filter((comment) => comment.page === pageNumber)
@@ -259,6 +259,7 @@ export default function JobDescriptionPage() {
               )}
             </div>
           ))}
+        </Document>
 
         {popup && (
           <Popup
