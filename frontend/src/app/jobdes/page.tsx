@@ -1,6 +1,7 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
+import Navbar from "../components/navbar";
+import { useState, useEffect, JSX, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/esm/Page/AnnotationLayer.css";
 import "react-pdf/dist/esm/Page/TextLayer.css";
@@ -28,23 +29,95 @@ interface CommentType {
   isEditing?: boolean;
 }
 
-export default function JobDescriptionPage() {
-  const fileUrl = "carbonite-jobdes.pdf";
-  const [numPages, setNumPages] = useState<number | null>(null);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [comments, setComments] = useState<CommentType[]>([]);
-  const [tool, setTool] = useState<"pointer" | "comment">("pointer");
-  const [loading, setLoading] = useState(true);
-  const [popup, setPopup] = useState<{ headline: string; message: string } | null>(null);
-  const [pdfLoaded, setPdfLoaded] = useState(false);
-  const pathname = usePathname();
+export default function JobDescriptionPage() { 
+    const fileUrl = "carbonite-jobdes.pdf"; // URL of the PDF file
+    const [numPages, setNumPages] = useState<number | null>(null);
+    const [pageNumber, setPageNumber] = useState(1);
+    const [highlights, setHighlights] = useState<IHighlight[]>([]);
+    const [tool, setTool] = useState("pointer");
+    const [comments, setComments] = useState<{x: number; y: number; text: string, page: number}[]>([]);
+     const [loading, setLoading] = useState(true);
+    const [pdfLoaded, setPdfLoaded] = useState(false);
+    interface User {
+        email: string;
+        // Add other user properties if needed
+    }
+    const [user, setUser] = useState<User | null>(null);
 
-  const [user, setUser] = useState<{ email: string } | null>(null);
+    const completeJobDescription = () => {
+        localStorage.setItem("progress", "res-review");
+        window.location.href = '/res-review';
+      };
+
+  useEffect(() => {
+    const savedHighlights = localStorage.getItem("jobdes-highlights");
+    if (savedHighlights) {
+      setHighlights(JSON.parse(savedHighlights));
+    }
+  }, []);
+
+  const saveHighlights = (newHighlights: IHighlight[]) => {
+    setHighlights(newHighlights);
+    localStorage.setItem("jobdes-highlights", JSON.stringify(newHighlights));
+  };
+
+  const addHighlight = (highlight: NewHighlight) => {
+    const newHighlights = [...highlights, { id: String(Date.now()), ...highlight }];
+    saveHighlights(newHighlights);  
+  };
+
+  const resetHighlights = () => {
+    saveHighlights([]);
+  };
+
+  const handlePdfClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    const pdfPage = document.querySelector(".react-pdf__Page") as HTMLElement | null; // Select the actual page
+    if (!pdfPage) {
+        console.log("PDF page not found.");
+        return;
+    }
+
+    const pageRect = pdfPage.getBoundingClientRect();
+
+    const x = (event.clientX + pageRect.left) / 18.5;
+    const y = (event.clientY + pageRect.top) / 18.5;
+
+    
+    if (
+      event.clientX >= pageRect.left && 
+      event.clientX <= pageRect.right &&
+      event.clientY >= pageRect.top && 
+      event.clientY <= pageRect.bottom
+    ) {
+        if (tool === "comment") {
+            const newComment = { x, y, text: "", page: pageNumber };
+            setComments([...comments, newComment]);
+        }
+    } else {
+        console.log("Clicked outside the PDF page, comment not added.");
+    }
+};
+
+  const updateComment = (index: number, text: string, pageNumber: number) => {
+    const updatedComments = [...comments];
+    updatedComments[index].text = text;
+    setComments(updatedComments);
+  };
+
+
+  useEffect(() => {
+    const savedComments = JSON.parse(localStorage.getItem("pdf-comments") || "[]");
+    setComments(savedComments);
+  }, []);
+  
+  useEffect(() => {
+    localStorage.setItem("pdf-comments", JSON.stringify(comments));
+  }, [comments]);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch("http://localhost:5001/auth/user", { credentials: "include" });
+        const response = await fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" });
         const userData = await response.json();
         if (response.ok) {
           setUser(userData);
@@ -58,18 +131,7 @@ export default function JobDescriptionPage() {
       }
     };
     fetchUser();
-  }, []);
-
-  useEffect(() => {
-    const savedComments = localStorage.getItem("pdf-comments");
-    if (savedComments) {
-      setComments(JSON.parse(savedComments));
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("pdf-comments", JSON.stringify(comments));
-  }, [comments]);
+  }, [router]);
 
   useEffect(() => {
     if (user && user.email) {
@@ -79,7 +141,7 @@ export default function JobDescriptionPage() {
 
       const updateCurrentPage = async () => {
         try {
-          await fetch("http://localhost:5001/update-currentpage", {
+          const response = await fetch("http://localhost:5001/update-currentpage", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ page: 'jobdes', user_email: user.email }),
@@ -91,73 +153,7 @@ export default function JobDescriptionPage() {
 
       updateCurrentPage(); 
     }
-  }, [user, pathname]);
-
-
-
-  useEffect(() => {
-    socket.on("receivePopup", ({ headline, message }) => {
-      setPopup({ headline, message });
-    });
-    return () => {
-      socket.off("receivePopup");
-    };
-  }, []);
-
-  const handlePdfClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    if (tool !== "comment") return;
-    const pdfPage = document.querySelector(".react-pdf__Page") as HTMLElement | null;
-    if (!pdfPage) {
-      console.log("PDF page not found.");
-      return;
-    }
-    const pageRect = pdfPage.getBoundingClientRect();
-    if (
-      event.clientX >= pageRect.left &&
-      event.clientX <= pageRect.right &&
-      event.clientY >= pageRect.top &&
-      event.clientY <= pageRect.bottom
-    ) {
-      // Calculate coordinates relative to PDF
-      const x = (event.clientX - pageRect.left) / pageRect.width * 100;
-      const y = (event.clientY - pageRect.top) / pageRect.height * 100;
-      const newComment: CommentType = {
-        id: String(Date.now()),
-        x,
-        y,
-        text: "",
-        page: pageNumber,
-        isEditing: true,
-      };
-      setComments([...comments, newComment]);
-    } else {
-      console.log("Clicked outside the PDF page, comment not added.");
-    }
-  };
-
-  // Update comment text and turn off editing mode
-  const updateComment = (id: string, newText: string) => {
-    setComments((prevComments) =>
-      prevComments.map((comment) =>
-        comment.id === id ? { ...comment, text: newText, isEditing: false } : comment
-      )
-    );
-  };
-
-  const deleteComment = (id: string) => {
-    setComments((prevComments) => prevComments.filter((comment) => comment.id !== id));
-  };
-
-  const toggleEditComment = (id: string) => {
-    setComments((prevComments) =>
-      prevComments.map((comment) =>
-        comment.id === id ? { ...comment, isEditing: true } : comment
-      )
-    );
-  };
-
-  if (loading) return <div>Loading...</div>;
-  if (!user) return <div>Error: User not found.</div>;
+  }, [user]);
 
   return (
     <div className="bg-sand font-rubik">

@@ -94,7 +94,7 @@ const Navbar = () => {
           </div>
         )}
         <Link href="/dashboard" className="text-4xl font-rubik font-bold">
-          Pandployer
+          NUHire
         </Link>
 
         <Link

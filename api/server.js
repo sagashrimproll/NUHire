@@ -6,8 +6,13 @@ const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const dotenv = require("dotenv");
 const cors = require("cors");
 const bodyParser = require("body-parser");
+const multer = require("multer");
+const fs = require("fs");
+const path = require("path");  // ✅ Add this line at the top
+
 
 dotenv.config();
+const FRONT_URL = process.env.REACT_APP_FRONT_URL;
 const app = express();
 const http = require("http");  
 const { Server } = require("socket.io");
@@ -15,16 +20,101 @@ const { Server } = require("socket.io");
 const server = http.createServer(app); // Use HTTP server for Socket.io
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000", // Allow frontend connection
+    origin: `${FRONT_URL}`, // Allow frontend connection
     credentials: true
   }
 });
 
-// ✅ CORS Middleware (Allow credentials for session cookies)
+
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: `${FRONT_URL}`,
   credentials: true
 }));
+
+app.set('view engine', 'ejs');
+
+app.set('views', path.join(__dirname, 'views'));
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    let uploadPath = 'uploads/other'; // Default path
+
+    if (file.fieldname === 'jobDescription') {
+      uploadPath = 'uploads/jobdescription';
+    } else if (file.fieldname === 'resume') {
+      uploadPath = 'uploads/resumes';
+    }
+
+    cb(null, uploadPath);
+  },
+  filename: (req, file, cb) => {
+    const fileName = `${file.originalname}`;
+    cb(null, fileName);
+  },
+});
+
+const upload = multer({ storage: storage });
+
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+app.post("/upload", upload.single("file"), (req, res) => {
+  console.log("File received:", req.file);
+  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+  res.json({ filePath: `${req.file.path}` });
+});
+
+app.post('/upload/resume', upload.single('resume'), (req, res) => {
+  console.log("File received:", req.file);
+  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+  res.json({ filePath: `${req.file.path}` });
+});
+
+app.post('/upload/job', upload.single('jobDescription'), (req, res) => {
+  console.log("File received:", req.file);
+  if (!req.file) return res.status(400).json({ error: "No file uploaded" });
+  res.json({ filePath: `${req.file.path}` });
+});
+
+app.delete('/delete/resume/:fileName', (req, res) => {
+  const fileName = req.params.fileName;
+  const filePath = path.join(__dirname, 'uploads/resumes', fileName);
+
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+
+    db.query("DELETE FROM Resume_pdfs WHERE file_path = ?", [`uploads/resumes/${fileName}`], (err, result) => {
+      if (err) {
+        console.error("Database deletion error:", err);
+        return res.status(500).json({ error: "Database deletion failed" });
+      }
+      res.json({ message: `File "${fileName}" deleted successfully.` });
+    });
+    
+  } else {
+    res.status(404).send(`File "${fileName}" not found.`);
+  }
+});
+
+app.delete('/delete/job/:fileName', (req, res) => {
+  const fileName = req.params.fileName;
+  const filePath = path.join(__dirname, 'uploads/jobdescription', fileName);
+
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+
+    db.query("DELETE FROM job_descriptions WHERE file_path = ?", [`uploads/jobdescription/${fileName}`], (err, result) => {
+      if (err) {
+        console.error("Database deletion error:", err);
+        return res.status(500).json({ error: "Database deletion failed" });
+      }
+      res.json({ message: `File "${fileName}" deleted successfully.` });
+    });
+    
+  } else {
+    res.status(404).send(`File "${fileName}" not found.`);
+  }
+});
 
 // ✅ Body Parser Middleware
 app.use(bodyParser.json());
@@ -194,7 +284,32 @@ io.on("connection", (socket) => {
             }
         });
     });
+  console.log("A user connected:", socket.id);
+
+  // Example: Handle messages from clients
+  socket.on("message", (data) => {
+    console.log("Received message:", data);
+    
+    // Broadcast the message to all connected clients
+    io.emit("message", data);
+  });
+
+  socket.on("joinGroup", (group_id) => {
+    socket.join(group_id);
 });
+
+
+  socket.on("check", ({ group_id, resume_number, checked }) => {
+    socket.to(group_id).emit("checkboxUpdated", { resume_number, checked });
+});
+
+
+  // Example: Handle user disconnect
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});
+
 
 
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
@@ -207,7 +322,7 @@ app.get("/auth/google/callback",
     db.query("SELECT * FROM Users WHERE email = ?", [email], (err, results) => {
       if (err) {
         console.error("Database error:", err);
-        return res.redirect("/login?error=server");
+        return res.redirect("/");
       }
       if (results.length > 0) {
         const user = results[0];
@@ -215,12 +330,12 @@ app.get("/auth/google/callback",
 
         // Check the Affiliation field
         if (user.affiliation === "admin") {
-          return res.redirect(`http://localhost:3000/advisor-dashboard?name=${fullName}`);
+          return res.redirect(`${FRONT_URL}/advisor-dashboard?name=${fullName}`);
         } else {
-          return res.redirect(`http://localhost:3000/dashboard?name=${fullName}`);
+          return res.redirect(`${FRONT_URL}/dashboard?name=${fullName}`);
         }
       } else {
-        return res.redirect(`http://localhost:3000/signupform?email=${email}`);
+        return res.redirect(`${FRONT_URL}/signupform?email=${email}`);
       }
     });
   }
@@ -234,15 +349,15 @@ app.get("/dashboard", (req, res) => {
   }
   
   // Redirect to frontend dashboard with user data
-  res.redirect(`http://localhost:3000/dashboard?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
+  res.redirect(`${FRONT_URL}/dashboard?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
 });
 
-app.get("/jobdes"), (req, res) => { 
+app.get("/jobdes", (req, res) => { 
   if (!req.isAuthenticated()) {
     return res.status(401).json({ message: "Unauthorized" });
   }
-  res.redirect(`http://localhost:3000/jobdes?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
-}
+  res.redirect(`${FRONT_URL}/jobdes?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
+});
 
 app.get("/res-review"), (req, res) => { 
   if (!req.isAuthenticated()) {
@@ -519,13 +634,13 @@ app.post("/interview/vote", async (req, res) => {
 // Logout route
 app.get("/auth/logout", (req, res) => {
   req.logout(() => {
-      res.redirect("http://localhost:3000");
+      res.redirect(`${FRONT_URL}`);
   });
 });
 
 
 app.get("/groups", async (req, res) => {
-  db.query("SELECT f_name, l_name, email, current_page, `group_id` FROM Users WHERE `group_id` IS NOT NULL", (err, results) => {
+  db.query("SELECT f_name, l_name, email, job_des, current_page, `group_id` FROM Users WHERE `group_id` IS NOT NULL", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     if (results.length === 0) return res.status(404).json({ message: "No users found in any group" });
 
@@ -538,7 +653,8 @@ app.get("/groups", async (req, res) => {
       groups[user.group_id].push({
         name: `${user.f_name} ${user.l_name}`,
         email: user.email,
-        current_page: user.current_page
+        current_page: user.current_page,
+        job_des: user.job_des
       });
     });
 
@@ -555,6 +671,102 @@ app.get("/students", async (req, res) => {
   });
 });
 
+app.get("/jobs", (req, res) => {
+  db.query("SELECT * FROM job_descriptions", (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
+  }); 
+});
+
+app.post("/jobs", async (req, res) => {
+  const { title, filePath } = req.body;
+
+  if (!title || !filePath) {
+    return res.status(400).json({ error: "Missing title or filePath" });
+  }
+
+  try {
+    const sql = "INSERT INTO job_descriptions (title, file_path) VALUES (?, ?)";
+    await db.query(sql, [title, filePath]);
+    res.json({ message: "Job description added successfully!" });
+  } catch (error) {
+    console.error("Error inserting into DB:", error);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.get("/resume_pdf", (req, res) => {
+  db.query("SELECT * FROM Resume_pdfs", (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
+  }); 
+});
+
+app.post("/resume_pdf", async (req, res) => {
+  const { resTitle, filePath } = req.body;
+
+  if (!resTitle || !filePath) {
+    return res.status(400).json({ error: "Missing title or filePath" });
+  }
+
+  try {
+    const sql = "INSERT INTO Resume_pdfs (title, file_path) VALUES (?, ?)";
+    await db.query(sql, [resTitle, filePath]);
+    res.json({ message: "resume added successfully!" });
+  } catch (error) {
+    console.error("Error inserting into DB:", error);
+    res.status(500).json({ error: "Database error" });
+  }
+});
+
+app.delete("/resume_pdf/:file_path", (req, res) => {
+  const { file_path } = req.params;
+  db.query("DELETE FROM Resume_pdfs WHERE file_path = ?", [file_path], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: "Resume deleted successfully" });
+  }); 
+}
+);
+
+
+app.post("/update-job", (req, res) => {
+  const { job_group_id, job } = req.body;
+
+  if (!job_group_id || job.length === 0) {
+    return res.status(400).json({ error: "Group ID and job are required." });
+  }
+
+  const queries = job.map(title => {
+    return new Promise((resolve, reject) => {
+      db.query("UPDATE Users SET `job_des` = ? WHERE group_id = ?", [title, job_group_id], (err, result) => {
+        if (err) reject(err);
+        resolve(result);
+      });
+    });
+  });
+}); 
+
+app.get("/jobdes/title", (req, res) => {
+  const { title } = req.query; // ✅ Extract from query, not params
+
+  if (!title) {
+    return res.status(400).json({ error: "Title is required" });
+  }
+
+  db.query("SELECT * FROM job_descriptions WHERE title = ?", [title], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Job description not found" });
+    }
+
+    res.json(results[0]); // ✅ Return only the first result (assuming unique titles)
+  });
+});
+
+
+// ✅ Serve Uploaded Files
+app.use("/uploads", express.static(path.join(__dirname, "uploads/")));
 
 
 const PORT = process.env.PORT || 5001;
