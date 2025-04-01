@@ -1,5 +1,5 @@
 'use client'
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 import Navbar from "../components/navbar";
 import { useState, useEffect, JSX, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -30,16 +30,19 @@ interface CommentType {
 }
 
 export default function JobDescriptionPage() { 
+    const fileUrl = "carbonite-jobdes.pdf"; // URL of the PDF file
     const [numPages, setNumPages] = useState<number | null>(null);
     const [pageNumber, setPageNumber] = useState(1);
     const [highlights, setHighlights] = useState<IHighlight[]>([]);
-    const [tool, setTool] = useState<"pointer" | "comment">("pointer");
+    const [tool, setTool] = useState("pointer");
     const [comments, setComments] = useState<{x: number; y: number; text: string, page: number}[]>([]);
      const [loading, setLoading] = useState(true);
-     const [popup, setPopup] = useState<{ headline: string; message: string } | null>(null);
     const [pdfLoaded, setPdfLoaded] = useState(false);
-    const [fileUrl, setJob] = useState("");
-    const [user, setUser] = useState(null);
+    interface User {
+        email: string;
+        // Add other user properties if needed
+    }
+    const [user, setUser] = useState<User | null>(null);
 
     const completeJobDescription = () => {
         localStorage.setItem("progress", "res-review");
@@ -128,18 +131,7 @@ export default function JobDescriptionPage() {
       }
     };
     fetchUser();
-  }, []);
-
-  useEffect(() => {
-    const savedComments = localStorage.getItem("pdf-comments");
-    if (savedComments) {
-      setComments(JSON.parse(savedComments));
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("pdf-comments", JSON.stringify(comments));
-  }, [comments]);
+  }, [router]);
 
   useEffect(() => {
     if (user && user.email) {
@@ -149,7 +141,7 @@ export default function JobDescriptionPage() {
 
       const updateCurrentPage = async () => {
         try {
-          const response = await fetch(`${API_BASE_URL}/update-currentpage`, {
+          const response = await fetch("http://localhost:5001/update-currentpage", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ page: 'jobdes', user_email: user.email }),
@@ -161,110 +153,7 @@ export default function JobDescriptionPage() {
 
       updateCurrentPage(); 
     }
-  }, [user, pathname]);
-
-  useEffect(() => {
-    const fetchJob = async () => {
-      if (!user || !user.job_des) {
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        const response = await fetch(`${API_BASE_URL}/jobdes/title?title=${encodeURIComponent(user.job_des)}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-  
-        if (!response.ok) {
-          throw new Error("Failed to fetch job description");
-        }
-  
-        const job = await response.json();
-        setJob(`${API_BASE_URL}/${job.file_path}`);
-      } catch (error) {
-        console.error("Error fetching job description:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-  
-    fetchJob();
-  }, [user]); // ✅ Depend on `user`
-  
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen text-xl">Loading...</div>;
-  }
-
-  if (!user || user.affiliation !== "student" || user.group === null) {
-    return null;
-  }
-
-
-
-  useEffect(() => {
-    socket.on("receivePopup", ({ headline, message }) => {
-      setPopup({ headline, message });
-    });
-    return () => {
-      socket.off("receivePopup");
-    };
-  }, []);
-
-  const handlePdfClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    if (tool !== "comment") return;
-    const pdfPage = document.querySelector(".react-pdf__Page") as HTMLElement | null;
-    if (!pdfPage) {
-      console.log("PDF page not found.");
-      return;
-    }
-    const pageRect = pdfPage.getBoundingClientRect();
-    if (
-      event.clientX >= pageRect.left &&
-      event.clientX <= pageRect.right &&
-      event.clientY >= pageRect.top &&
-      event.clientY <= pageRect.bottom
-    ) {
-      // Calculate coordinates relative to PDF
-      const x = (event.clientX - pageRect.left) / pageRect.width * 100;
-      const y = (event.clientY - pageRect.top) / pageRect.height * 100;
-      const newComment: CommentType = {
-        id: String(Date.now()),
-        x,
-        y,
-        text: "",
-        page: pageNumber,
-        isEditing: true,
-      };
-      setComments([...comments, newComment]);
-    } else {
-      console.log("Clicked outside the PDF page, comment not added.");
-    }
-  };
-
-  // Update comment text and turn off editing mode
-  const updateComment = (id: string, newText: string) => {
-    setComments((prevComments) =>
-      prevComments.map((comment) =>
-        comment.id === id ? { ...comment, text: newText, isEditing: false } : comment
-      )
-    );
-  };
-
-  const deleteComment = (id: string) => {
-    setComments((prevComments) => prevComments.filter((comment) => comment.id !== id));
-  };
-
-  const toggleEditComment = (id: string) => {
-    setComments((prevComments) =>
-      prevComments.map((comment) =>
-        comment.id === id ? { ...comment, isEditing: true } : comment
-      )
-    );
-  };
-
-  if (loading) return <div>Loading...</div>;
-  if (!user) return <div>Error: User not found.</div>;
+  }, [user]);
 
   return (
     <div className="bg-sand font-rubik">
