@@ -320,10 +320,10 @@ export default function ResumesPage() {
       pageNumber={1}
       scale={
         window.innerWidth < 768
-          ? 0.8
+          ? 0.5
           : window.innerHeight < 800
           ? 1.0
-          : 1.4
+          : 1.0
       }
     />
   </Document>
