@@ -423,6 +423,7 @@ INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample10', 'uploads/re
 INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (1, 'Interview1', 'OVAMb6Kui6A');
 INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (2, 'Interview2', 'KCm6JVtoRdo');
 INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (3, 'Interview3', 'srw4r3htm4U');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (4, 'Interview4', '5bId3N7QZec');
 INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (5, 'Interview5', 'sjTxmq68RXU');
 INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (6, 'Interview6', '6bJTEZnTT5A');
 INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (7, 'Interview7', 'es7XtrloDIQ');
