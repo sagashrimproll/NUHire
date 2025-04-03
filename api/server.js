@@ -211,41 +211,53 @@ passport.deserializeUser((identifier, done) => {
 let onlineStudents = {};
 
 io.on("connection", (socket) => {
-    console.log(`User connected: ${socket.id}`);
+  console.log(`User connected: ${socket.id}`);
 
-    socket.on("studentOnline", ({ studentId }) => {
-        onlineStudents[studentId] = socket.id;
+  socket.on("studentOnline", ({ studentId }) => {
+    onlineStudents[studentId] = socket.id;
 
-          // Example: Handle messages from clients
-  socket.on("message", (data) => {
-    console.log("Received message:", data);
+    // Example: Handle messages from clients
+    socket.on("message", (data) => {
+      console.log("Received message:", data);
 
-    // Broadcast the message to all connected clients
-    io.emit("message", data);
-  });
-
-        socket.on("joinGroup", (group_id) => {
-          socket.join(group_id);
-      });
-      
-      
-        socket.on("check", ({ group_id, resume_number, checked }) => {
-          socket.to(group_id).emit("checkboxUpdated", { resume_number, checked });
-        });
-
-        db.query(
-            "SELECT group_id, current_page FROM Users WHERE email = ?",
-            [studentId],
-            (err, result) => {
-                if (!err && result.length > 0) {
-                    const { group_id, current_page } = result[0];
-                    console.log(`Student ${studentId} (Group ${group_id}) is on ${current_page}`);
-
-                    io.emit("updateOnlineStudents", { studentId, group_id, current_page });
-                }
-            }
-        );
+      // Broadcast the message to all connected clients
+      io.emit("message", data);
     });
+
+    socket.on("joinGroup", (group_id) => {
+      socket.join(group_id);
+    });
+
+
+    socket.on("check", ({ group_id, resume_number, checked }) => {
+      db.query(
+          "UPDATE Resume SET `checked` = ? WHERE group_id = ? AND resume_number = ?",
+          [checked, group_id, resume_number],
+          (err, result) => {
+              if (err) {
+                  console.error("Database Error:", err);
+                  return; // Stop execution on error
+              }
+             
+              // Emit only if the update was successful
+              socket.to(group_id).emit("checkboxUpdated", { resume_number, checked });
+          }
+      );
+    });
+
+    db.query(
+      "SELECT group_id, current_page FROM Users WHERE email = ?",
+      [studentId],
+      (err, result) => {
+        if (!err && result.length > 0) {
+          const { group_id, current_page } = result[0];
+          console.log(`Student ${studentId} (Group ${group_id}) is on ${current_page}`);
+
+          io.emit("updateOnlineStudents", { studentId, group_id, current_page });
+        }
+      }
+    );
+  });
 
     socket.on("studentPageChanged", ({ studentId, currentPage }) => {
         if (onlineStudents[studentId]) {
@@ -727,6 +739,19 @@ app.delete("/resume_pdf/:file_path", (req, res) => {
   }); 
 }
 );
+
+app.get("/interview_vids", (req, res) => {
+  const sql = `
+    SELECT iv.*
+    FROM Interview_vids iv
+    JOIN Resume r ON iv.resume_id = r.resume_number
+    WHERE r.checked = 1
+  `;
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
+  });
+});
 
 
 app.post("/update-job", (req, res) => {

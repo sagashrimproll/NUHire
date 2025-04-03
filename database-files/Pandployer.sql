@@ -218,7 +218,7 @@ CREATE TABLE `Resume` (
   `student_id` int NOT NULL,
   `group_id` int NOT NULL,
   `timespent` int NOT NULL,
-  `resume_number` int NOT NULL,
+  `resume_number` int NOT NULL UNIQUE,
   `vote` enum('yes','no','unanswered') NOT NULL,
   PRIMARY KEY (`id`),
   KEY `student_id` (`student_id`),
@@ -267,11 +267,7 @@ CREATE TABLE `Interview_vids` (
   title VARCHAR(255) NOT NULL,
   resume_id INT NOT NULL,
   video_path VARCHAR(255) NOT NULL, 
-  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_resumepdf
-    FOREIGN KEY (resume_id)
-    REFERENCES Resume_pdfs(id)
-    ON DELETE CASCADE
+  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 --
 -- Table structure for table `Resumepage`
@@ -420,13 +416,13 @@ INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample7', 'uploads/res
 INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample8', 'uploads/resumes/sample8.pdf');
 INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample9', 'uploads/resumes/sample9.pdf');
 INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample10', 'uploads/resumes/sample10.pdf');
-INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (1, 'Interview1', 'OVAMb6Kui6A');
-INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (2, 'Interview2', 'KCm6JVtoRdo');
-INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (3, 'Interview3', 'srw4r3htm4U');
-INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (4, 'Interview4', '5bId3N7QZec');
-INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (5, 'Interview5', 'sjTxmq68RXU');
-INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (6, 'Interview6', '6bJTEZnTT5A');
-INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (7, 'Interview7', 'es7XtrloDIQ');
-INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (8, 'Interview8', '0siE31sqz0Q');
-INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (9, 'Interview9', '5v-wyR5emRw');
-INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (10, 'Interview10', 'TQHW7gGjrCQ');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (1, 'Interview1', 'https://www.youtube.com/embed/OVAMb6Kui6A');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (2, 'Interview2', 'https://www.youtube.com/embed/KCm6JVtoRdo');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (3, 'Interview3', 'https://www.youtube.com/embed/srw4r3htm4U');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (4, 'Interview4', 'https://www.youtube.com/embed/5bId3N7QZec');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (5, 'Interview5', 'https://www.youtube.com/embed/sjTxmq68RXU');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (6, 'Interview6', 'https://www.youtube.com/embed/6bJTEZnTT5A');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (7, 'Interview7', 'https://www.youtube.com/embed/es7XtrloDIQ');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (8, 'Interview8', 'https://www.youtube.com/embed/0siE31sqz0Q');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (9, 'Interview9', 'https://www.youtube.com/embed/5v-wyR5emRw');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (10, 'Interview10', 'https://www.youtube.com/embed/TQHW7gGjrCQ');
