@@ -3,13 +3,13 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import React, { useState, useEffect } from "react";
 import { io, Socket } from "socket.io-client";
 import Navbar from "../components/navbar";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useProgress } from "../components/useProgress";
 import NotesPage from "../components/note";
 import Footer from "../components/footer";
 
 const SOCKET_URL = `${API_BASE_URL}`; 
-let socket: Socket | null = null; // Define socket with correct type
+let socket: Socket | null = null; 
 
 export default function ResReviewGroup() {
     useProgress();
@@ -21,31 +21,94 @@ export default function ResReviewGroup() {
     const [user, setUser] = useState(null);
     const [resumes, setResumes] =  useState([]);
     const router = useRouter();
+    const pathname = usePathname();
 
-    // Fetch user authentication data
+
     useEffect(() => {
         const fetchUser = async () => {
-          try {
-            const response = await fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" });
-            const userData = await response.json();
-    
-            if (response.ok) {
-              setUser(userData);
-            } else {
-              setUser(null);
-              router.push("/login"); // Redirect to login if unauthorized
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" });
+                const userData = await response.json();
+                
+                if (response.ok) {
+                    setUser(userData);
+                } else {
+                    setUser(null);
+                    router.push("/login"); // Redirect to login if unauthorized
+                }
+            } catch (error) {
+                console.error("Error fetching user:", error);
+                router.push("/login"); // Redirect on error
+            } finally {
+                setLoading(false);
             }
-          } catch (error) {
-            console.error("Error fetching user:", error);
-            router.push("/login"); // Redirect on error
-          } finally {
-            setLoading(false);
-          }
         };
-    
+        
         fetchUser();
     }, [router]);
-
+    
+    
+    useEffect(() => {
+        if (!user || socket) return; // Prevent reconnecting if socket already exists
+  
+        socket = io(SOCKET_URL, {
+            reconnectionAttempts: 5,
+            timeout: 5000,
+        });
+  
+        socket.on("connect", () => {
+            setIsConnected(true);
+            socket?.emit("joinGroup", user.group_id);
+        });
+  
+        socket.on("disconnect", () => {
+            setIsConnected(false);
+        });
+  
+        socket.on("checkboxUpdated", ({ resume_number, checked }: { resume_number: number; checked: boolean }) => {
+            setCheckedState((prev) => ({
+                ...prev,
+                [resume_number]: checked,
+            }));
+        });
+  
+        socket.on("connect_error", (err) => {
+            console.error("Socket connection error:", err);
+        });
+  
+        socket.on("reconnect_failed", () => {
+            console.error("Socket reconnection failed.");
+        });
+  
+        return () => {
+            if (socket) {
+                socket.off("checkboxUpdated");
+            }
+        };
+    }, [user]);
+    
+    useEffect(() => {
+        if (user && user.email) {
+            socket.emit("studentOnline", { studentId: user.email }); 
+            
+            socket.emit("studentPageChanged", { studentId: user.email, currentPage: pathname });
+            
+            const updateCurrentPage = async () => {
+                try {
+                    await fetch(`${API_BASE_URL}/update-currentpage`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ page: 'resumepage2', user_email: user.email }),
+                    });
+                } catch (error) {
+                    console.error("Error updating current page:", error);
+                }
+            };
+            
+            updateCurrentPage(); 
+        }
+    }, [user, pathname]);
+    
     const fetchResumes = async () => {
         try {
           const response = await fetch(`${API_BASE_URL}/resume_pdf`);
@@ -100,45 +163,6 @@ export default function ResReviewGroup() {
         }
     }, [user]);
 
-    // Setup Socket.IO connection after user authentication
-    useEffect(() => {
-        if (!user || socket) return; // Prevent reconnecting if socket already exists
-
-        socket = io(SOCKET_URL, {
-            reconnectionAttempts: 5,
-            timeout: 5000,
-        });
-
-        socket.on("connect", () => {
-            setIsConnected(true);
-            socket?.emit("joinGroup", user.group_id);
-        });
-
-        socket.on("disconnect", () => {
-            setIsConnected(false);
-        });
-
-        socket.on("checkboxUpdated", ({ resume_number, checked }: { resume_number: number; checked: boolean }) => {
-            setCheckedState((prev) => ({
-                ...prev,
-                [resume_number]: checked,
-            }));
-        });
-
-        socket.on("connect_error", (err) => {
-            console.error("Socket connection error:", err);
-        });
-
-        socket.on("reconnect_failed", () => {
-            console.error("Socket reconnection failed.");
-        });
-
-        return () => {
-            if (socket) {
-                socket.off("checkboxUpdated");
-            }
-        };
-    }, [user]);
 
     // Handle checkbox toggle
     const handleCheckboxChange = (resumeNumber: number) => {
