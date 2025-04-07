@@ -30,7 +30,7 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="bg-sand justify-center items-center flex flex-col p-6">
-        <h1 className="text-5xl font-bold">Welcome to Employer For a Day 2.0!</h1>
+        <h1 className="text-5xl font-bold">Welcome to NUHire!</h1>
         <p className="text-2xl italic mt-2">Where you can be your own employer!</p>
         <button 
           onClick={handleGoogleLogin} 
