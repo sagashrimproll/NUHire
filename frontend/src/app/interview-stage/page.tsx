@@ -199,7 +199,7 @@ export default function Interview() {
           nextVideo();
           resetRatings();
         } else {
-          console.log("All videos are rated!");
+          console.log("All interviews have been are rated!");
           setFinished(true);
         }
       };
@@ -269,7 +269,7 @@ export default function Interview() {
 
         {finished && (
         <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-springWater p-8 w-200 rounded-md shadow-lg z-50 font-bold font-rubik text-navyHeader">
-          All videos have been rated! You can move onto the next stage!
+          All Interviews have been rated! You can move onto the next stage!
         </div>
       )}
 

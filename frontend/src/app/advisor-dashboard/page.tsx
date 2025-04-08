@@ -55,7 +55,7 @@ const Dashboard = () => {
 
       <div className="flex justify-center items-center py-10">
         <h1 className="text-4xl font-bold text-navy text-center">
-          Welcome to Employer For A Day 2.0
+          Welcome to NUHire
         </h1>
       </div>
 

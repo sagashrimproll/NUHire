@@ -27,7 +27,7 @@ DROP TABLE IF EXISTS `Candidates`;
 CREATE TABLE `Candidates` (
   `id` int NOT NULL AUTO_INCREMENT,
   `resume_id` int NOT NULL,
-  `interview` text NOT NULL,
+  `interview` int NOT NULL,
   PRIMARY KEY (`id`),
   KEY `resume_id` (`resume_id`),
   CONSTRAINT `Candidates_ibfk_1` FOREIGN KEY (`resume_id`) REFERENCES `Resume` (`id`) ON DELETE CASCADE
@@ -260,6 +260,19 @@ LOCK TABLES `Resume_pdfs` WRITE;
 /*!40000 ALTER TABLE `Resume_pdfs` ENABLE KEYS */;
 UNLOCK TABLES;
 
+
+DROP TABLE IF EXISTS `Interview_vids`; 
+CREATE TABLE `Interview_vids` (
+  id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  resume_id INT NOT NULL,
+  video_path VARCHAR(255) NOT NULL, 
+  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_resumepdf
+    FOREIGN KEY (resume_id)
+    REFERENCES Resume_pdfs(id)
+    ON DELETE CASCADE
+);
 --
 -- Table structure for table `Resumepage`
 --
@@ -389,6 +402,8 @@ INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sai A.
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sage', 'Batchelor', 'sagebatchelor@gmail.com', 'student');
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sag', 'Bat', 'batchelor.sa@husky.neu.edu', 'student');
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sage', 'Batchelor', 'sagashrimproll@gmail.com', 'admin');
+INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sai Anirudh', 'Dhanasiri', 'dhanasiri.s@husky.neu.edu', 'admin');
+INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Penguin', 'The Last', 'ilovepenguinsandhowtheylook@gmail.com', 'student');
 INSERT INTO `job_descriptions` (`title`, `file_path`) VALUES ('Carbonite', 'uploads/jobdescription/carbonite-jobdes.pdf');
 INSERT INTO `job_descriptions` (`title`, `file_path`) VALUES ('Cygilant', 'uploads/jobdescription/Cygilant Security Research Job Description.pdf');
 INSERT INTO `job_descriptions` (`title`, `file_path`) VALUES ('Motionlogic', 'uploads/jobdescription/QA Coop Motionlogic (Berlin, Germany).pdf');
@@ -405,6 +420,12 @@ INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample7', 'uploads/res
 INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample8', 'uploads/resumes/sample8.pdf');
 INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample9', 'uploads/resumes/sample9.pdf');
 INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample10', 'uploads/resumes/sample10.pdf');
-INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sai Anirudh', 'Dhanasiri', 'dhanasiri.s@husky.neu.edu', 'admin');
-INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Penguin', 'The Last', 'ilovepenguinsandhowtheylook@gmail.com', 'student');
-
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (1, 'Interview1', 'https://www.youtube.com/embed/OVAMb6Kui6A');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (2, 'Interview2', 'https://www.youtube.com/embed/KCm6JVtoRdo');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (3, 'Interview3', 'https://www.youtube.com/embed/srw4r3htm4U');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (5, 'Interview5', 'https://www.youtube.com/embed/sjTxmq68RXU');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (6, 'Interview6', 'https://www.youtube.com/embed/6bJTEZnTT5A');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (7, 'Interview7', 'https://www.youtube.com/embed/es7XtrloDIQ');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (8, 'Interview8', 'https://www.youtube.com/embed/0siE31sqz0Q');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (9, 'Interview9', 'https://www.youtube.com/embed/5v-wyR5emRw');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (10, 'Interview10', 'https://www.youtube.com/embed/TQHW7gGjrCQ');

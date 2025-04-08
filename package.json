@@ -8,6 +8,7 @@
     "next": "^15.1.7",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
+    "popup": "^0.0.3",
     "python": "^0.0.4",
     "socket.io": "^4.8.1"
   },

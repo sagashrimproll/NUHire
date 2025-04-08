@@ -35,7 +35,7 @@ export default function UserProfile() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+      const response = await fetch(`${API_BASE_URL}/logout`, {
         method: "POST",
         credentials: "include", // ✅ Ensures cookies clear if using sessions
       });
