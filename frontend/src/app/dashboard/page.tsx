@@ -89,6 +89,13 @@ const Dashboard = () => {
     }
   }, []);
 
+  const handleCompleteSimulation = () => {
+    localStorage.setItem("progress", "jobdes");
+    setProgress("jobdes"); 
+    localStorage.setItem("pdf-comments", "");
+    router.push("/dashboard")
+  }
+
  
   const steps = [
     { key: "jobdes", label: "Job Description", path: "/jobdes" },
@@ -123,7 +130,6 @@ const Dashboard = () => {
         <p className="text-lg text-gray-800">You play employer, we provide applicants.</p>
       </div>
 
-      <main className="Options">
         <div className="flex flex-col items-center text-center p-6">
           <h1 className="text-2xl font-rubik font-bold mb-4">Get started with learning about ATS</h1>
           <div className="w-full max-w-5xl aspect-video border-4 border-[#1c2a63] mb-5 rounded-lg shadow-lg">
@@ -156,7 +162,15 @@ const Dashboard = () => {
             </button>
           ))}
         </div>
-      </main>
+
+        {progress === "employerPannel" && (
+          <button 
+          onClick={handleCompleteSimulation}
+          className="px-6 py-3 font-semibold bg-navy text-white rounded-md shadow-lg hover:bg-navyHeader mt-6 items-center transition duration-300 mx-auto"
+          >
+            Complete Simulation
+          </button>
+        )}
 
       {popup && (
         <Popup

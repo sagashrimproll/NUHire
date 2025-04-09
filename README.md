@@ -1,65 +1,54 @@
-Febuary 21th 2025: 
-Worked on the front-end, created a navigation bar spreading across all platforms, enforced links and user profile working as expceted. Worked on design and layout of pages.
+# NUHire
 
-Febuary 20th 2025: 
-Database working, edited and tested login-page for redirection and retrieval of users already existing in the database. Made another post request to identify user by their email. Waiting on server connection to develop O-Auth for users to signup.
+NUHire is a web application that simulates the job application process. In the simulation, the students get to play the part of employers reading through a job-description and reviewing resumes, conducting job-interviews and making decisions based on a real-world hiring process.
 
-Febuary 19th 2025:
-- Connected API, Database, and Signup pages together in order for a user to sign up for the platform.
-- Designed the sign up page.
-- Sign up page is now fully functional
+## Table of Contents
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Build and Installation](#build-installation)
+- [Usage](#usage)
 
-Febuary 10th 2025: 
-Server.js edited - 
-- Added restApi endpoints and tested them for user sign-up authentication 
-- Written but yet to test for PUT and DELETE endpoints 
 
-Febuary 5th 2025:
-page.tsx edited -
-  - Added in a function to create buttons which will be used later in order to develop a feature where homepage buttons are hidden until that page is reached in the process.
-  - Embedded ATS youtube video into the page.
-  - Linked the buttons to their respective pages.
+## Overview
 
-gloabal.css edited -
-  - Made the front page design adding in a nav bar and style to the home page.
+NUHire is desinged fo reducation purposes, helping students understand the employer's perspective. Students will be in groups and the advisor can make these groups and assign each group a job description. From there students will be going through the job description, look at resumes for potential candidates, interview them and make an offer. Students who play as employers will be able to also deal with tardiness in candidates, internal refferals, etc. in real time to simulate a real-world hiring process faciliatated through web sockets. 
 
-FEBUARY 4TH 2025:
-page.tsx edited - 
-  - Page represents the landing page of the website (The home page)
-  - Added in the basic skeleton of the page. This being 4 buttons which will lead to the Interview page, the Job Description page, the Resume Review page, and back to the home page.
-  - Added in a link to a video about ATS which has a cover photo. 
-  - The very bottom of the page contains a link to a discord channel for Northeasterns Khoury College of Computer Science Students and Alum to interact
-  - In the top left corner is the start of the navigation bar where it says the name of the project (Pandployer).
+## Features
 
-globals.css edited - 
-  - Gives css design for buttons, background, and the ATS video all on the home page (many may have to be moved in the future to a different file in order for theme to be kept tthe same globally but each elemnet being diffrent within each page)
+- **Simulation Process**: Students engage in multiple step process simulating what a hiring team goes through while selecting candidates for a job position. This includes reading job description, reading resumes under a time crunch, conducting interviews and evaluating the candidate's responses, group discussions for making offers and selecting an candidate while dealing with potential roadblocks that employers have to deal with while making a decision. 
+- **Real Time Interaction**: Uses Socket.IO to provide real updates to students from the advisor who can monitor the student's stage of the simulation, allows groups of students to come together and make decisions about resumes and interviews.
+- **Dynamic Content**: Groups, Job description and Resumes are dynamically assigned by the advisor in a class.
+- **Dockerized Environment**: SImplifies develop and deployment through docker and docker-compose.
 
-Jobs folder added -
-  - Stores all of the job descriptions and resumes which willl be used in the project for the functionnality.
-  
----------------------------------------------------------------------------------------------------------------------------------------------------------
-## PREWRITEN GOTTEN FROM USING REACT
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Tech Stack
+- Frontend: Built with Next.js, React, and Tailwind CSS.
+- Backend/API: Built with Express.js and Node.js 
+- Database: MySQL
+- Real-time Communication: Socket.IO
+- Containerization: Docker and docker-compose. 
 
-## Getting Started
+## Build and Installation 
 
-First, run the development server:
+For the build instructions and running the application locally please refer to the build instruction file here: [Build Instructions](BUILD.md). 
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Run the application locally here:
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit and save the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Usage
+
+### Students: 
+Log in to complete the simulation, groups along with job descriptions and resumes will be assigned by the advisor and students have to go through each of the stage completing them. They will have the ability to return back to the dashboard and jump back to the pages where they left off. They will be able to complete the simualtion when they send out offers and get through the what would an employer do page. 
+
+### Advisor: 
+Advisors after they log in, will be able to see all the students that are in their class, assign the groups along with their job description and monitor the students in their groups as they go through the simualtion. If every need be to send popups, they can do so and select any of the preset highlights or type up a custom message choosing to notify any of the groups they would like to. 
+
+
+## PREWRITEN GOTTEN FROM USING REACT
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Learn More
 
@@ -68,10 +57,3 @@ To learn more about Next.js, take a look at the following resources:
 - [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

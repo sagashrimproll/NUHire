@@ -90,6 +90,48 @@ useEffect(() => {
           };
       }, [user]);
 
+      useEffect(() => {
+        if (user && user.email) {
+          socket.emit("studentOnline", { studentId: user.email });
+    
+          socket.emit("studentPageChanged", {
+            studentId: user.email,
+            currentPage: pathname,
+          });
+    
+          const updateCurrentPage = async () => {
+            try {
+              await fetch("http://localhost:5001/update-currentpage", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  page: "interviewpage",
+                  user_email: user.email,
+                }),
+              });
+            } catch (error) {
+              console.error("Error updating current page:", error);
+            }
+          };
+    
+          updateCurrentPage();
+        }
+      }, [user, pathname]);
+    
+      useEffect(() => {
+        socket?.on("receivePopup", ({ headline, message }) => {
+          setPopup({ headline, message });
+        });
+        return () => {
+          socket.off("receivePopup");
+        };
+      }, []);
+    
+      const completeMakeOffer = () => {
+        localStorage.setItem("progress", "employerPannel");
+        window.location.href = "/employerPannel";
+      };
+
       const handleCheckboxChange = (resumeNumber: number) => {
         if (!socket || !isConnected) {
             console.warn("Socket not connected. Checkbox state not sent.");
@@ -128,49 +170,7 @@ useEffect(() => {
                 socket.off("checkboxUpdated");
             };
         }, []);
-  
-  
-    useEffect(() => {
-    if (user && user.email) {
-      socket.emit("studentOnline", { studentId: user.email });
 
-      socket.emit("studentPageChanged", {
-        studentId: user.email,
-        currentPage: pathname,
-      });
-
-      const updateCurrentPage = async () => {
-        try {
-          await fetch("http://localhost:5001/update-currentpage", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              page: "interviewpage",
-              user_email: user.email,
-            }),
-          });
-        } catch (error) {
-          console.error("Error updating current page:", error);
-        }
-      };
-
-      updateCurrentPage();
-    }
-  }, [user, pathname]);
-
-  useEffect(() => {
-    socket.on("receivePopup", ({ headline, message }) => {
-      setPopup({ headline, message });
-    });
-    return () => {
-      socket.off("receivePopup");
-    };
-  }, []);
-
-  const completeMakeOffer = () => {
-    localStorage.setItem("progress", "employerPannel");
-    window.location.href = "/employerPannel";
-  };
 
 
   if (loading) {
