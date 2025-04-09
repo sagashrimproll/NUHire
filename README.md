@@ -6,7 +6,7 @@ NUHire is a web application that simulates the job application process. In the s
 - [Overview](#overview)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
-- [Build and Installation](#build-installation)
+- [Build and Installation](#build-and-installation)
 - [Usage](#usage)
 
 
