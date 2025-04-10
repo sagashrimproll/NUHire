@@ -1,5 +1,7 @@
 # NUHire
 
+![Screenshot](/project-screenshots/NUHireImage.png)
+
 NUHire is a web application that simulates the job application process. In the simulation, the students get to play the part of employers reading through a job-description and reviewing resumes, conducting job-interviews and making decisions based on a real-world hiring process.
 
 ## Table of Contents
@@ -8,6 +10,7 @@ NUHire is a web application that simulates the job application process. In the s
 - [Tech Stack](#tech-stack)
 - [Build and Installation](#build-and-installation)
 - [Usage](#usage)
+- [Technical Specifications](#technical-specifications)
 - [Project Images](#project-images)
 
 
@@ -40,6 +43,10 @@ Run the application locally here:
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit and save the file.
+
+## Technical Specifications: 
+
+For technical specs about how the frontend backend and api work together along with how the database is consutrcted and data being stored; please refer to this page here: [Technical Specs](TECHNICAL_SPECS.md)
 
 ## Usage
 
