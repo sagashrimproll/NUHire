@@ -27,10 +27,9 @@ DROP TABLE IF EXISTS `Candidates`;
 CREATE TABLE `Candidates` (
   `id` int NOT NULL AUTO_INCREMENT,
   `resume_id` int NOT NULL,
-  `interview` int NOT NULL,
+  `interview` VARCHAR(255) NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `resume_id` (`resume_id`),
-  CONSTRAINT `Candidates_ibfk_1` FOREIGN KEY (`resume_id`) REFERENCES `Resume` (`id`) ON DELETE CASCADE
+  KEY `resume_id` (`resume_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -109,10 +108,10 @@ CREATE TABLE `InterviewPage` (
   `question4` int NOT NULL,
   `timespent` int NOT NULL,
   `candidate_id` int NOT NULL,
+  `checked` BOOLEAN DEFAULT FALSE,
   PRIMARY KEY (`id`),
   KEY `student_id` (`student_id`),
-  KEY `candidate_id` (`candidate_id`),
-  CONSTRAINT `InterviewPage_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `Users` (`id`) ON DELETE CASCADE
+  KEY `candidate_id` (`candidate_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -420,6 +419,15 @@ INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample7', 'uploads/res
 INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample8', 'uploads/resumes/sample8.pdf');
 INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample9', 'uploads/resumes/sample9.pdf');
 INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample10', 'uploads/resumes/sample10.pdf');
+INSERT INTO `Candidates` (`resume_id`, `interview`) VALUES (1, 'https://www.youtube.com/embed/OVAMb6Kui6A');
+INSERT INTO `Candidates` (`resume_id`, `interview`) VALUES (2, 'https://www.youtube.com/embed/KCm6JVtoRdo');
+INSERT INTO `Candidates` (`resume_id`, `interview`) VALUES (3, 'https://www.youtube.com/embed/srw4r3htm4U');
+INSERT INTO `Candidates` (`resume_id`, `interview`) VALUES (5, 'https://www.youtube.com/embed/sjTxmq68RXU');
+INSERT INTO `Candidates` (`resume_id`, `interview`) VALUES (6, 'https://www.youtube.com/embed/6bJTEZnTT5A');
+INSERT INTO `Candidates` (`resume_id`, `interview`) VALUES (7, 'https://www.youtube.com/embed/es7XtrloDIQ');
+INSERT INTO `Candidates` (`resume_id`, `interview`) VALUES (8, 'https://www.youtube.com/embed/0siE31sqz0Q');
+INSERT INTO `Candidates` (`resume_id`, `interview`) VALUES (9, 'https://www.youtube.com/embed/5v-wyR5emRw');
+INSERT INTO `Candidates` (`resume_id`, `interview`) VALUES (10, 'https://www.youtube.com/embed/TQHW7gGjrCQ');
 INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (1, 'Interview1', 'https://www.youtube.com/embed/OVAMb6Kui6A');
 INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (2, 'Interview2', 'https://www.youtube.com/embed/KCm6JVtoRdo');
 INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (3, 'Interview3', 'https://www.youtube.com/embed/srw4r3htm4U');

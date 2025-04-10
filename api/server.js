@@ -724,7 +724,7 @@ app.post("/interview/vote", async (req, res) => {
 
     db.query(query, [student_id, group_id, question1, question2, question3, question4, timespent, candidate_id], (err, result) => {
       if (err) {
-        console.error(err)
+        console.error(err)  
         return res.status(500).json({error: "Database error"}); 
       }
       res.status(200).json({message: "Interview result update successfully"}); 
@@ -858,11 +858,21 @@ app.delete("/resume_pdf/:file_path", (req, res) => {
 }
 );
 
+//Deletes a stored resume as long as it's given the resumes file path
+app.get("/resume_pdf/id/:id", (req, res) => {
+  const { id } = req.params;
+  db.query("SELECT * FROM Resume_pdfs WHERE id = ?", [id], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results);
+  }); 
+}
+);
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Canidates API routes
 
 // get route for retrieving all candidates from the database
-app.get("/candidates", (req, res) => {
+app.get("/canidates", (req, res) => {
   db.query("SELECT * FROM Candidates", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
@@ -870,11 +880,11 @@ app.get("/candidates", (req, res) => {
 });
 
 //get route to get a list canidates by their ids
-app.get("/candidates/:id", (req, res) => {
-  const ids = req.params.ids.split(",").map(id => parseInt(id));
-  db.query("SELECT * FROM Candidates WHERE id IN (?)", [ids], (err, results) => {
+app.get("/canidates/:id", (req, res) => {
+  const { id } = req.params;
+  db.query("SELECT * FROM Candidates WHERE id = ?", [id], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
-    res.json(results);
+    res.json(results[0]); 
   }); 
 });
 
