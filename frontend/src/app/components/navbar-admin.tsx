@@ -45,6 +45,13 @@ const NavbarAdmin = () => {
             >
               Send Popups
             </Link>
+
+            <Link
+              href="/new-pdf"
+              className="block px-4 py-2 text-[#1c2a63] hover:bg-gray-200 rounded-md"
+            >
+              Upload Jobs and Resumes
+            </Link>
           </div>
         )}
         <Link

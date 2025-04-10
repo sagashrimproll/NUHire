@@ -35,7 +35,7 @@ export default function UserProfile() {
 
   const handleLogout = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+      const response = await fetch(`${API_BASE_URL}/logout`, {
         method: "POST",
         credentials: "include", // ✅ Ensures cookies clear if using sessions
       });
@@ -52,12 +52,20 @@ export default function UserProfile() {
 
   return (
     <div>
-    {user?.affiliation !== "admin" ? <Navbar /> : <NavbarAdmin />}
-      <h1>User Profile Page</h1>
-      <p>Content will be stored here</p>
-      <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">
-        Logout
-      </button>
+      {user?.affiliation !== "admin" ? <Navbar /> : <NavbarAdmin />}
+    <div className=" bg-gradient-to-navy from-springWater via-sand to-wood text-white flex flex-col items-center justify-center p-6 min-h-screen">
+  
+      <div className="bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-lg text-center">
+        <h1 className="text-4xl font-bold mb-4 text-blue-300">User Profile</h1>
+  
+        <button
+          onClick={handleLogout}
+          className="mt-6 px-6 py-3 bg-red-600 hover:bg-red-700 transition-all duration-300 rounded-lg shadow-md text-white font-semibold text-lg"
+        >
+          Logout
+        </button>
+      </div>
+    </div>
     </div>
   );
-}
+}  

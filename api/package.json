@@ -24,6 +24,7 @@
     "passport-google-oauth2": "^0.2.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-oauth2": "^1.8.0",
+    "socket": "^0.14.68",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {

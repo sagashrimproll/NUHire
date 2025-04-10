@@ -16,7 +16,7 @@ NUHire is a web application that simulates the job application process. In the s
 
 ## Overview
 
-NUHire is desinged fo reducation purposes, helping students understand the employer's perspective. Students will be in groups and the advisor can make these groups and assign each group a job description. From there students will be going through the job description, look at resumes for potential candidates, interview them and make an offer. Students who play as employers will be able to also deal with tardiness in candidates, internal refferals, etc. in real time to simulate a real-world hiring process faciliatated through web sockets. 
+NUHire is desinged for education purposes, helping students understand the employer's perspective. Students will be in groups and the advisor can make these groups and assign each group a job description. From there students will be going through the job description, look at resumes for potential candidates, interview them and make an offer. Students who play as employers will be able to also deal with tardiness in candidates, internal refferals, etc. in real time to simulate a real-world hiring process faciliatated through web sockets. 
 
 ![Screenshot](/project-screenshots/landing_page.png)
 

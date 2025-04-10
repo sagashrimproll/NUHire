@@ -9,7 +9,7 @@ import NotesPage from "../components/note";
 import Footer from "../components/footer";
 
 const SOCKET_URL = `${API_BASE_URL}`; 
-let socket: Socket | null = null; 
+let socket: Socket; // Define socket with correct type
 
 export default function ResReviewGroup() {
     useProgress();

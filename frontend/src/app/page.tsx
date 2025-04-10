@@ -31,7 +31,7 @@ export default function Home() {
       {/* Main Content */}
       <main className="bg-sand justify-center items-center flex flex-col p-6">
         <h1 className="text-5xl font-bold">Welcome to NUHire!</h1>
-        <p className="text-2xl italic mt-2">Employer for a day 2.0!</p>
+        <p className="text-2xl italic mt-2">Where you can be your own employer!</p>
         <button 
           onClick={handleGoogleLogin} 
           className="mt-6 px-6 py-4 bg-white text-black border-4 border-navy rounded-md text-lg transition-opacity hover:opacity-60 active:opacity-30"
