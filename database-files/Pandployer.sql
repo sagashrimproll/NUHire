@@ -217,7 +217,7 @@ CREATE TABLE `Resume` (
   `student_id` int NOT NULL,
   `group_id` int NOT NULL,
   `timespent` int NOT NULL,
-  `resume_number` int NOT NULL,
+  `resume_number` int NOT NULL UNIQUE,
   `vote` enum('yes','no','unanswered') NOT NULL,
   PRIMARY KEY (`id`),
   KEY `student_id` (`student_id`),
@@ -266,11 +266,7 @@ CREATE TABLE `Interview_vids` (
   title VARCHAR(255) NOT NULL,
   resume_id INT NOT NULL,
   video_path VARCHAR(255) NOT NULL, 
-  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_resumepdf
-    FOREIGN KEY (resume_id)
-    REFERENCES Resume_pdfs(id)
-    ON DELETE CASCADE
+  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 --
 -- Table structure for table `Resumepage`

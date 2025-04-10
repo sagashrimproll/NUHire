@@ -14,7 +14,7 @@ import Popup from "../components/popup";
 import { io } from "socket.io-client";
 import { usePathname } from "next/navigation";
 
-const socket = io("http://localhost:5001"); 
+const socket = io(API_BASE_URL); 
 
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -119,8 +119,8 @@ export default function ResumesPage() {
       };
 
       useEffect(() => {
-      fetchResumes();
-    }, []);    
+        fetchResumes();
+      }, []);    
 
   useEffect(() => {
     const timer = setInterval(() => {
