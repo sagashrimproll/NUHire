@@ -1,4 +1,13 @@
-# Technical Specifications
+# System Overview
+
+## Design Goals and Constraints
+
+- Support multiple simultaneous user sessions
+- Provide real-time collaboration between students in the same group
+- Ensure responsive design for various devices
+- Support secure user authentication
+- Enable advisors to monitor student progress
+- Allow dynamic content assignment (job descriptions, resumes, interviews)
 
 ## Frontend
 

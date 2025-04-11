@@ -64,6 +64,81 @@ Student-dashboard:
 Advisor dashboard: 
 ![Screenshot](/project-screenshots/advisor_dashboard.png)
 
+## Security Design
+
+### Authentication and Authorization
+
+- Google OAuth 2.0 for user authentication
+- Session-based authentication using express-session
+- MySQL session store for persistence
+- Role-based authorization (student vs. admin)
+
+### Session Management
+
+- Secure HTTP-only cookies
+- Session timeout handling
+- CSRF protection
+
+### Data Protection
+
+- Input validation on all API endpoints
+- Parameterized SQL queries to prevent injection
+- CORS configuration to restrict domain access
+
+## Deployment Architecture
+
+### Docker Configuration
+The application is containerized using Docker with three main services:
+
+1. DB: MySQL database container
+2. API: Node.js backend container
+3. Frontend: Next.js frontend container
+
+Docker Compose orchestrates these containers and manages networking.
+
+### Environment Configuration
+
+Environment variables control configuration settings:
+
+- Database credentials
+- OAuth secrets
+- API endpoints
+- Port settings
+
+### Infrastructure Requirements
+
+- Node.js v18+
+- MySQL database
+- Docker and Docker Compose
+- Network connectivity for OAuth
+
+## Maintenance and Support
+
+### Monitoring
+
+- Error logging and tracking
+- User activity monitoring
+- Performance metrics collection
+
+### Backup Strategy
+
+- Regular database backups
+- File storage redundancy
+- Configuration version control
+
+### Update Procedures
+
+- Documented deployment procedures
+- Database migration plans
+- Backward compatibility considerations
+
+###  Technology Stack Summary
+
+Frontend: Next.js, React, Tailwind CSS, Socket.IO Client
+Backend: Node.js, Express.js, Socket.IO, Passport.js
+Database: MySQL
+Containerization: Docker, Docker Compose
+Authentication: Google OAuth 2.0
 
 ## PREWRITEN GOTTEN FROM USING REACT
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).

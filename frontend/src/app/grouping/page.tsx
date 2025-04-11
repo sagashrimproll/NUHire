@@ -144,6 +144,7 @@ const Grouping = () => {
         }),
       });
 
+      window.location.reload();
       if (response.ok) {
         alert("job assigned to group successfully!");
         setSelectedJobs([]);

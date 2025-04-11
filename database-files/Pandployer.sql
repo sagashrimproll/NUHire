@@ -367,6 +367,8 @@ CREATE TABLE `Users` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `group_id` int DEFAULT NULL,
   `job_des` varchar(100) DEFAULT NULL,
+  `class` varchar(100) DEFAULT NULL,
+  `group` int DEFAULT NULL,
   `current_page` enum('dashboard','resumepage','resumepage2','jobdes','interviewpage','makeofferpage') DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)

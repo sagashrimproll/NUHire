@@ -78,7 +78,6 @@ For Google Client Id and Session secret keys, the student recreating this would 
 docker-compose up --build
 ```
 
-
 ### If Running manually (without docker):
 
 ```bash
