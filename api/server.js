@@ -192,6 +192,7 @@ db.connect((err) => {
     console.log("Connected to MySQL database.");
   }
 });
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Passport.js configuration for Google OAuth 2.0 authentication
 
@@ -301,48 +302,48 @@ io.on("connection", (socket) => {
         io.emit("updateOnlineStudents", { studentId, group_id, current_page });
       }
     });
-  });
 
-  // Listen for the "studentPageChanged" event, which is emitted by the client when a student changes their page
-  socket.on("studentPageChanged", ({ studentId, currentPage }) => {
-    if (onlineStudents[studentId]) {
-      console.log(`Student ${studentId} changed page to ${currentPage}`);
-      io.emit("studentPageChange", { studentId, currentPage });
-    }
-  });
-
-  // Listen for the "sendPopupToGroups" event, which is emitted by the client when an admin wants to send a popup message to specific groups
-  // The server queries the database to get the email addresses of students in the specified groups
-  socket.on("sendPopupToGroups", ({ groups, headline, message }) => {
-    if (!groups || groups.length === 0) return;
-
-    db.query( "SELECT email FROM Users WHERE group_id IN (?) AND affiliation = 'student'", [groups], (err, results) => {
-      if (!err && results.length > 0) {
-        results.forEach(({ email }) => {
-          const studentSocketId = onlineStudents[email];
-          if (studentSocketId) {
-            io.to(studentSocketId).emit("receivePopup", { headline, message });
-          }
-        });
-
-        console.log(`Popup sent to Groups: ${groups.join(", ")}`);
-      } else {
-        console.log("No online students in the selected groups.");
+    // Listen for the "studentPageChanged" event, which is emitted by the client when a student changes their page
+    socket.on("studentPageChanged", ({ studentId, currentPage }) => {
+      if (onlineStudents[studentId]) {
+        console.log(`Student ${studentId} changed page to ${currentPage}`);
+        io.emit("studentPageChange", { studentId, currentPage });
       }
     });
-  });  
+
+    // Listen for the "sendPopupToGroups" event, which is emitted by the client when an admin wants to send a popup message to specific groups
+    // The server queries the database to get the email addresses of students in the specified groups
+    socket.on("sendPopupToGroups", ({ groups, headline, message }) => {
+      if (!groups || groups.length === 0) return;
+
+      db.query( "SELECT email FROM Users WHERE group_id IN (?) AND affiliation = 'student'", [groups], (err, results) => {
+        if (!err && results.length > 0) {
+          results.forEach(({ email }) => {
+            const studentSocketId = onlineStudents[email];
+            if (studentSocketId) {
+              io.to(studentSocketId).emit("receivePopup", { headline, message });
+            }
+          });
+
+          console.log(`Popup sent to Groups: ${groups.join(", ")}`);
+        } else {
+          console.log("No online students in the selected groups.");
+        }
+      });
+    });
+
+    // Listens for the "disconnect" event, which is emitted when a client disconnects from the server
+    // The server removes the student from the onlineStudents object and emits the "updateOnlineStudents" event to all connected clients
+    socket.on("disconnect", () => {
+      Object.keys(onlineStudents).forEach((studentId) => {
+        if (onlineStudents[studentId] === socket.id) {
+          console.log(`Student ${studentId} disconnected`);
+          delete onlineStudents[studentId];
+        }
+      });
+    });
+  });
   
-  // Listens for the "disconnect" event, which is emitted when a client disconnects from the server
-  // The server removes the student from the onlineStudents object and emits the "updateOnlineStudents" event to all connected clients
-  socket.on("disconnect", () => {
-    Object.keys(onlineStudents).forEach((studentId) => {
-      if (onlineStudents[studentId] === socket.id) {
-        console.log(`Student ${studentId} disconnected`);
-        delete onlineStudents[studentId];
-      }
-    });
-  });
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Google OAuth 2.0 authentication routes
 
@@ -456,6 +457,7 @@ app.get("/logout", (req, res) => {
         res.redirect("/");
     });
 });
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Routes for handling stored data user data
 

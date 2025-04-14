@@ -35,11 +35,11 @@ const Dashboard = () => {
           setUser(userData);
         } else {
           setUser(null);
-          router.push("/login"); 
+          router.push("/"); 
         }
       } catch (error) {
         console.error("Error fetching user:", error);
-        router.push("/login"); 
+        router.push("/"); 
       } finally {
         setLoading(false);
       }
