@@ -4,7 +4,7 @@ FROM node:18-alpine as builder
 WORKDIR /apicode
 
 # Copy package.json and install dependencies
-COPY package*.json ./
+COPY package*.json package-lock.json ./
 
 RUN npm install
 
