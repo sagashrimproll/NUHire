@@ -16,7 +16,7 @@ const path = require("path");  // Path module for working with file and director
 dotenv.config();
 const FRONT_URL = process.env.REACT_APP_FRONT_URL;
 const app = express();
-const http = require("http");  
+const http = require("http");
 const { Server } = require("socket.io");
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -109,7 +109,7 @@ app.delete('/delete/resume/:fileName', (req, res) => {
       }
       res.json({ message: `File "${fileName}" deleted successfully.` });
     });
-    
+
   } else {
     res.status(404).send(`File "${fileName}" not found.`);
   }
@@ -130,7 +130,7 @@ app.delete('/delete/job/:fileName', (req, res) => {
       }
       res.json({ message: `File "${fileName}" deleted successfully.` });
     });
-    
+
   } else {
     res.status(404).send(`File "${fileName}" not found.`);
   }
@@ -157,9 +157,9 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   store: sessionStore,
-  cookie: { 
+  cookie: {
     secure: false, // Set `true` if using HTTPS
-    httpOnly: true, 
+    httpOnly: true,
     sameSite: "lax"
   }
 }));
@@ -248,9 +248,9 @@ io.on("connection", (socket) => {
   console.log(`User connected: ${socket.id}`);
   console.log(`User connected: ${socket.id}`);
 
-    // Listen for the "studentOnline" event, which is emitted by the client when a student comes online
+  // Listen for the "studentOnline" event, which is emitted by the client when a student comes online
   socket.on("studentOnline", ({ studentId }) => {
-      onlineStudents[studentId] = socket.id;
+    onlineStudents[studentId] = socket.id;
 
     // Listen for the "message" event, which is emitted by the client when a message is sent
     // The server logs the message and broadcasts it to all connected clients
@@ -260,41 +260,10 @@ io.on("connection", (socket) => {
       // Broadcast the message to all connected clients
       io.emit("message", data);
     });
-      // Broadcast the message to all connected clients
-      io.emit("message", data);
-    });
 
-    // Listen for the "joinGroup" event, which is emitted by the client when a student joins a group
-    // The server adds the student to the specified group room
-    socket.on("joinGroup", (group_id) => {
-      socket.join(group_id);
-    });
-      
-    // Listen for the "check" event, which is emitted by the client when a checkbox is checked or unchecked
-    // The server emits the checkbox update to all clients in the specified group room    
-    socket.on("check", ({ group_id, resume_number, checked }) => {
-      db.query(
-          "UPDATE Resume SET `checked` = ? WHERE group_id = ? AND resume_number = ?",
-          [checked, group_id, resume_number],
-          (err, result) => {
-              if (err) {
-                  console.error("Database Error:", err);
-                  return; // Stop execution on error
-              }
-              
-              // Emit only if the update was successful
-              socket.to(group_id).emit("checkboxUpdated", { resume_number, checked });
-          }
-      );
-    });
-
-    socket.on("checkint", ({ group_id, interview_number, checked }) => {
-      socket.to(group_id).emit("checkboxUpdated", { interview_number, checked });
-    });
-  
     // Query the database to get the group ID and current page for the student
     // The server emits the "updateOnlineStudents" event to all connected clients with the student's information
-    db.query( "SELECT group_id, current_page FROM Users WHERE email = ?", [studentId], (err, result) => {
+    db.query("SELECT group_id, current_page FROM Users WHERE email = ?", [studentId], (err, result) => {
       if (!err && result.length > 0) {
         const { group_id, current_page } = result[0];
         console.log(`Student ${studentId} (Group ${group_id}) is on ${current_page}`);
@@ -303,47 +272,77 @@ io.on("connection", (socket) => {
       }
     });
 
-    // Listen for the "studentPageChanged" event, which is emitted by the client when a student changes their page
-    socket.on("studentPageChanged", ({ studentId, currentPage }) => {
-      if (onlineStudents[studentId]) {
-        console.log(`Student ${studentId} changed page to ${currentPage}`);
-        io.emit("studentPageChange", { studentId, currentPage });
+
+  });
+
+  // Listen for the "joinGroup" event, which is emitted by the client when a student joins a group
+  // The server adds the student to the specified group room
+  socket.on("joinGroup", (group_id) => {
+    socket.join(group_id);
+  });
+
+  // Listen for the "check" event, which is emitted by the client when a checkbox is checked or unchecked
+  // The server emits the checkbox update to all clients in the specified group room    
+  socket.on("check", ({ group_id, resume_number, checked }) => {
+    db.query(
+      "UPDATE Resume SET `checked` = ? WHERE group_id = ? AND resume_number = ?",
+      [checked, group_id, resume_number],
+      (err, result) => {
+        if (err) {
+          console.error("Database Error:", err);
+          return; // Stop execution on error
+        }
+
+        // Emit only if the update was successful
+        socket.to(group_id).emit("checkboxUpdated", { resume_number, checked });
+      }
+    );
+  });
+
+  socket.on("checkint", ({ group_id, interview_number, checked }) => {
+    socket.to(group_id).emit("checkboxUpdated", { interview_number, checked });
+  });
+  // Listen for the "studentPageChanged" event, which is emitted by the client when a student changes their page
+  socket.on("studentPageChanged", ({ studentId, currentPage }) => {
+    if (onlineStudents[studentId]) {
+      console.log(`Student ${studentId} changed page to ${currentPage}`);
+      io.emit("studentPageChange", { studentId, currentPage });
+    }
+  });
+
+  // Listen for the "sendPopupToGroups" event, which is emitted by the client when an admin wants to send a popup message to specific groups
+  // The server queries the database to get the email addresses of students in the specified groups
+  socket.on("sendPopupToGroups", ({ groups, headline, message }) => {
+    if (!groups || groups.length === 0) return;
+
+    db.query("SELECT email FROM Users WHERE group_id IN (?) AND affiliation = 'student'", [groups], (err, results) => {
+      if (!err && results.length > 0) {
+        results.forEach(({ email }) => {
+          const studentSocketId = onlineStudents[email];
+          if (studentSocketId) {
+            io.to(studentSocketId).emit("receivePopup", { headline, message });
+          }
+        });
+
+        console.log(`Popup sent to Groups: ${groups.join(", ")}`);
+      } else {
+        console.log("No online students in the selected groups.");
       }
     });
+  });
 
-    // Listen for the "sendPopupToGroups" event, which is emitted by the client when an admin wants to send a popup message to specific groups
-    // The server queries the database to get the email addresses of students in the specified groups
-    socket.on("sendPopupToGroups", ({ groups, headline, message }) => {
-      if (!groups || groups.length === 0) return;
-
-      db.query( "SELECT email FROM Users WHERE group_id IN (?) AND affiliation = 'student'", [groups], (err, results) => {
-        if (!err && results.length > 0) {
-          results.forEach(({ email }) => {
-            const studentSocketId = onlineStudents[email];
-            if (studentSocketId) {
-              io.to(studentSocketId).emit("receivePopup", { headline, message });
-            }
-          });
-
-          console.log(`Popup sent to Groups: ${groups.join(", ")}`);
-        } else {
-          console.log("No online students in the selected groups.");
-        }
-      });
-    });
-
-    // Listens for the "disconnect" event, which is emitted when a client disconnects from the server
-    // The server removes the student from the onlineStudents object and emits the "updateOnlineStudents" event to all connected clients
-    socket.on("disconnect", () => {
-      Object.keys(onlineStudents).forEach((studentId) => {
-        if (onlineStudents[studentId] === socket.id) {
-          console.log(`Student ${studentId} disconnected`);
-          delete onlineStudents[studentId];
-        }
-      });
+  // Listens for the "disconnect" event, which is emitted when a client disconnects from the server
+  // The server removes the student from the onlineStudents object and emits the "updateOnlineStudents" event to all connected clients
+  socket.on("disconnect", () => {
+    Object.keys(onlineStudents).forEach((studentId) => {
+      if (onlineStudents[studentId] === socket.id) {
+        console.log(`Student ${studentId} disconnected`);
+        delete onlineStudents[studentId];
+      }
     });
   });
-  
+});
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Google OAuth 2.0 authentication routes
 
@@ -397,7 +396,7 @@ app.post("/auth/logout", (req, res, next) => {
 
     req.session.destroy(() => {
       res.clearCookie("connect.sid");
-      res.status(200).json({ message: "Logged out successfully" }); 
+      res.status(200).json({ message: "Logged out successfully" });
       res.redirect(`${FRONT_URL}`);
     });
 
@@ -410,15 +409,15 @@ app.post("/auth/logout", (req, res, next) => {
 // get route for the dashboard page, which checks if the user is authenticated and redirects them to the frontend student dashboard with their name as a query parameter
 app.get("/dashboard", (req, res) => {
   if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Unauthorized" });
+    return res.status(401).json({ message: "Unauthorized" });
   }
-  
+
   // Redirect to frontend dashboard with user data
   res.redirect(`${FRONT_URL}/dashboard?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
 });
 
 //get route for the job description page, which checks if the user is authenticated and redirects them to the frontend job description page with their name as a query parameter
-app.get("/jobdes", (req, res) => { 
+app.get("/jobdes", (req, res) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ message: "Unauthorized" });
   }
@@ -426,7 +425,7 @@ app.get("/jobdes", (req, res) => {
 });
 
 // get route for the resume review page, which checks if the user is authenticated and redirects them to the frontend resume review page with their name as a query parameter
-app.get("/res-review"), (req, res) => { 
+app.get("/res-review"), (req, res) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ message: "Unauthorized" });
   }
@@ -435,8 +434,8 @@ app.get("/res-review"), (req, res) => {
 
 //get route for the group resume review page, which checks if the user is authenticated and redirects them to the frontend group resume review page with their name as a query parameter
 app.get("/res-review-group"), (req, res) => {
-  if(!req.isAuthenticated()) {
-    return res.status(401).json({message: "Unauthorized"});
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   res.redirect(`http://localhost:3000/res-review-group?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
@@ -444,8 +443,8 @@ app.get("/res-review-group"), (req, res) => {
 
 // get route for the interview stage page, which checks if the user is authenticated and redirects them to the frontend interview stage page with their name as a query parameter
 app.get("/interview-stage"), (req, res) => {
-  if(!req.isAuthenticated()) {
-    return res.status(401).json({message: "Unauthorized"});
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
   }
 
   res.redirect(`http://localhost:3000/interview-stage?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
@@ -453,9 +452,9 @@ app.get("/interview-stage"), (req, res) => {
 
 // Logout route
 app.get("/logout", (req, res) => {
-    req.logout(() => {
-        res.redirect("/");
-    });
+  req.logout(() => {
+    res.redirect("/");
+  });
 });
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -505,7 +504,7 @@ app.get("/students", async (req, res) => {
     if (err) return res.status(500).json({ error: err.message });
     if (results.length === 0) return res.status(404).json({ message: "No students found" });
 
-    res.json(results); 
+    res.json(results);
   });
 });
 
@@ -543,7 +542,7 @@ app.post("/update-job", (req, res) => {
       });
     });
   });
-}); 
+});
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Notes API Routes
@@ -631,13 +630,13 @@ app.get("/resume", (req, res) => {
   db.query("SELECT * FROM Resume", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
-  }); 
+  });
 });
 
 //post route for submitting a resume vote, which checks if the required fields are provided in the request body
 app.post("/resume/vote", (req, res) => {
-  const {student_id, group_id, timespent, resume_number, vote } = req.body;
-  
+  const { student_id, group_id, timespent, resume_number, vote } = req.body;
+
   if (!student_id || !group_id || !resume_number || !timespent || !vote) {
     return res.status(400).json({ error: "student_id, group_id, resume_number, timespent, and vote are required" });
   }
@@ -647,9 +646,9 @@ app.post("/resume/vote", (req, res) => {
   ON DUPLICATE KEY UPDATE timespent = VALUES(timespent), vote = VALUES(vote);`;
 
   db.query(query, [student_id, group_id, timespent, resume_number, vote], (err, result) => {
-    if (err){
-      console.error(err); 
-      return res.status(500).json({error: "Database error"});
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Database error" });
     }
     res.status(200).json({ message: "Resume review updated successfully" });
   });
@@ -671,7 +670,7 @@ app.delete("/resume/:student_id", (req, res) => {
   db.query("DELETE FROM Resume WHERE student_id = ?", [student_id], (err) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Resume deleted successfully" });
-  }); 
+  });
 });
 
 // get route for retrieving all resumes submitted by a specific group, given their id.
@@ -688,18 +687,18 @@ app.post("/resume/check", async (req, res) => {
   const { user_id, group_id, resume_number, checked } = req.body;
 
   try {
-      await db.query(
-          "UPDATE resume_votes SET checked = $1 WHERE user_id = $2 AND group_id = $3 AND resume_number = $4",
-          [checked, user_id, group_id, resume_number]
-      );
+    await db.query(
+      "UPDATE resume_votes SET checked = $1 WHERE user_id = $2 AND group_id = $3 AND resume_number = $4",
+      [checked, user_id, group_id, resume_number]
+    );
 
-      // Emit the checkbox update to the group
-      io.to(group_id).emit("checkboxUpdated", { resume_number, checked });
+    // Emit the checkbox update to the group
+    io.to(group_id).emit("checkboxUpdated", { resume_number, checked });
 
-      res.json({ success: true });
+    res.json({ success: true });
   } catch (error) {
-      console.error("Error updating checkbox:", error);
-      res.status(500).json({ success: false });
+    console.error("Error updating checkbox:", error);
+    res.status(500).json({ success: false });
   }
 });
 
@@ -718,31 +717,31 @@ app.get("/resume/checked/:group_id", async (req, res) => {
 //post route for submitting an interview vote, which checks if the required fields are provided in the request body
 app.post("/interview/vote", async (req, res) => {
 
-  const {student_id, group_id, question1, question2, question3, question4, timespent, candidate_id} = req.body; 
-  
+  const { student_id, group_id, question1, question2, question3, question4, timespent, candidate_id } = req.body;
+
   if (!student_id || !group_id || !question1 || !question2 || !question3 || !question4 || !timespent || !candidate_id) {
-    return res.status(400).json({error: "Missing required fields"}); 
+    return res.status(400).json({ error: "Missing required fields" });
   }
 
-    const query = `INSERT INTO InterviewPage 
+  const query = `INSERT INTO InterviewPage 
         (student_id, group_id, question1, question2, question3, question4, timespent, candidate_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`; 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
-    db.query(query, [student_id, group_id, question1, question2, question3, question4, timespent, candidate_id], (err, result) => {
-      if (err) {
-        console.error(err)  
-        return res.status(500).json({error: "Database error"}); 
-      }
-      res.status(200).json({message: "Interview result update successfully"}); 
-    });
+  db.query(query, [student_id, group_id, question1, question2, question3, question4, timespent, candidate_id], (err, result) => {
+    if (err) {
+      console.error(err)
+      return res.status(500).json({ error: "Database error" });
+    }
+    res.status(200).json({ message: "Interview result update successfully" });
+  });
 });
-  
+
 //get route for getting all stored interview votes
 app.get("/interview", (req, res) => {
   db.query("SELECT * FROM InterviewPage", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
-  }); 
+  });
 });
 
 // get route for retrieving all interviews submitted by a specific group, given their id.
@@ -754,14 +753,14 @@ app.get("/interview/group/:group_id", (req, res) => {
   });
 });
 
-  // just to test something with postman 
-  app.delete("/interview/:student_id", (req,res) => {
-    const { student_id } = req.params;
-    db.query("DELETE FROM Interview WHERE student_id = ?", [student_id], (err) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ message: "Interview vote deleted successfully" });
-    }); 
-  }
+// just to test something with postman 
+app.delete("/interview/:student_id", (req, res) => {
+  const { student_id } = req.params;
+  db.query("DELETE FROM Interview WHERE student_id = ?", [student_id], (err) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: "Interview vote deleted successfully" });
+  });
+}
 );
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -772,7 +771,7 @@ app.get("/interview-vids", (req, res) => {
   db.query("SELECT * FROM Interview_vids", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
-  }); 
+  });
 });
 
 
@@ -784,7 +783,7 @@ app.get("/jobs", (req, res) => {
   db.query("SELECT * FROM job_descriptions", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
-  }); 
+  });
 });
 
 //Posts a new job description into the database taking in the jobs title and file path
@@ -832,7 +831,7 @@ app.get("/resume_pdf", (req, res) => {
   db.query("SELECT * FROM Resume_pdfs", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
-  }); 
+  });
 });
 
 //Posts a new resume into the database as long as it's given the resume title and the file path
@@ -860,7 +859,7 @@ app.delete("/resume_pdf/:file_path", (req, res) => {
   db.query("DELETE FROM Resume_pdfs WHERE file_path = ?", [file_path], (err) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: "Resume deleted successfully" });
-  }); 
+  });
 }
 );
 
@@ -870,7 +869,7 @@ app.get("/resume_pdf/id/:id", (req, res) => {
   db.query("SELECT * FROM Resume_pdfs WHERE id = ?", [id], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
-  }); 
+  });
 }
 );
 
@@ -882,7 +881,7 @@ app.get("/canidates", (req, res) => {
   db.query("SELECT * FROM Candidates", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
-  }); 
+  });
 });
 
 //get route to get a list canidates by their ids
@@ -890,8 +889,8 @@ app.get("/canidates/:id", (req, res) => {
   const { id } = req.params;
   db.query("SELECT * FROM Candidates WHERE id = ?", [id], (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
-    res.json(results[0]); 
-  }); 
+    res.json(results[0]);
+  });
 });
 
 
@@ -906,4 +905,3 @@ const PORT = process.env.PORT || 5001;
 server.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
-  
