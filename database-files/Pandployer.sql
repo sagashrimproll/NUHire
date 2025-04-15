@@ -420,6 +420,7 @@ INSERT INTO `Resume_pdfs` (`title`, `file_path`) VALUES ('sample10', 'uploads/re
 INSERT INTO `Candidates` (`resume_id`, `interview`) VALUES (1, 'https://www.youtube.com/embed/OVAMb6Kui6A');
 INSERT INTO `Candidates` (`resume_id`, `interview`) VALUES (2, 'https://www.youtube.com/embed/KCm6JVtoRdo');
 INSERT INTO `Candidates` (`resume_id`, `interview`) VALUES (3, 'https://www.youtube.com/embed/srw4r3htm4U');
+INSERT INTO `Candidates` (`resume_id`, `interview`) VALUES (4, 'https://www.youtube.com/embed/sjTxmq68RXU');
 INSERT INTO `Candidates` (`resume_id`, `interview`) VALUES (5, 'https://www.youtube.com/embed/sjTxmq68RXU');
 INSERT INTO `Candidates` (`resume_id`, `interview`) VALUES (6, 'https://www.youtube.com/embed/6bJTEZnTT5A');
 INSERT INTO `Candidates` (`resume_id`, `interview`) VALUES (7, 'https://www.youtube.com/embed/es7XtrloDIQ');
@@ -429,6 +430,7 @@ INSERT INTO `Candidates` (`resume_id`, `interview`) VALUES (10, 'https://www.you
 INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (1, 'Interview1', 'https://www.youtube.com/embed/OVAMb6Kui6A');
 INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (2, 'Interview2', 'https://www.youtube.com/embed/KCm6JVtoRdo');
 INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (3, 'Interview3', 'https://www.youtube.com/embed/srw4r3htm4U');
+INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (4, 'Interview5', 'https://www.youtube.com/embed/sjTxmq68RXU');
 INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (5, 'Interview5', 'https://www.youtube.com/embed/sjTxmq68RXU');
 INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (6, 'Interview6', 'https://www.youtube.com/embed/6bJTEZnTT5A');
 INSERT INTO `Interview_vids` (resume_id, title, video_path) VALUES (7, 'Interview7', 'https://www.youtube.com/embed/es7XtrloDIQ');
