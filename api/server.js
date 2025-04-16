@@ -702,7 +702,7 @@ app.post("/resume/check", async (req, res) => {
   }
 });
 
-//get route for getting all users registered as a student 
+//get route for getting all resumes that have been checked by a group, given their id.
 app.get("/resume/checked/:group_id", async (req, res) => {
   const { group_id } = req.params;
   db.query("SELECT vote, resume_number FROM Resume WHERE group_id = ? AND checked == 'True'", [group_id], (err, results) => {
@@ -893,6 +893,14 @@ app.get("/canidates/:id", (req, res) => {
   });
 });
 
+//get route to get a list canidates by their ids
+app.get("/canidates/resume/:resume_number", (req, res) => {
+  const { resume_number } = req.params;
+  db.query("SELECT * FROM Candidates WHERE resume_id = ?", [resume_number], (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results[0]);
+  });
+});
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //Various
