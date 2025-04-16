@@ -113,7 +113,7 @@ export default function JobDescriptionPage() {
     };
   
     fetchJob();
-  }, [user]); // ✅ Depend on `user`
+  }, [user]); 
 
 
       useEffect(() => {
