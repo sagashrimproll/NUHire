@@ -8,6 +8,10 @@ import NavbarAdmin from "../components/navbar-admin";
 export default function UserProfile() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [classes, setClasses] = useState([]);
+    const [selectedClass, setSelectedClass] = useState("");
+    const [isUpdating, setIsUpdating] = useState(false);
+    const [updateSuccess, setUpdateSuccess] = useState(false);
     const router = useRouter();
   
     useEffect(() => {
@@ -18,6 +22,9 @@ export default function UserProfile() {
   
           if (response.ok) {
             setUser(userData);
+            if (userData.class) {
+              setSelectedClass(userData.class.toString());
+            }
           } else {
             setUser(null);
             router.push("/");
@@ -33,39 +40,161 @@ export default function UserProfile() {
       fetchUser();
     }, [router]);
 
-  const handleLogout = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/logout`, {
-        method: "POST",
-        credentials: "include", // ✅ Ensures cookies clear if using sessions
-      });
+    // Fetch available classes
+    useEffect(() => {
+      const fetchClasses = async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/classes`);
+          const data = await response.json();
+          setClasses(data);
+        } catch (error) {
+          console.error("Error fetching classes:", error);
+        }
+      };
 
-      if (response.ok) {
-        router.push("/"); // ✅ Redirect to home page
-      } else {
-        console.error("Failed to logout:", response.statusText);
+      fetchClasses();
+    }, []);
+
+    const handleClassChange = (e) => {
+      setSelectedClass(e.target.value);
+    };
+
+    const updateClass = async () => {
+      if (!selectedClass) {
+        alert("Please select a class");
+        return;
       }
-    } catch (error) {
-      console.error("Error logging out:", error);
-    }
-  };
 
-  return (
-    <div>
-      {user?.affiliation !== "admin" ? <Navbar /> : <NavbarAdmin />}
-    <div className=" bg-gradient-to-navy from-springWater via-sand to-wood text-white flex flex-col items-center justify-center p-6 min-h-screen">
-  
-      <div className="bg-gray-800 p-8 rounded-2xl shadow-lg w-full max-w-lg text-center">
-        <h1 className="text-4xl font-bold mb-4 text-blue-300">User Profile</h1>
-  
-        <button
-          onClick={handleLogout}
-          className="mt-6 px-6 py-3 bg-red-600 hover:bg-red-700 transition-all duration-300 rounded-lg shadow-md text-white font-semibold text-lg"
-        >
-          Logout
-        </button>
+      setIsUpdating(true);
+      setUpdateSuccess(false);
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/update-user-class`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            email: user.email,
+            class: selectedClass
+          }),
+        });
+
+        if (response.ok) {
+          setUpdateSuccess(true);
+          // Update the user state with the new class
+          setUser(prev => ({ ...prev, class: selectedClass }));
+        } else {
+          alert("Failed to update class. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error updating class:", error);
+        alert("An error occurred while updating your class.");
+      } finally {
+        setIsUpdating(false);
+      }
+    };
+
+    const handleLogout = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/logout`, {
+          method: "POST",
+          credentials: "include", // ✅ Ensures cookies clear if using sessions
+        });
+
+        if (response.ok) {
+          router.push("/"); // ✅ Redirect to home page
+        } else {
+          console.error("Failed to logout:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error logging out:", error);
+      }
+    };
+
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center min-h-screen bg-sand">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold mb-4">Loading...</h2>
+            <div className="w-16 h-16 border-t-4 border-navy border-solid rounded-full animate-spin mx-auto"></div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div>
+        {user?.affiliation !== "admin" ? <Navbar /> : <NavbarAdmin />}
+        <div className="bg-sand flex flex-col items-center justify-center p-6 min-h-screen">
+      
+          <div className="bg-navy p-8 rounded-2xl shadow-lg w-full max-w-lg">
+            <h1 className="text-4xl font-bold mb-4 text-sand text-center">User Profile</h1>
+            
+            {user && (
+              <div className="space-y-6">
+                <div className="bg-springWater p-4 rounded-lg">
+                  <h2 className="text-xl font-semibold text-navy mb-2">Personal Information</h2>
+                  <p className="text-navy"><span className="font-semibold">Name:</span> {user.f_name} {user.l_name}</p>
+                  <p className="text-navy"><span className="font-semibold">Email:</span> {user.email}</p>
+                  <p className="text-navy"><span className="font-semibold">Role:</span> {user.affiliation}</p>
+                  {user.group_id && (
+                    <p className="text-navy"><span className="font-semibold">Group:</span> {user.group_id}</p>
+                  )}
+                  {user.class && (
+                    <p className="text-navy"><span className="font-semibold">Class:</span> {user.class}</p>
+                  )}
+                </div>
+                
+                {user.affiliation === "student" && (
+                  <div className="bg-springWater p-4 rounded-lg">
+                    <h2 className="text-xl font-semibold text-navy mb-2">Update Class</h2>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-navy mb-1">Select Class</label>
+                        <select 
+                          value={selectedClass}
+                          onChange={handleClassChange}
+                          className="w-full p-2 border border-wood rounded-md focus:outline-none focus:ring-2"
+                        >
+                          <option value="">Select a class</option>
+                          {classes.map(classItem => (
+                            <option key={classItem.id} value={classItem.id}>
+                              {classItem.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      
+                      <button
+                        onClick={updateClass}
+                        disabled={isUpdating || !selectedClass}
+                        className={`w-full py-2 rounded-md font-semibold text-white
+                          ${isUpdating || !selectedClass 
+                            ? "bg-gray-400 cursor-not-allowed" 
+                            : "bg-wood text-navy hover:opacity-90"}`}
+                      >
+                        {isUpdating ? "Updating..." : "Update Class"}
+                      </button>
+                      
+                      {updateSuccess && (
+                        <div className="bg-green-100 text-green-700 p-2 rounded-md text-center">
+                          Class updated successfully!
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+      
+            <button
+              onClick={handleLogout}
+              className="mt-6 px-6 py-3 bg-red-600 hover:bg-red-700 transition-all duration-300 rounded-lg shadow-md text-white font-semibold text-lg w-full"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
-    </div>
-  );
-}  
+    );
+}

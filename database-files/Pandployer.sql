@@ -102,6 +102,7 @@ CREATE TABLE `InterviewPage` (
   `id` int NOT NULL AUTO_INCREMENT,
   `student_id` int NOT NULL,
   `group_id` int NOT NULL,
+  `class` int NOT NULL,
   `question1` int NOT NULL,
   `question2` int NOT NULL,
   `question3` int NOT NULL,
@@ -163,6 +164,7 @@ CREATE TABLE `MakeOfferPage` (
   `selected_candidate` int NOT NULL,
   `timespent` int NOT NULL,
   `group_id` int NOT NULL,
+  `class` int NOT NULL,
   PRIMARY KEY (`id`),
   KEY `selected_candidate` (`selected_candidate`),
   KEY `group_id` (`group_id`),
@@ -213,11 +215,12 @@ DROP TABLE IF EXISTS `Resume`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `Resume` (
-  `id` int NOT NULL AUTO_INCREMENT,
+  `id` int NOT NULL AUTO_INCREMENT UNIQUE,
   `student_id` int NOT NULL,
   `group_id` int NOT NULL,
+  `class` int NOT NULL,
   `timespent` int NOT NULL,
-  `resume_number` int NOT NULL UNIQUE,
+  `resume_number` int NOT NULL,
   `vote` enum('yes','no','unanswered') NOT NULL,
   PRIMARY KEY (`id`),
   KEY `student_id` (`student_id`),
@@ -336,6 +339,7 @@ CREATE TABLE `Resumepage2` (
   `vote4` int NOT NULL,
   `timespent` int NOT NULL,
   `group_id` int NOT NULL,
+  `class` int NOT NULL,
   PRIMARY KEY (`id`),
   KEY `group_id` (`group_id`),
   CONSTRAINT `Resumepage2_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `Groups` (`id`) ON DELETE CASCADE
@@ -367,8 +371,7 @@ CREATE TABLE `Users` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `group_id` int DEFAULT NULL,
   `job_des` varchar(100) DEFAULT NULL,
-  `class` varchar(100) DEFAULT NULL,
-  `group` int DEFAULT NULL,
+  `class` int DEFAULT NULL,
   `current_page` enum('dashboard','resumepage','resumepage2','jobdes','interviewpage','makeofferpage') DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
@@ -396,8 +399,8 @@ UNLOCK TABLES;
 -- Dump completed on 2025-03-04 12:57:26
 
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sai A.', 'Dhanasiri', 'saianirudhsjps@gmail.com', 'student');
-INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sage', 'Batchelor', 'sagebatchelor@gmail.com', 'student');
-INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sag', 'Bat', 'batchelor.sa@husky.neu.edu', 'student');
+INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`, `class`) VALUES ('Sage', 'Batchelor', 'sagebatchelor@gmail.com', 'student', 1);
+INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`, `class`) VALUES ('Sag', 'Bat', 'batchelor.sa@husky.neu.edu', 'student', 2);
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sage', 'Batchelor', 'sagashrimproll@gmail.com', 'admin');
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sai Anirudh', 'Dhanasiri', 'dhanasiri.s@husky.neu.edu', 'admin');
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Penguin', 'The Last', 'ilovepenguinsandhowtheylook@gmail.com', 'student');

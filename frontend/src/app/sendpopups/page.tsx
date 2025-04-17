@@ -1,13 +1,11 @@
 "use client";
-
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; 
 import NavbarAdmin from "../components/navbar-admin";
-import {io} from "socket.io-client";
+import { io } from "socket.io-client";
 
-const socket = io("http://localhost:5001");
-
-
+const socket = io(`${API_BASE_URL}`);
 
 const SendPopups = () => {  
     interface User {
@@ -16,41 +14,43 @@ const SendPopups = () => {
 
     interface Group {
         group_id: string;
-        students: string[];
+        students: any[];
     }
-
     
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
-    const [groups, setGroups] = useState<Group[]>([]);
+    const [groups, setGroups] = useState<Record<string, any>>({});
     const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
     const [headline, setHeadline] = useState("");
     const [message, setMessage] = useState(""); 
-    const [sending, setSending] = useState(false); // Track API request state
-    const [selectedPreset, setSelectedPreset] = useState<string>(""); 
+    const [sending, setSending] = useState(false);
+    const [selectedPreset, setSelectedPreset] = useState<string>("");
+    const [classes, setClasses] = useState<{id: number, name: string}[]>([]);
+    const [selectedClass, setSelectedClass] = useState<string>("");
     const router = useRouter(); 
-    const [isConnected, setIsConntected] = useState(false); // Track WebSocket connection state
+    const [isConnected, setIsConntected] = useState(false);
     
     const presetPopups = [
         {title: "Internal Refferal", headline: "Internal Referral", message: "This candidate was referred to the position by a current employee. They automatically advance to the interview stage."},
         {title: "No Show", headline: "Abandoned Interview", message: "This candidate did not show up for the interview."}
     ];
 
+    // Fetch the logged-in user
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const response = await fetch("http://localhost:5001/auth/user", { credentials: "include" });
+                const response = await fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" });
                 const userData = await response.json();
 
                 if (response.ok) {
                     setUser(userData);
                 } else {
                     setUser(null);
-                    router.push("/login");
+                    router.push("/");
                 }
             } catch (error) {
                 console.error("Error fetching user:", error);
-                router.push("/login");
+                router.push("/");
             } finally {
                 setLoading(false);
             }
@@ -59,10 +59,31 @@ const SendPopups = () => {
         fetchUser();
     }, [router]); 
 
+    // Fetch available classes
+    useEffect(() => {
+        const fetchClasses = async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/classes`);
+                const data = await response.json();
+                setClasses(data);
+                if (data.length > 0) {
+                    setSelectedClass(data[0].id.toString());
+                }
+            } catch (error) {
+                console.error("Error fetching classes:", error);
+            }
+        };
+
+        fetchClasses();
+    }, []);
+
+    // Fetch groups filtered by class
     useEffect(() => {
         const fetchGroups = async () => {
+            if (!selectedClass) return;
+            
             try {
-                const response = await fetch("http://localhost:5001/groups");
+                const response = await fetch(`${API_BASE_URL}/groups?class=${selectedClass}`);
                 const data = await response.json();
                 setGroups(data);
             } catch (error) {
@@ -70,14 +91,21 @@ const SendPopups = () => {
             }
         };
 
-        fetchGroups();
-    }, []);
+        if (selectedClass) {
+            fetchGroups();
+        }
+    }, [selectedClass]);
 
     if (loading) return <p>Loading...</p>;
 
     if (!user || user.affiliation !== "admin") {
         return <div>This account is not authorized to access this page. Please log in with an admin account.</div>;
     }
+
+    const handleClassChange = (e) => {
+        setSelectedClass(e.target.value);
+        setSelectedGroups([]); // Reset selected groups when class changes
+    };
 
     const handleCheckboxChange = (groupId: string) => {
         setSelectedGroups((prevSelected) =>
@@ -87,7 +115,6 @@ const SendPopups = () => {
         );
     }; 
     
-
     const handlePresetSelection = (presetTitle: string) => {
         setSelectedPreset(presetTitle);
         const preset = presetPopups.find((p) => p.title === presetTitle);
@@ -98,34 +125,34 @@ const SendPopups = () => {
     };
 
     const sendPopups = async () => {
-      if (!headline || !message || selectedGroups.length === 0) {
-          alert("Please enter a headline, message, and select at least one group.");
-          return;
-      }
-  
-      setSending(true);
-  
-      try {
-          socket.emit("sendPopupToGroups", {
-              groups: selectedGroups,
-              headline,
-              message,
-          });
-  
-          alert("Popups sent successfully!");
-          
-          setHeadline("");
-          setMessage("");
-          setSelectedGroups([]);
-          setSelectedPreset("");
-      } catch (error) {
-          console.error("Error sending popups:", error);
-          alert("Failed to send popups. Please try again.");
-      } finally {
-          setSending(false); 
-      }
-  };
-
+        if (!headline || !message || selectedGroups.length === 0) {
+            alert("Please enter a headline, message, and select at least one group.");
+            return;
+        }
+    
+        setSending(true);
+    
+        try {
+            socket.emit("sendPopupToGroups", {
+                groups: selectedGroups,
+                headline,
+                message,
+                class: selectedClass // Add class information
+            });
+    
+            alert("Popups sent successfully!");
+            
+            setHeadline("");
+            setMessage("");
+            setSelectedGroups([]);
+            setSelectedPreset("");
+        } catch (error) {
+            console.error("Error sending popups:", error);
+            alert("Failed to send popups. Please try again.");
+        } finally {
+            setSending(false); 
+        }
+    };
 
     return (
       <div className="flex flex-col min-h-screen bg-sand font-rubik">
@@ -140,111 +167,135 @@ const SendPopups = () => {
             Select a preset or create a custom message to send to selected groups of students.
           </p>
 
+          {/* Class Selection Dropdown */}
           <div className="mb-6">
-            <label className="text-lg font-rubik block mb-2">Choose a Preset:</label>
+            <label className="text-lg font-rubik block mb-2">Select Class:</label>
             <select
-              value={selectedPreset}
-              onChange={(e) => handlePresetSelection(e.target.value)}
+              value={selectedClass}
+              onChange={handleClassChange}
               className="w-full p-3 border border-wood bg-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">-- Select a Preset --</option>
-              {presetPopups.map((preset) => (
-                <option key={preset.title} value={preset.title}>
-                  {preset.title}
+              <option value="">-- Select a Class --</option>
+              {classes.map((classItem) => (
+                <option key={classItem.id} value={classItem.id}>
+                  {classItem.name}
                 </option>
               ))}
             </select>
           </div>
 
-          <div className="flex items-center gap-4 mb-6">
-            <label className="text-lg font-rubik">Headline:</label>
-            <input
-              type="text"
-              placeholder="Enter subject for popup"
-              value={headline}
-              onChange={(e) => setHeadline(e.target.value)}
-              className="p-3 border border-wood text-left bg-springWater rounded-md 
-                   focus:outline-none focus:ring-2 focus:ring-blue-500 w-full max-w-lg"
-            />
-          </div>
-
-          <div className="flex gap-4 mb-6">
-            <label className="text-lg font-rubik">Content: </label>
-            <textarea
-              placeholder="Enter your message here"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="w-[600px] max-w-1xl h-32 p-4 border border-wood text-left bg-springWater 
-                rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 
-                mb-4 resize-none overflow-hidden text-lg whitespace-pre-wrap"
-              rows={3}
-            />
-          </div>
-
-          <div className="w-full max-w-2xl bg-navy shadow-lg rounded-lg p-6">
-            {groups && Object.keys(groups).length > 0 ? (
-              Object.entries(groups).map(([group_id, students]) => (
-                <div
-                  key={group_id}
-                  className="bg-springWater mb-4 p-4 border rounded-lg shadow-sm"
+          {selectedClass && (
+            <>
+              <div className="mb-6">
+                <label className="text-lg font-rubik block mb-2">Choose a Preset:</label>
+                <select
+                  value={selectedPreset}
+                  onChange={(e) => handlePresetSelection(e.target.value)}
+                  className="w-full p-3 border border-wood bg-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-navy">
-                      Group {group_id}
-                    </h3>
-                    <input
-                      type="checkbox"
-                      className="h-5 w-5 text-blue-500 accent-navy cursor-pointer"
-                      checked={selectedGroups.includes(group_id)}
-                      onChange={() => handleCheckboxChange(group_id)}
-                    />
-                  </div>
+                  <option value="">-- Select a Preset --</option>
+                  {presetPopups.map((preset) => (
+                    <option key={preset.title} value={preset.title}>
+                      {preset.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-                  <ul className="mt-2 space-y-2">
-                    {Array.isArray(students) && students.length > 0 ? (
-                      students.map((student, index) => (
-                        <li
-                          key={index}
-                          className="bg-springWater p-3 rounded-md shadow-sm border flex items-center gap-3"
-                        >
-                          <div className="text-navy font-medium">
-                            {student.name}
-                            <span className="text-gray-500 text-sm ml-2">
-                              ({student.email})
-                            </span>
-                          </div>
-                          <span className="ml-auto text-sm italic text-gray-600">
-                            {student.current_page
-                              ? `- ${student.current_page}`
-                              : ""}
-                          </span>
-                        </li>
-                      ))
-                    ) : (
-                      <li className="text-gray-500 text-sm italic">
-                        No Students Added
-                      </li>
-                    )}
-                  </ul>
-                </div>
-              ))
-            ) : (
-              <p className="text-gray-500 text-center">Loading groups...</p>
-            )}
-          </div>
+              <div className="flex items-center gap-4 mb-6">
+                <label className="text-lg font-rubik">Headline:</label>
+                <input
+                  type="text"
+                  placeholder="Enter subject for popup"
+                  value={headline}
+                  onChange={(e) => setHeadline(e.target.value)}
+                  className="p-3 border border-wood text-left bg-springWater rounded-md 
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 w-full max-w-lg"
+                />
+              </div>
 
-          <button
-            onClick={sendPopups}
-            disabled={sending || selectedGroups.length === 0}
-            className={`mt-6 px-6 py-3 font-semibold rounded-md transition 
-                        ${
-                          sending || selectedGroups.length === 0
-                            ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-blue-600 text-white hover:bg-blue-700"
-                        }`}
-          >
-            {sending ? "Sending..." : "Send Popups"}
-          </button>
+              <div className="flex gap-4 mb-6">
+                <label className="text-lg font-rubik">Content: </label>
+                <textarea
+                  placeholder="Enter your message here"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  className="w-[600px] max-w-1xl h-32 p-4 border border-wood text-left bg-springWater 
+                    rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 
+                    mb-4 resize-none overflow-hidden text-lg whitespace-pre-wrap"
+                  rows={3}
+                />
+              </div>
+
+              <div className="w-full max-w-2xl bg-navy shadow-lg rounded-lg p-6">
+                <h2 className="text-xl font-bold text-sand mb-4">
+                  Groups in Class {selectedClass}
+                </h2>
+                {groups && Object.keys(groups).length > 0 ? (
+                  Object.entries(groups).map(([group_id, students]) => (
+                    <div
+                      key={group_id}
+                      className="bg-springWater mb-4 p-4 border rounded-lg shadow-sm"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="text-lg font-semibold text-navy">
+                          Group {group_id}
+                        </h3>
+                        <input
+                          type="checkbox"
+                          className="h-5 w-5 text-blue-500 accent-navy cursor-pointer"
+                          checked={selectedGroups.includes(group_id)}
+                          onChange={() => handleCheckboxChange(group_id)}
+                        />
+                      </div>
+
+                      <ul className="mt-2 space-y-2">
+                        {Array.isArray(students) && students.length > 0 ? (
+                          students.map((student, index) => (
+                            <li
+                              key={index}
+                              className="bg-springWater p-3 rounded-md shadow-sm border flex items-center gap-3"
+                            >
+                              <div className="text-navy font-medium">
+                                {student.name}
+                                <span className="text-gray-500 text-sm ml-2">
+                                  ({student.email})
+                                </span>
+                              </div>
+                              <span className="ml-auto text-sm italic text-gray-600">
+                                {student.current_page
+                                  ? `- ${student.current_page}`
+                                  : ""}
+                              </span>
+                            </li>
+                          ))
+                        ) : (
+                          <li className="text-gray-500 text-sm italic">
+                            No Students Added
+                          </li>
+                        )}
+                      </ul>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sand text-center">No groups found in this class.</p>
+                )}
+              </div>
+
+              <button
+                onClick={sendPopups}
+                disabled={sending || selectedGroups.length === 0}
+                className={`mt-6 px-6 py-3 font-semibold rounded-md transition 
+                            ${
+                              sending || selectedGroups.length === 0
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-blue-600 text-white hover:bg-blue-700"
+                            }`}
+              >
+                {sending ? "Sending..." : "Send Popups"}
+              </button>
+            </>
+          )}
         </div>
       </div>
     );

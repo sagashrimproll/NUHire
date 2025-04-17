@@ -58,8 +58,8 @@ export default function ResReviewGroup() {
   
         socket.on("connect", () => {
             setIsConnected(true);
-            socket?.emit("joinGroup", user.group_id);
-        });
+            socket.emit("joinGroup", `${user.group_id}_${user.class}`);
+        });   
   
         socket.on("disconnect", () => {
             setIsConnected(false);
@@ -123,41 +123,43 @@ export default function ResReviewGroup() {
         fetchResumes();
       }, []);
 
-    useEffect(() => {
-    const fetchData = async () => {
-        try {
-            if (!user) return;
-    
-            const response = await fetch(`${API_BASE_URL}/resume/group/${user.group_id}`);
-            const data: ResumeData[] = await response.json();
-    
-            const voteData: { [key: number]: VoteData } = {};
-            const checkboxData: { [key: number]: boolean } = {};  // New state tracking checkboxes
-    
-            data.forEach((resume) => {
-                const { resume_number, vote, checked } = resume;
-    
-                if (!voteData[resume_number]) {
-                    voteData[resume_number] = { yes: 0, no: 0, undecided: 0 };
-                }
-    
-                if (vote === "yes") {
-                    voteData[resume_number].yes += 1;
-                } else if (vote === "no") {
-                    voteData[resume_number].no += 1;
-                } else if (vote === "unanswered") {
-                    voteData[resume_number].undecided += 1;
-                }
-    
-                checkboxData[resume_number] = checked;  // Store checkbox state
-            });
-    
-            setVoteCounts(voteData);
-            setCheckedState(checkboxData);  // Load checkboxes
-        } catch (error) {
-            console.error("Error fetching resume data:", error);
-        }
-       };
+      useEffect(() => {
+        const fetchData = async () => {
+            try {
+                if (!user || !user.class) return;
+        
+                // Update the endpoint to include class filtering
+                const response = await fetch(`${API_BASE_URL}/resume/group/${user.group_id}?class=${user.class}`);
+                const data: ResumeData[] = await response.json();
+        
+                const voteData: { [key: number]: VoteData } = {};
+                const checkboxData: { [key: number]: boolean } = {};  // New state tracking checkboxes
+        
+                data.forEach((resume) => {
+                    const { resume_number, vote, checked } = resume;
+        
+                    if (!voteData[resume_number]) {
+                        voteData[resume_number] = { yes: 0, no: 0, undecided: 0 };
+                    }
+        
+                    if (vote === "yes") {
+                        voteData[resume_number].yes += 1;
+                    } else if (vote === "no") {
+                        voteData[resume_number].no += 1;
+                    } else if (vote === "unanswered") {
+                        voteData[resume_number].undecided += 1;
+                    }
+        
+                    checkboxData[resume_number] = checked;  // Store checkbox state
+                });
+        
+                setVoteCounts(voteData);
+                setCheckedState(checkboxData);  // Load checkboxes
+            } catch (error) {
+                console.error("Error fetching resume data:", error);
+            }
+        };
+        
         if (user) {
             fetchData();
         }
@@ -165,27 +167,30 @@ export default function ResReviewGroup() {
 
 
     // Handle checkbox toggle
-    const handleCheckboxChange = (resumeNumber: number) => {
-        if (!socket || !isConnected) {
-            console.warn("Socket not connected. Checkbox state not sent.");
-            return;
-        }
+const handleCheckboxChange = (resumeNumber: number) => {
+    if (!socket || !isConnected) {
+        console.warn("Socket not connected. Checkbox state not sent.");
+        return;
+    }
+
+    const newCheckedState = !checkedState[resumeNumber];
     
-        const newCheckedState = !checkedState[resumeNumber];
-    
-        console.log(`Sending checkbox update: Resume ${resumeNumber}, Checked: ${newCheckedState}`);
-    
-        setCheckedState((prev) => ({
-            ...prev,
-            [resumeNumber]: newCheckedState,
-        }));
-    
-        socket.emit("check", {
-            group_id: user?.group_id,
-            resume_number: resumeNumber,
-            checked: newCheckedState,
-        });
-    };
+    // Create the room ID that combines both group_id and class
+    const roomId = `group_${user.group_id}_class_${user.class}`;
+
+    console.log(`Sending checkbox update: Resume ${resumeNumber}, Checked: ${newCheckedState}`);
+
+    setCheckedState((prev) => ({
+        ...prev,
+        [resumeNumber]: newCheckedState,
+    }));
+
+    socket.emit("check", {
+        group_id: roomId,
+        resume_number: resumeNumber,
+        checked: newCheckedState,
+    });
+};
     
     useEffect(() => {
         if (!socket) return;

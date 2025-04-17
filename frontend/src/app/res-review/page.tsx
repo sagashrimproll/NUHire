@@ -147,6 +147,7 @@ export default function ResumesPage() {
         body: JSON.stringify({
           student_id: user.id,
           group_id: user.group_id,
+          class: user.class,
           timespent: timeSpent,
           resume_number: currentResumeIndex + 1,
           vote: vote,

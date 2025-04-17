@@ -283,20 +283,37 @@ io.on("connection", (socket) => {
 
   // Listen for the "check" event, which is emitted by the client when a checkbox is checked or unchecked
   // The server emits the checkbox update to all clients in the specified group room    
+  // Listen for the "check" event
   socket.on("check", ({ group_id, resume_number, checked }) => {
-    db.query(
-      "UPDATE Resume SET `checked` = ? WHERE group_id = ? AND resume_number = ?",
-      [checked, group_id, resume_number],
-      (err, result) => {
+    // Extract class information from the group_id if it contains the new format
+    let actualGroupId = group_id;
+    let classId = null;
+    
+    // Check if the group_id is in the format "group_X_class_Y"
+    const roomMatch = /group_(\d+)_class_(\d+)/.exec(group_id);
+    if (roomMatch) {
+        actualGroupId = roomMatch[1]; // The actual group ID
+        classId = roomMatch[2];       // The class ID
+    }
+    
+    // Update the database - removed commas between WHERE conditions and removed AND
+    const query = classId 
+      ? "UPDATE Resume SET `checked` = ? WHERE group_id = ? AND class = ? AND resume_number = ?"
+      : "UPDATE Resume SET `checked` = ? WHERE group_id = ? AND resume_number = ?";
+      
+    const params = classId 
+      ? [checked, actualGroupId, classId, resume_number]
+      : [checked, actualGroupId, resume_number];
+    
+    db.query(query, params, (err, result) => {
         if (err) {
-          console.error("Database Error:", err);
-          return; // Stop execution on error
+            console.error("Database Error:", err);
+            return; // Stop execution on error
         }
-
-        // Emit only if the update was successful
+        
+        // Emit the update to all clients in the same room
         socket.to(group_id).emit("checkboxUpdated", { resume_number, checked });
-      }
-    );
+    });
   });
 
   socket.on("checkint", ({ group_id, interview_number, checked }) => {
@@ -312,10 +329,18 @@ io.on("connection", (socket) => {
 
   // Listen for the "sendPopupToGroups" event, which is emitted by the client when an admin wants to send a popup message to specific groups
   // The server queries the database to get the email addresses of students in the specified groups
-  socket.on("sendPopupToGroups", ({ groups, headline, message }) => {
+  socket.on("sendPopupToGroups", ({ groups, headline, message, class: classId }) => {
     if (!groups || groups.length === 0) return;
-
-    db.query("SELECT email FROM Users WHERE group_id IN (?) AND affiliation = 'student'", [groups], (err, results) => {
+  
+    let query = "SELECT email FROM Users WHERE group_id IN (?) AND affiliation = 'student'";
+    let params = [groups];
+    
+    if (classId) {
+      query += " AND class = ?";
+      params.push(classId);
+    }
+  
+    db.query(query, params, (err, results) => {
       if (!err && results.length > 0) {
         results.forEach(({ email }) => {
           const studentSocketId = onlineStudents[email];
@@ -323,8 +348,8 @@ io.on("connection", (socket) => {
             io.to(studentSocketId).emit("receivePopup", { headline, message });
           }
         });
-
-        console.log(`Popup sent to Groups: ${groups.join(", ")}`);
+  
+        console.log(`Popup sent to Groups: ${groups.join(", ")} in Class ${classId || 'All'}`);
       } else {
         console.log("No online students in the selected groups.");
       }
@@ -479,31 +504,84 @@ app.get("/users/:id", (req, res) => {
 
 // post route for creating a new user, which checks if the user already exists in the database and inserts a new user record if not
 app.post("/users", (req, res) => {
-  const { First_name, Last_name, Email, Affiliation } = req.body;
+  const { First_name, Last_name, Email, Affiliation, group_id, course_id } = req.body;
 
+  // Validate required fields
+  if (!First_name || !Last_name || !Email || !Affiliation) {
+    return res.status(400).json({ message: "First name, last name, email, and affiliation are required" });
+  }
+
+  // Check if user already exists
   db.query("SELECT * FROM Users WHERE email = ?", [Email], (err, results) => {
-    if (err) return res.status(500).json({ error: err.message });
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({ error: err.message });
+    }
+    
     if (results.length > 0) {
       return res.status(409).json({ message: "User already exists" });
     }
 
-    db.query(
-      "INSERT INTO Users (f_name, l_name, email, affiliation) VALUES (?, ?, ?, ?)",
-      [First_name, Last_name, Email, Affiliation],
-      (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ id: result.insertId, First_name, Last_name, Email, Affiliation });
+    // Create SQL query based on whether group_id is provided
+    let sql, params;
+    
+    if (Affiliation === 'student' && group_id && course_id) {
+      // Include group_id for students
+      sql = "INSERT INTO Users (f_name, l_name, email, affiliation, group_id, class) VALUES (?, ?, ?, ?, ?, ?)";
+      params = [First_name, Last_name, Email, Affiliation, group_id, course_id];
+    } else {
+      // Don't include group_id for faculty
+      sql = "INSERT INTO Users (f_name, l_name, email, affiliation) VALUES (?, ?, ?, ?)";
+      params = [First_name, Last_name, Email, Affiliation];
+    }
+    
+    // Execute the query
+    db.query(sql, params, (err, result) => {
+      if (err) {
+        console.error("Failed to create user:", err);
+        return res.status(500).json({ error: err.message });
       }
-    );
+      
+      // Log successful user creation
+      console.log(`User created: ${First_name} ${Last_name} (${Email}) as ${Affiliation}${group_id ? `, group: ${group_id}` : ''}${course_id ? `, class: ${course_id}` : ''}`);
+      
+      // Return success response
+      res.status(201).json({ 
+        id: result.insertId, 
+        First_name, 
+        Last_name, 
+        Email, 
+        Affiliation,
+        ...(group_id && { group_id }),
+        ...(course_id && { course_id }) 
+      });
+    });
   });
 });
 
-//get route for getting all users registered as a student 
+// Get all unique classes from the database
+app.get("/classes", (req, res) => {
+  db.query("SELECT DISTINCT class AS id, class AS name FROM Users WHERE class IS NOT NULL ORDER BY class", (err, results) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(results.length ? results : []);
+  });
+});
+
+// Update the students endpoint to filter by class
 app.get("/students", async (req, res) => {
-  db.query("SELECT f_name, l_name, email FROM Users WHERE affiliation != 'admin'", (err, results) => {
+  const { class: classId } = req.query;
+  
+  let query = "SELECT f_name, l_name, email FROM Users WHERE affiliation = 'student'";
+  let params = [];
+  
+  if (classId) {
+    query += " AND class = ?";
+    params.push(classId);
+  }
+  
+  db.query(query, params, (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     if (results.length === 0) return res.status(404).json({ message: "No students found" });
-
     res.json(results);
   });
 });
@@ -528,7 +606,7 @@ app.post("/update-currentpage", (req, res) => {
 
 //Updates a group of Users stored job description as long as it's given the id of the group and the job descrption title
 app.post("/update-job", (req, res) => {
-  const { job_group_id, job } = req.body;
+  const { job_group_id, class_id, job } = req.body;
 
   if (!job_group_id || job.length === 0) {
     return res.status(400).json({ error: "Group ID and job are required." });
@@ -536,11 +614,42 @@ app.post("/update-job", (req, res) => {
 
   const queries = job.map(title => {
     return new Promise((resolve, reject) => {
-      db.query("UPDATE Users SET `job_des` = ? WHERE group_id = ?", [title, job_group_id], (err, result) => {
+      db.query("UPDATE Users SET `job_des` = ? WHERE group_id = ? AND class = ?", [title, job_group_id, class_id], (err, result) => {
         if (err) reject(err);
         resolve(result);
       });
     });
+  });
+});
+
+// Update user's class
+app.post("/update-user-class", (req, res) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const { email, class: classId } = req.body;
+  
+  // Verify the user is updating their own data
+  if (req.user.email !== email && req.user.affiliation !== "admin") {
+    return res.status(403).json({ message: "Forbidden: You can only update your own profile" });
+  }
+
+  if (!email || !classId) {
+    return res.status(400).json({ error: "Email and class are required." });
+  }
+
+  db.query("UPDATE Users SET `class` = ? WHERE email = ?", [classId, email], (err, result) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({ error: "Failed to update class." });
+    }
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: "User not found." });
+    }
+    
+    res.json({ message: "Class updated successfully!" });
   });
 });
 
@@ -578,11 +687,21 @@ app.post("/notes", (req, res) => {
 
 // get route for retrieving all groups from the database
 app.get("/groups", async (req, res) => {
-  db.query("SELECT f_name, l_name, email, job_des, current_page, `group_id` FROM Users WHERE `group_id` IS NOT NULL", (err, results) => {
+  const { class: classId } = req.query;
+  
+  let query = "SELECT f_name, l_name, email, job_des, current_page, `group_id` FROM Users WHERE `group_id` IS NOT NULL";
+  let params = [];
+  
+  if (classId) {
+    query += " AND class = ?";
+    params.push(classId);
+  }
+  
+  db.query(query, params, (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     if (results.length === 0) return res.status(404).json({ message: "No users found in any group" });
 
-    // ✅ Group users by `group`
+    // Group users by `group`
     const groups = {};
     results.forEach(user => {
       if (!groups[user.group_id]) {
@@ -635,24 +754,27 @@ app.get("/resume", (req, res) => {
 
 //post route for submitting a resume vote, which checks if the required fields are provided in the request body
 app.post("/resume/vote", (req, res) => {
-  const { student_id, group_id, timespent, resume_number, vote } = req.body;
+  const { student_id, group_id, class: classId, timespent, resume_number, vote } = req.body;
 
-  if (!student_id || !group_id || !resume_number || !timespent || !vote) {
-    return res.status(400).json({ error: "student_id, group_id, resume_number, timespent, and vote are required" });
+  if (!student_id || !group_id || !classId || !resume_number || !timespent || !vote) {
+    return res.status(400).json({ 
+      error: "student_id, group_id, class, resume_number, timespent, and vote are required" 
+    });
   }
 
-  const query = `INSERT INTO Resume (student_id, group_id, timespent, resume_number, vote) 
-  VALUES (?, ?, ?, ?, ?)
+  const query = `INSERT INTO Resume (student_id, group_id, class, timespent, resume_number, vote) 
+  VALUES (?, ?, ?, ?, ?, ?)
   ON DUPLICATE KEY UPDATE timespent = VALUES(timespent), vote = VALUES(vote);`;
 
-  db.query(query, [student_id, group_id, timespent, resume_number, vote], (err, result) => {
+  db.query(query, [student_id, group_id, classId, timespent, resume_number, vote], (err, result) => {
     if (err) {
-      console.error(err);
+      console.error("Error saving vote:", err);
       return res.status(500).json({ error: "Database error" });
     }
+    
+    console.log(`Vote recorded for resume ${resume_number} by student ${student_id} in group ${group_id}, class ${classId}`);
     res.status(200).json({ message: "Resume review updated successfully" });
   });
-
 });
 
 // get route for retriving all of the resume submissions made by a specific student, given their id.
@@ -673,10 +795,27 @@ app.delete("/resume/:student_id", (req, res) => {
   });
 });
 
-// get route for retrieving all resumes submitted by a specific group, given their id.
+// Update the existing endpoint to support class filtering
 app.get("/resume/group/:group_id", (req, res) => {
   const { group_id } = req.params;
-  db.query("SELECT * FROM Resume WHERE group_id = ?", [group_id], (err, results) => {
+  const { class: studentClass } = req.query;
+  
+  let query = "SELECT * FROM Resume WHERE group_id = ?";
+  let params = [group_id];
+  
+  // If class is provided, add it to the query
+  if (studentClass) {
+    // You'll need to join with the Users table to filter by class
+    query = `
+      SELECT r.* 
+      FROM Resume r
+      JOIN Users u ON r.student_id = u.id
+      WHERE r.group_id = ? AND u.class = ?
+    `;
+    params = [group_id, studentClass];
+  }
+  
+  db.query(query, params, (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });
@@ -717,17 +856,17 @@ app.get("/resume/checked/:group_id", async (req, res) => {
 //post route for submitting an interview vote, which checks if the required fields are provided in the request body
 app.post("/interview/vote", async (req, res) => {
 
-  const { student_id, group_id, question1, question2, question3, question4, timespent, candidate_id } = req.body;
+  const { student_id, group_id, studentClass, question1, question2, question3, question4, timespent, candidate_id } = req.body;
 
-  if (!student_id || !group_id || !question1 || !question2 || !question3 || !question4 || !timespent || !candidate_id) {
+  if (!student_id || !group_id || !studentClass || !question1 || !question2 || !question3 || !question4 || !timespent || !candidate_id) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
   const query = `INSERT INTO InterviewPage 
-        (student_id, group_id, question1, question2, question3, question4, timespent, candidate_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+        (student_id, group_id, class, question1, question2, question3, question4, timespent, candidate_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-  db.query(query, [student_id, group_id, question1, question2, question3, question4, timespent, candidate_id], (err, result) => {
+  db.query(query, [student_id, group_id, studentClass, question1, question2, question3, question4, timespent, candidate_id], (err, result) => {
     if (err) {
       console.error(err)
       return res.status(500).json({ error: "Database error" });
@@ -747,7 +886,24 @@ app.get("/interview", (req, res) => {
 // get route for retrieving all interviews submitted by a specific group, given their id.
 app.get("/interview/group/:group_id", (req, res) => {
   const { group_id } = req.params;
-  db.query("SELECT * FROM InterviewPage WHERE group_id = ?", [group_id], (err, results) => {
+  const { class: studentClass } = req.query;
+  
+  let query = "SELECT * FROM InterviewPage WHERE group_id = ?";
+  let params = [group_id];
+  
+  // If class is provided, add it to the query
+  if (studentClass) {
+    // You'll need to join with the Users table to filter by class
+    query = `
+      SELECT r.* 
+      FROM InterviewPage r
+      JOIN Users u ON r.student_id = u.id
+      WHERE r.group_id = ? AND u.class = ?
+    `;
+    params = [group_id, studentClass];
+  }
+  
+  db.query(query, params, (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });

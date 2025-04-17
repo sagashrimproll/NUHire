@@ -57,7 +57,7 @@ export default function MakeOffer() {
   
     const fetchInterviews = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/interview/group/${user.group_id}`);
+        const response = await fetch(`${API_BASE_URL}/interview/group/${user.group_id}?class=${user.class}`);
         const data = await response.json();
         
         setInterviews(data);
@@ -198,7 +198,7 @@ export default function MakeOffer() {
 
     socket.on("connect", () => {
       setIsConnected(true);
-      socket?.emit("joinGroup", user.group_id);
+      socket?.emit("joinGroup", `${user.group_id}_${user.class}`);
     });
 
     socket.on("disconnect", () => {
@@ -217,11 +217,13 @@ export default function MakeOffer() {
   const handleCheckboxChange = (interviewNumber: number) => {
     if (!socket || !isConnected) return;
 
+    const roomId = `group_${user.group_id}_class_${user.class}`;
+
     const newCheckedState = !checkedState[interviewNumber];
     setCheckedState((prev) => ({ ...prev, [interviewNumber]: newCheckedState }));
 
     socket.emit("checkint", {
-      group_id: user.group_id,
+      group_id: roomId,
       interview_number: interviewNumber,
       checked: newCheckedState,
     });

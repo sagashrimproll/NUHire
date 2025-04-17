@@ -107,7 +107,7 @@ export default function Interview() {
     const fetchCandidates = async () => {
       try {
         // First get the resumes with checked = TRUE
-        const resumeResponse = await axios.get(`${API_BASE_URL}/resume/group/${user.group_id}`);
+        const resumeResponse = await axios.get(`${API_BASE_URL}/resume/group/${user.group_id}?class=${user.class}`);
         const allResumes = resumeResponse.data;
         
         // Filter to get only checked resumes
@@ -219,7 +219,7 @@ export default function Interview() {
     timeSpent: number,
     candidate_id: number
   ) => {
-    if (!user || !user.id || !user.group_id) {
+    if (!user || !user.id || !user.group_id || !user.class) {
       console.error("Student ID or Group ID not found");
       return;
     }
@@ -228,6 +228,7 @@ export default function Interview() {
       const response = await axios.post(`${API_BASE_URL}/interview/vote`, {
         student_id: user.id,
         group_id: user.group_id,
+        studentClass: user.class,
         question1: overall,
         question2: professionalPresence,
         question3: qualityOfAnswer,
