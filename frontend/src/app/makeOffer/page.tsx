@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useProgress } from "../components/useProgress";
 import NotesPage from "../components/note";
 import Footer from "../components/footer";
+import Popup from "../components/popup";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const SOCKET_URL = `${API_BASE_URL}`;
@@ -26,6 +27,8 @@ export default function MakeOffer() {
   const [voteCounts, setVoteCounts] = useState<{ [key: number]: VoteData }>({});
   const [loading, setLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
+  const [popup, setPopup] = useState<{ headline: string; message: string } | null>(null);
+  const [acceptedAnotherOffer, setAcceptedAnotherOffer] = useState(false);
 
   const [user, setUser] = useState<any>(null);
   const [resumes, setResumes] = useState<any[]>([]);
@@ -227,7 +230,27 @@ export default function MakeOffer() {
       interview_number: interviewNumber,
       checked: newCheckedState,
     });
-  };
+  };  
+  
+  useEffect(() => {
+    socket?.on("receivePopup", ({ headline, message }) => {
+      setPopup({ headline, message });
+
+      if(popup?.headline === "Candidate Accepted Another Offer") {
+        setAcceptedAnotherOffer(true); 
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      }
+    });
+
+    return () => {
+      socket?.off("receivePopup");
+    };
+  }, []);
+
+
 
   const completeInterview = () => {
     const selectedCount = Object.values(checkedState).filter(Boolean).length;
@@ -262,16 +285,19 @@ export default function MakeOffer() {
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {interviewsWithVideos.map((interview, index) => {
+          {interviewsWithVideos.map((interview, index) => {
             const interviewNumber = interview.candidate_id;
             const votes = voteCounts[interviewNumber];
 
             return (
-              <div key={interviewNumber} className="bg-wood p-6 rounded-lg shadow-md flex flex-col gap-4">
+              <div
+                key={interviewNumber}
+                className="bg-wood p-6 rounded-lg shadow-md flex flex-col gap-4"
+              >
                 <h3 className="text-xl font-semibold text-navy text-center">
                   Candidate {interviewNumber}
                 </h3>
-            
+
                 <div className="aspect-video w-full">
                   <iframe
                     className="w-full h-full rounded-lg shadow-md"
@@ -282,12 +308,24 @@ export default function MakeOffer() {
                     allowFullScreen
                   ></iframe>
                 </div>
-            
+
                 <div className="mt-2 space-y-1 text-navy text-sm">
-                  <p><span className="font-medium">Overall:</span> {votes.Overall}</p>
-                  <p><span className="font-medium">Professional Presence:</span> {votes.Profesionality}</p>
-                  <p><span className="font-medium">Quality of Answer:</span> {votes.Quality}</p>
-                  <p><span className="font-medium">Personality:</span> {votes.Personality}</p>
+                  <p>
+                    <span className="font-medium">Overall:</span>{" "}
+                    {votes.Overall}
+                  </p>
+                  <p>
+                    <span className="font-medium">Professional Presence:</span>{" "}
+                    {votes.Profesionality}
+                  </p>
+                  <p>
+                    <span className="font-medium">Quality of Answer:</span>{" "}
+                    {votes.Quality}
+                  </p>
+                  <p>
+                    <span className="font-medium">Personality:</span>{" "}
+                    {votes.Personality}
+                  </p>
                 </div>
 
                 <a
@@ -298,7 +336,7 @@ export default function MakeOffer() {
                 >
                   View / Download Resume
                 </a>
-            
+
                 <label className="flex items-center mt-2">
                   <input
                     type="checkbox"
@@ -306,11 +344,21 @@ export default function MakeOffer() {
                     onChange={() => handleCheckboxChange(interviewNumber)}
                     className="h-4 w-4 text-navyHeader"
                   />
-                  <span className="ml-2 text-navy text-sm">Selected for Offer</span>
+                  <span className="ml-2 text-navy text-sm">
+                    Selected for Offer
+                  </span>
                 </label>
               </div>
-            );            
+            );
           })}
+
+          {popup && (
+            <Popup
+              headline={popup.headline}
+              message={popup.message}
+              onDismiss={() => setPopup(null)}
+            />
+          )}
         </div>
 
         <footer className="flex justify-between mt-6">
@@ -324,7 +372,9 @@ export default function MakeOffer() {
             onClick={completeInterview}
             disabled={selectedCount !== 1}
             className={`px-4 py-2 bg-navyHeader text-white rounded-lg shadow-md font-rubik transition duration-300 ${
-              selectedCount !== 1 ? "cursor-not-allowed opacity-50" : "hover:bg-blue-400"
+              selectedCount !== 1
+                ? "cursor-not-allowed opacity-50"
+                : "hover:bg-blue-400"
             }`}
           >
             Next: Dashboard →
@@ -335,4 +385,3 @@ export default function MakeOffer() {
     </div>
   );
 }
-

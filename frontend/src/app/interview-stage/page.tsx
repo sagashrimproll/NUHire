@@ -31,7 +31,7 @@ interface Interview {
 
 export default function Interview() {
   useProgress();
-  const [user, setUser] = useState<User | null>(null); 
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [popup, setPopup] = useState<{ headline: string; message: string } | null>(null);
@@ -46,11 +46,19 @@ export default function Interview() {
   // Video states
   const [videoIndex, setVideoIndex] = useState(0); 
   const [timeSpent, setTimeSpent] = useState(0);
-  const [fadingEffect, setFadingEffect] = useState(false); 
+  const [fadingEffect, setFadingEffect] = useState(false);
   const [finished, setFinished] = useState(false);
-  const [interviews, setInterviews] = useState<Interview[]>([]);
+  const [interviews, setInterviews] = useState<
+    { resume_id: number; title: string; video_path: string }[]
+  >([]);
+  const [noShow, setNoShow] = useState(false);
 
-  // Fetch user data on component mount
+  interface User {
+    id: string;
+    group_id: string;
+    email: string;
+  }
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -414,7 +422,12 @@ export default function Interview() {
           {/* Submit button */}
           <button
             onClick={handleSubmit}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-900 mt-6 transition duration-300 font-rubik"
+            disabled={finished}
+            className={`px-4 py-2 rounded-lg shadow-md transition duration-300 font-rubik mt-6 ${
+              finished
+                ? "bg-blue-500 text-white opacity-50 cursor-not-allowed"
+                : "bg-blue-500 text-white hover:bg-blue-900"
+            }`}
           >
             Submit Response
           </button>
@@ -441,10 +454,16 @@ export default function Interview() {
         {/* Video display */}
         <div className={`md:w-2/3 flex flex-col items-center justify-center p-4 md:p-8 ${fadingEffect ? 'opacity-50 transition-opacity duration-500' : 'opacity-100 transition-opacity duration-500'}`}>
           <h1 className="text-xl font-rubik font-bold mb-4 text-center">
-            Candidate Interview {videoIndex + 1}
+            {noShow ? "Candidate No-Show" : `Candidate Interview ${videoIndex + 1}`}
           </h1>
           <div className="w-full max-w-4xl aspect-video border-4 border-navyHeader mb-5 rounded-lg shadow-lg mx-auto">
-            {currentVid ? (
+            {noShow ? (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-xl font-bold">
+                  This candidate did not show up.
+                </p>
+              </div>
+            ) : currentVid ? (
               <iframe
                 className="w-full h-full rounded-lg shadow-lg"
                 src={currentVid.interview}
