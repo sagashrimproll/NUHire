@@ -1,5 +1,6 @@
-FROM node:20-alpine
+FROM node:18-alpine
 
+RUN npm install
 RUN apk add --no-cache \
     python3 \
     make \

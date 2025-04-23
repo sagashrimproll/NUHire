@@ -20,7 +20,9 @@ services:
   api:
     build: ./api # Uses api/Dockerfile
     container_name: api_container
-    volumes: ['./api:/apicode']
+    volumes:
+    - './api:/apicode'
+    - '/apicode/node_modules'
     ports:
       - "5001:5001"
     depends_on:
@@ -35,7 +37,9 @@ services:
   frontend:
     build: ./frontend  # Uses frontend/Dockerfile
     container_name: frontend_container
-    volumes: ['./frontend:/app']
+    volumes: 
+      - './frontend:/app'
+      - '/app/node_modules'
     ports:
       - "3000:3000"
     depends_on:

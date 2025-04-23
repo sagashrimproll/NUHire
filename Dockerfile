@@ -14,7 +14,7 @@ RUN npm run build
 
 RUN ls -la /app/.next
 
-FROM node:22-alpine
+FROM node:18-alpine
 
 WORKDIR /app
 
