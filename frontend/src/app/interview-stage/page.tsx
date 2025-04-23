@@ -36,6 +36,7 @@ export default function Interview() {
   const [error, setError] = useState<string | null>(null);
   const [popup, setPopup] = useState<{ headline: string; message: string } | null>(null);
   const pathname = usePathname();
+  const [noShow, setNoShow] = useState(false);
   
   // Rating states
   const [overall, setOverall] = useState(5); 
@@ -51,7 +52,6 @@ export default function Interview() {
   const [interviews, setInterviews] = useState<
     { resume_id: number; title: string; video_path: string }[]
   >([]);
-  const [noShow, setNoShow] = useState(false);
 
   interface User {
     id: string;
@@ -153,6 +153,12 @@ export default function Interview() {
   useEffect(() => {
     socket.on("receivePopup", ({ headline, message }) => {
       setPopup({ headline, message });
+
+      if (headline ===  "Abandoned Interview") {
+        setNoShow(true);
+      } else {
+        setNoShow(false); 
+      }
     });
     
     return () => {
@@ -187,6 +193,7 @@ export default function Interview() {
         setVideoIndex(videoIndex + 1); 
         setTimeSpent(0); 
         setFadingEffect(false); 
+        setNoShow(false);
       }, 500);
     } else {
       setFinished(true);
@@ -258,7 +265,10 @@ export default function Interview() {
       console.error("No current video selected");
       return;
     }
-    
+
+    if(noShow) {
+      await sendResponseToBackend(1, 1, 1, 1, timeSpent, currentVid.resume_id);
+    } else {
     await sendResponseToBackend(
       overall,
       professionalPresence,
@@ -267,6 +277,7 @@ export default function Interview() {
       timeSpent,
       currentVid.resume_id
     );
+  }
 
     if (videoIndex < interviews.length - 1) {
       nextVideo();
@@ -378,7 +389,7 @@ export default function Interview() {
 
       <div className="relative flex flex-col md:flex-row min-h-screen mt-4">
         {/* Evaluation panel */}
-        <div className="md:w-1/3 bg-blue-50 shadow-lg p-4 mx-4 my-2 flex flex-col items-center justify-start rounded-lg">
+        <div key={videoIndex} className="md:w-1/3 bg-blue-50 shadow-lg p-4 mx-4 my-2 flex flex-col items-center justify-start rounded-lg">
           <h1 className="text-2xl text-navyHeader font-bold mb-4">
             Evaluation
           </h1>
@@ -480,6 +491,7 @@ export default function Interview() {
           {/* Timer display */}
           <div className="text-sm text-gray-500">
             Time spent: {Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}
+            {/* Time spent debugger: {timeSpent} */}
           </div>
         </div>
 

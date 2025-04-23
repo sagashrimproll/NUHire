@@ -331,6 +331,17 @@ io.on("connection", (socket) => {
     });
   });
 
+  socket.on("makeOfferRequest", ({groupId, candidateId }) => {
+    console.log(`Student in group ${groupId} wants to offer candidate ${candidateId}`);
+    io.emit("makeOfferRequest", {groupId, candidateId});
+  });
+
+  // Advisor’s decision → notify the student group
+  socket.on('makeOfferResponse', ({ groupId, candidateId, accepted }) => {
+    console.log(`Advisor responded to group ${groupId} for candidate ${candidateId}: accepted=${accepted}`);
+    io.to(groupId).emit('makeOfferResponse', { groupId, candidateId, accepted });
+  });
+
   // Listens for the "disconnect" event, which is emitted when a client disconnects from the server
   // The server removes the student from the onlineStudents object and emits the "updateOnlineStudents" event to all connected clients
   socket.on("disconnect", () => {
@@ -723,9 +734,17 @@ app.post("/interview/vote", async (req, res) => {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
-  const query = `INSERT INTO InterviewPage 
-        (student_id, group_id, question1, question2, question3, question4, timespent, candidate_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+  const query = `
+  INSERT INTO InterviewPage
+    (student_id, group_id, question1, question2, question3, question4, timespent, candidate_id)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  ON DUPLICATE KEY UPDATE
+    question1 = VALUES(question1),
+    question2 = VALUES(question2),
+    question3 = VALUES(question3),
+    question4 = VALUES(question4),
+    timespent  = VALUES(timespent)
+`;
 
   db.query(query, [student_id, group_id, question1, question2, question3, question4, timespent, candidate_id], (err, result) => {
     if (err) {

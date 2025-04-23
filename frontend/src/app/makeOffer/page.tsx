@@ -2,11 +2,12 @@
 import React, { useState, useEffect, use } from "react";
 import { io, Socket } from "socket.io-client";
 import Navbar from "../components/navbar";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useProgress } from "../components/useProgress";
 import NotesPage from "../components/note";
 import Footer from "../components/footer";
 import Popup from "../components/popup";
+import axios from "axios";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const SOCKET_URL = `${API_BASE_URL}`;
@@ -28,7 +29,9 @@ export default function MakeOffer() {
   const [loading, setLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
   const [popup, setPopup] = useState<{ headline: string; message: string } | null>(null);
-  const [acceptedAnotherOffer, setAcceptedAnotherOffer] = useState(false);
+  const pathname = usePathname();
+  const [offerPending, setOfferPending] = useState(false);
+
 
   const [user, setUser] = useState<any>(null);
   const [resumes, setResumes] = useState<any[]>([]);
@@ -36,6 +39,7 @@ export default function MakeOffer() {
   const [interviews, setInterviews] = useState<any[]>([]);
   const [candidates, setCandidates] = useState<any[]>([]);
   const [interviewsWithVideos, setInterviewsWithVideos] = useState<any[]>([]);
+  const [acceptedOffer, setAcceptedOffer] = useState(false); 
   
 
   // Load user
@@ -102,6 +106,7 @@ export default function MakeOffer() {
     fetchCandidates();
   }, [interviews]);
 
+
   useEffect(() => {
     if (!candidates.length) return;
   
@@ -161,7 +166,7 @@ export default function MakeOffer() {
         voteData[candidateId].Profesionality += interview.question2;
         voteData[candidateId].Quality += interview.question3;
         voteData[candidateId].Personality += interview.question4;
-        // You can use OR logic so if any vote has checked=true, it's selected
+  
         checkboxData[candidateId] = checkboxData[candidateId] || interview.checked;
       });
     }
@@ -208,13 +213,47 @@ export default function MakeOffer() {
       setIsConnected(false);
     });
 
+    // Listens to Advisor's response
+    socket.on("makeOfferResponse", ({ groupId, candidateId, accepted }: { groupId: number; candidateId: number; accepted: boolean }) => {
+      if (groupId !== user.group_id) return;
+      if (accepted) {
+        setPopup({
+          headline: "Offer accepted!",
+          message: "Congratulations—you’ve extended the offer successfully.",
+        });
+        setAcceptedOffer(true);
+      } else {
+        setPopup({
+          headline: "Offer rejected",
+          message: "That candidate wasn’t available or has chosen another offer. Please choose again.",
+        });
+
+        // filter the candidates based on the id to remove the rejected candidate.
+        setInterviewsWithVideos((prev) => 
+        prev.filter((iv) => iv.candidate_id !== candidateId));
+
+
+
+        setCheckedState((prev) => {
+          const next = { ...prev };
+          delete next[candidateId];
+          return next;
+        });
+
+
+        setOfferPending(false);
+      }
+    });
+
     socket.on("checkboxUpdated", ({ interview_number, checked }: { interview_number: number; checked: boolean }) => {
       setCheckedState((prev) => ({ ...prev, [interview_number]: checked }));
     });
 
     return () => {
-      socket?.off("checkboxUpdated");
+      socket?.disconnect();
     };
+  
+  
   }, [user]);
 
   const handleCheckboxChange = (interviewNumber: number) => {
@@ -229,34 +268,60 @@ export default function MakeOffer() {
       checked: newCheckedState,
     });
   };  
+
+  const handleMakeOffer = () => {
+    const selectedIds = Object.entries(checkedState)
+      .filter(([_, checked]) => checked)
+      .map(([id]) => Number(id));
+    if (selectedIds.length !== 1) return;
+    const candidateId = selectedIds[0];
   
-  useEffect(() => {
-    socket?.on("receivePopup", ({ headline, message }) => {
-      setPopup({ headline, message });
-
-      if(popup?.headline === "Candidate Accepted Another Offer") {
-        setAcceptedAnotherOffer(true); 
-
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
-      }
+    socket?.emit("makeOfferRequest", {
+      groupId: user.group_id,
+      candidateId,
     });
+  
+    setPopup({
+      headline: "Offer submitted",
+      message: "Awaiting approval from your advisor…",
+    });
+    setOfferPending(true);
+  };
+  
 
-    return () => {
-      socket?.off("receivePopup");
-    };
-  }, []);
+    // Update current page when user is loaded
+    useEffect(() => {
+      if (user && user.email) {
+        // Emit socket events
+        socket?.emit("studentOnline", { studentId: user.email }); 
+        socket?.emit("studentPageChanged", { studentId: user.email, currentPage: pathname });
+        
+        // Update current page in database
+        const updateCurrentPage = async () => {
+          try {
+            await axios.post(`${API_BASE_URL}/update-currentpage`, {
+              page: 'makeofferpage', 
+              user_email: user.email
+            });
+          } catch (error) {
+            console.error("Error updating current page:", error);
+          }
+        };
+        
+        updateCurrentPage(); 
+      }
+    }, [user, pathname]);
+  
 
 
 
-  const completeInterview = () => {
+  const completeMakeOffer = () => {
     const selectedCount = Object.values(checkedState).filter(Boolean).length;
     if (selectedCount !== 1) {
       alert("You must select exactly 1 candidates before proceeding.");
       return;
     }
-    localStorage.setItem("progress", "interview-stage");
+    localStorage.setItem("progress", "makeOffer");
     window.location.href = "/dashboard";
   };
 
@@ -350,6 +415,7 @@ export default function MakeOffer() {
             );
           })}
 
+
           {popup && (
             <Popup
               headline={popup.headline}
@@ -357,7 +423,20 @@ export default function MakeOffer() {
               onDismiss={() => setPopup(null)}
             />
           )}
-        </div>
+          </div>
+        {selectedCount === 1 && (
+          <div className="flex justify-center my-6">
+            <button
+              onClick={handleMakeOffer}
+              disabled={offerPending}
+              className={`px-6 py-3 bg-navyHeader text-white rounded-lg shadow-md font-rubik transition duration-300 ${
+                offerPending ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'
+              }`}
+            >
+              {offerPending ? 'Awaiting Advisor…' : 'Make an Offer'}
+            </button>
+          </div>
+        )}
 
         <footer className="flex justify-between mt-6">
           <button
@@ -367,15 +446,14 @@ export default function MakeOffer() {
             ← Back: Job Description
           </button>
           <button
-            onClick={completeInterview}
-            disabled={selectedCount !== 1}
+            onClick={completeMakeOffer}
             className={`px-4 py-2 bg-navyHeader text-white rounded-lg shadow-md font-rubik transition duration-300 ${
-              selectedCount !== 1
+              !acceptedOffer
                 ? "cursor-not-allowed opacity-50"
                 : "hover:bg-blue-400"
             }`}
           >
-            Next: Dashboard →
+            Next: Employer Pannel →
           </button>
         </footer>
       </div>

@@ -131,7 +131,9 @@ const Dashboard = () => {
       </div>
 
         <div className="flex flex-col items-center text-center p-6">
-          <h1 className="text-2xl font-rubik font-bold mb-4">Get started with learning about ATS</h1>
+          <p className="text-xl font-rubik mb-4"> An Applicant Tracking System (ATS) is a software that streamlines the hiring process by automating tasks like resume screening and applicant tracking. It helps organizations manage the flow of applications and identify qualified candidates</p>
+          <h1 className="text-2xl font-rubik font-bold mb-4">Before you get started on this activity, watch the short video below: </h1>
+          
           <div className="w-full max-w-5xl aspect-video border-4 border-[#1c2a63] mb-5 rounded-lg shadow-lg">
             <iframe
               className="w-full h-full rounded-lg shadow-lg"
