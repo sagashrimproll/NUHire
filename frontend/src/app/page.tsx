@@ -16,22 +16,27 @@ export default function Home() {
       <div className="w-full flex justify-end p-2 bg-navy shadow-md font-rubik text-2xl fixed top-0">
         <button 
           onClick={handleGoogleLogin} 
-          className="m-2 px-2 py-2 bg-sand text-black border-4 border-wood rounded-md text-lg transition-opacity hover:opacity-60 active:opacity-30"
-        >
-          Signup
-        </button>
-        <button 
-          onClick={handleGoogleLogin} 
           className="m-2 px-2 py-2 bg-wood text-black border-4 border-sand rounded-md text-lg transition-opacity hover:opacity-60 active:opacity-30"
         >
           Login
         </button>
       </div>
 
-      {/* Main Content */}
-      <main className="bg-sand justify-center items-center flex flex-col p-6">
+      <div className="mt-20 mb-4">
+        <Image
+          src="/NUHireImageCuter.png"
+          alt="Project Mascot"
+          width={150}
+          height={150}
+          priority
+        />
+      </div>
+
+      <main className="bg-sand justify-center items-center flex flex-col p-6 font-rubik">
         <h1 className="text-5xl font-bold">Welcome to NUHire!</h1>
-        <p className="text-2xl italic mt-2">Where you can be your own employer!</p>
+        <p className="text-2xl italic mt-2">Step into the employer's Shoes!</p>
+        <p className="text-xl italic mt-2">Work in small teams to experience what it’s like to be a hiring manager. Review a job description, evaluate resumes, and decide which candidates deserve an interview. Then, watch interview clips and choose the top two finalists for the role. Who will your group select to be your NUHire?
+        </p>
         <button 
           onClick={handleGoogleLogin} 
           className="mt-6 px-6 py-4 bg-white text-black border-4 border-navy rounded-md text-lg transition-opacity hover:opacity-60 active:opacity-30"
@@ -40,7 +45,6 @@ export default function Home() {
         </button>
       </main>
 
-      {/* Footer */}
       <footer className="w-full flex justify-center p-2 bg-navy shadow-md font-rubik text-2xl fixed bottom-0">
         <a
           className="flex items-center text-wood hover:text-blue-700 transition"

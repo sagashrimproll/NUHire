@@ -1,6 +1,6 @@
 # NUHire
 
-![Screenshot](/project-screenshots/NUHireImage.png)
+![Screenshot](/project-screenshots/NUHireImageCuter.png)
 
 NUHire is a web application that simulates the job application process. In the simulation, the students get to play the part of employers reading through a job-description and reviewing resumes, conducting job-interviews and making decisions based on a real-world hiring process.
 

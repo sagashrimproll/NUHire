@@ -1,16 +1,17 @@
 "use client";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation"; 
+import { useRouter } from "next/navigation";
 import NavbarAdmin from "../components/navbar-admin";
 import { io } from "socket.io-client";
+import Popup from "../components/popup";
 
 const socket = io(`${API_BASE_URL}`);
 
-const SendPopups = () => {  
-    interface User {
-        affiliation: string;
-    }
+const SendPopups = () => {
+  interface User {
+    affiliation: string;
+  }
 
     interface Group {
         group_id: string;
@@ -57,8 +58,8 @@ const SendPopups = () => {
             }
         };
 
-        fetchUser();
-    }, [router]); 
+    fetchUser();
+  }, [router]);
 
     // Fetch available classes
     useEffect(() => {
@@ -93,11 +94,21 @@ const SendPopups = () => {
         };
 
         if (selectedClass) {
-            fetchGroups();
+        fetchGroups();
         }
-    }, [selectedClass]);
+  }, [selectedClass]);
 
-    if (loading) return <p>Loading...</p>;
+  useEffect(() => {
+    const onRequest = ({ groupId, candidateId }) => {
+      setPendingOffers((prev) => [...prev, { groupId, candidateId }]);
+    };
+    socket.on("makeOfferRequest", onRequest);
+    return () => {
+      socket.off("makeOfferRequest", onRequest);
+    };
+  }, []);
+
+  if (loading) return <p>Loading...</p>;
 
     if (!user || user.affiliation !== "admin") {
         return <div>This account is not authorized to access this page. Please log in with an admin account.</div>;
@@ -108,22 +119,33 @@ const SendPopups = () => {
         setSelectedGroups([]); // Reset selected groups when class changes
     };
 
-    const handleCheckboxChange = (groupId: string) => {
-        setSelectedGroups((prevSelected) =>
-            prevSelected.includes(groupId)
-                ? prevSelected.filter((id) => id !== groupId)
-                : [...prevSelected, groupId]
-        );
-    }; 
-    
-    const handlePresetSelection = (presetTitle: string) => {
-        setSelectedPreset(presetTitle);
-        const preset = presetPopups.find((p) => p.title === presetTitle);
-        if (preset) {
-            setHeadline(preset.headline);
-            setMessage(preset.message);
-        }
-    };
+  const handleCheckboxChange = (groupId: string) => {
+    setSelectedGroups((prevSelected) =>
+      prevSelected.includes(groupId)
+        ? prevSelected.filter((id) => id !== groupId)
+        : [...prevSelected, groupId]
+    );
+  };
+
+  const handlePresetSelection = (presetTitle: string) => {
+    setSelectedPreset(presetTitle);
+    const preset = presetPopups.find((p) => p.title === presetTitle);
+    if (preset) {
+      setHeadline(preset.headline);
+      setMessage(preset.message);
+    }
+  };
+
+  const respondToOffer = (
+    groupId: number,
+    candidateId: number,
+    accepted: boolean
+  ) => {
+    socket.emit("makeOfferResponse", { groupId, candidateId, accepted });
+    setPendingOffers((prev) =>
+      prev.filter((o) => o.groupId !== groupId || o.candidateId !== candidateId)
+    );
+  };
 
     const sendPopups = async () => {
         if (!headline || !message || selectedGroups.length === 0) {
@@ -155,18 +177,19 @@ const SendPopups = () => {
         }
     };
 
-    return (
-      <div className="flex flex-col min-h-screen bg-sand font-rubik">
-        <NavbarAdmin />
+  return (
+    <div className="flex flex-col min-h-screen bg-sand font-rubik">
+      <NavbarAdmin />
 
-        <div className="max-w-3xl mx-auto justify-center items-center p-6 mt-6">
-          <h1 className="text-3xl font-bold text-center text-navyHeader mb-6">
-            Send Popups
-          </h1>
+      <div className="max-w-3xl mx-auto justify-center items-center p-6 mt-6">
+        <h1 className="text-3xl font-bold text-center text-navyHeader mb-6">
+          Send Popups
+        </h1>
 
-          <p className="text-lg text-center text-navyHeader mb-4">
-            Select a preset or create a custom message to send to selected groups of students.
-          </p>
+        <p className="text-lg text-center text-navyHeader mb-4">
+          Select a preset or create a custom message to send to selected groups
+          of students.
+        </p>
 
           {/* Class Selection Dropdown */}
           <div className="mb-6">
@@ -283,23 +306,56 @@ const SendPopups = () => {
                 )}
               </div>
 
+        <button
+          onClick={sendPopups}
+          disabled={sending || selectedGroups.length === 0}
+          className={`mt-6 px-6 py-3 font-semibold rounded-md transition 
+                        ${
+                          sending || selectedGroups.length === 0
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-blue-600 text-white hover:bg-blue-700"
+                        }`}
+        >
+          {sending ? "Sending..." : "Send Popups"}
+        </button>
+
+        {pendingOffers.map(({ groupId, candidateId }) => (
+          <div
+            key={`offer-${groupId}-${candidateId}`}
+            className="mt-6 p-4 bg-springWater rounded-md shadow-md max-w-md mx-auto"
+          >
+            <Popup
+              headline={`Group ${groupId} wants to offer Candidate ${candidateId}`}
+              message="Do you approve?"
+              onDismiss={() =>
+                setPendingOffers((prev) =>
+                  prev.filter(
+                    (o) =>
+                      o.groupId !== groupId || o.candidateId !== candidateId
+                  )
+                )
+              }
+            />
+
+            <div className="mt-2 flex justify-between">
               <button
-                onClick={sendPopups}
-                disabled={sending || selectedGroups.length === 0}
-                className={`mt-6 px-6 py-3 font-semibold rounded-md transition 
-                            ${
-                              sending || selectedGroups.length === 0
-                                ? "bg-gray-400 cursor-not-allowed"
-                                : "bg-blue-600 text-white hover:bg-blue-700"
-                            }`}
+                onClick={() => respondToOffer(groupId, candidateId, false)}
+                className="px-4 py-2 rounded-md bg-red-200 text-red-800 hover:bg-red-300 transition"
               >
-                {sending ? "Sending..." : "Send Popups"}
+                Reject
               </button>
-            </>
-          )}
-        </div>
+              <button
+                onClick={() => respondToOffer(groupId, candidateId, true)}
+                className="px-4 py-2 rounded-md bg-green-200 text-green-800 hover:bg-green-300 transition"
+              >
+                Accept
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
-    );
+    </div>
+  );
 };
 
 export default SendPopups;

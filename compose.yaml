@@ -50,4 +50,4 @@ services:
 volumes:
   db_data:
   apicode:
-  frontendcode:
+  frontendcode: 
