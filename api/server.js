@@ -175,67 +175,123 @@ app.use((req, res, next) => {
   next();
 });
 
-// connect to MySQL database using the mysql2 package, which allows for executing SQL queries and managing database connections
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: 3306,
-});
+// Replace your current database connection setup
+function connectToDatabase() {
+  return new Promise((resolve, reject) => {
+    console.log(`Attempting to connect to MySQL at ${process.env.DB_HOST}...`);
+    console.log(`Connection details: host=${process.env.DB_HOST}, user=${process.env.DB_USER}, database=${process.env.DB_NAME}`);
+    
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      port: 3306,
+      connectTimeout: 20000 // Increase timeout to 20 seconds
+    });
+    
+    connection.connect((err) => {
+      if (err) {
+        console.error('Database connection failed:', err);
+        reject(err);
+      } else {
+        console.log('Connected to MySQL database successfully!');
+        resolve(connection);
+      }
+    });
+    
+    connection.on('error', (err) => {
+      console.error('Database error:', err);
+      if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+        console.log('Database connection lost. Reconnecting...');
+        global.db = connectToDatabase().catch(console.error);
+      } else {
+        throw err;
+      }
+    });
+  });
+}
 
-// Connect to the MySQL database and log the connection status
-db.connect((err) => {
-  if (err) {
-    console.error("Database connection failed:", err);
-  } else {
-    console.log("Connected to MySQL database.");
-  }
-});
+// Global database variable
+let db;
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Passport.js configuration for Google OAuth 2.0 authentication
-
-// use Google OAuth 2.0 strategy for user authentication, which allows users to log in using their Google accounts
-// The strategy uses the client ID and secret from the Google Developer Console, and the callback URL is set to "/auth/google/callback"
-passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: "/auth/google/callback"
-}, (accessToken, refreshToken, profile, done) => {
-  const email = profile.emails[0].value.toLowerCase();
-
-  db.query("SELECT * FROM Users WHERE email = ?", [email], (err, results) => {
-    if (err) return done(err);
-    if (results.length > 0) {
-      return done(null, results[0]);
-    } else {
-      return done(null, { email });
+// Initialize the application
+async function initializeApp() {
+  // Try to connect to the database with retries
+  let connected = false;
+  let retryCount = 0;
+  const maxRetries = 30;
+  
+  while (!connected && retryCount < maxRetries) {
+    try {
+      db = await connectToDatabase();
+      global.db = db; // Make it globally available
+      connected = true;
+      console.log("Database connection established successfully");
+    } catch (error) {
+      retryCount++;
+      console.error(`Database connection attempt ${retryCount} failed:`, error);
+      
+      if (retryCount < maxRetries) {
+        const delay = Math.min(10000, retryCount * 1000);
+        console.log(`Retrying in ${delay/1000} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } else {
+        console.error('All database connection attempts failed. Exiting application.');
+        process.exit(1);
+      }
     }
+  }
+  
+  // Configure passport after database is connected
+  configurePassport();
+  
+  const PORT = process.env.PORT || 5001;
+  // Start the server only after database is connected
+  server.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
   });
-}));
+}
 
-// serializeUser and deserializeUser methods are used to manage user sessions in Passport.js
-// serializeUser method is called when a user logs in, and it stores the user's ID in the session
-passport.serializeUser((user, done) => {
-  done(null, user.id || user.email);
-});
-
-// deserializeUser method is called on subsequent requests to retrieve the user from the session
-passport.deserializeUser((identifier, done) => {
-  console.log("Deserializing user:", identifier);
-  const query = isNaN(identifier)
-    ? "SELECT * FROM Users WHERE email = ?"
-    : "SELECT * FROM Users WHERE id = ?";
-
-  db.query(query, [identifier], (err, results) => {
-    if (err) return done(err);
-    if (results.length === 0) return done(null, false);
-    console.log("User found:", results[0]);
-    return done(null, results[0]);
+// Separate passport configuration function
+function configurePassport() {
+  // Passport.js configuration for Google OAuth 2.0 authentication
+  passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "/auth/google/callback"
+  }, (accessToken, refreshToken, profile, done) => {
+    const email = profile.emails[0].value.toLowerCase();
+    
+    db.query("SELECT * FROM Users WHERE email = ?", [email], (err, results) => {
+      if (err) return done(err);
+      if (results.length > 0) {
+        return done(null, results[0]);
+      } else {
+        return done(null, { email });
+      }
+    });
+  }));
+  
+  // serializeUser and deserializeUser methods
+  passport.serializeUser((user, done) => {
+    done(null, user.id || user.email);
   });
-});
-
+  
+  passport.deserializeUser((identifier, done) => {
+    console.log("Deserializing user:", identifier);
+    const query = isNaN(identifier)
+      ? "SELECT * FROM Users WHERE email = ?"
+      : "SELECT * FROM Users WHERE id = ?";
+  
+    db.query(query, [identifier], (err, results) => {
+      if (err) return done(err);
+      if (results.length === 0) return done(null, false);
+      console.log("User found:", results[0]);
+      return done(null, results[0]);
+    });
+  });
+}
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Socket.io configuration for real-time communication between the server and clients
 
@@ -1064,8 +1120,7 @@ app.get("/canidates/resume/:resume_number", (req, res) => {
 // ✅ Serve Uploaded Files
 app.use("/uploads", express.static(path.join(__dirname, "uploads/")));
 
-//Declares what port the API should listen to
-const PORT = process.env.PORT || 5001;
-server.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+initializeApp().catch(error => {
+  console.error("Failed to initialize app:", error);
+  process.exit(1);
 });

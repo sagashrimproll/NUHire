@@ -11,15 +11,17 @@ services:
     ports:
       - "3307:3306"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pexample"]
-      interval: 10s
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
     volumes:
       - ./database-files:/docker-entrypoint-initdb.d/:ro
   api:
     build: ./api # Uses api/Dockerfile
     container_name: api_container
+    restart: on-failure:5
     volumes:
     - './api:/apicode'
     - '/apicode/node_modules'
