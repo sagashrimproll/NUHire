@@ -398,12 +398,12 @@ UNLOCK TABLES;
 
 -- Dump completed on 2025-03-04 12:57:26
 
-INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sai A.', 'Dhanasiri', 'saianirudhsjps@gmail.com', 'student');
+INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`, `class`) VALUES ('Sai A.', 'Dhanasiri', 'saianirudhsjps@gmail.com', 'student', 1);
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`, `class`) VALUES ('Sage', 'Batchelor', 'sagebatchelor@gmail.com', 'student', 1);
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`, `class`) VALUES ('Sag', 'Bat', 'batchelor.sa@husky.neu.edu', 'student', 2);
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sage', 'Batchelor', 'sagashrimproll@gmail.com', 'admin');
 INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Sai Anirudh', 'Dhanasiri', 'dhanasiri.s@husky.neu.edu', 'admin');
-INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`) VALUES ('Penguin', 'The Last', 'ilovepenguinsandhowtheylook@gmail.com', 'student');
+INSERT INTO `Users` (`f_name`, `l_name`, `email`, `affiliation`, `class`) VALUES ('Penguin', 'The Last', 'ilovepenguinsandhowtheylook@gmail.com', 'student', 1);
 INSERT INTO `job_descriptions` (`title`, `file_path`) VALUES ('Carbonite', 'uploads/jobdescription/carbonite-jobdes.pdf');
 INSERT INTO `job_descriptions` (`title`, `file_path`) VALUES ('Cygilant', 'uploads/jobdescription/Cygilant Security Research Job Description.pdf');
 INSERT INTO `job_descriptions` (`title`, `file_path`) VALUES ('Motionlogic', 'uploads/jobdescription/QA Coop Motionlogic (Berlin, Germany).pdf');
