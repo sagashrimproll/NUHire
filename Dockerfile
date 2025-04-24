@@ -1,27 +1,36 @@
 FROM node:18-alpine as builder
 
-COPY package*.json .
-
 WORKDIR /app
 
+# Copy package files first for better caching
+COPY package*.json ./
+
+# Install dependencies
 RUN npm config set fetch-retry-maxtimeout 60000
+RUN npm install
 
-RUN npm install 
-
+# Copy the entire project
 COPY . .
 
+# Build the application
 RUN npm run build
-
-RUN ls -la /app/.next
 
 FROM node:18-alpine
 
 WORKDIR /app
 
-COPY --from=builder /app .
+# Copy from builder stage
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/next.config.js ./next.config.js
 
-RUN npm install --production
-
+# Expose port
 EXPOSE 3000
 
-CMD ["npm","start"]
+# Set environment variables
+ENV NODE_ENV production
+
+# Start the application
+CMD ["npm", "start"]
