@@ -96,13 +96,13 @@ export default function UserProfile() {
 
     const handleLogout = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/logout`, {
+        const response = await fetch(`${API_BASE_URL}/auth/logout`, {
           method: "POST",
-          credentials: "include", // ✅ Ensures cookies clear if using sessions
+          credentials: "include", // Ensures cookies clear if using sessions
         });
-
+    
         if (response.ok) {
-          router.push("/"); // ✅ Redirect to home page
+          router.push("/"); // Redirect to home page
         } else {
           console.error("Failed to logout:", response.statusText);
         }

@@ -372,9 +372,11 @@ io.on("connection", (socket) => {
     });
   });
 
+  // Listen for the "checkint" event, which is emitted by the client when a checkbox in the make offer stage is checked or unchecked
   socket.on("checkint", ({ group_id, interview_number, checked }) => {
     socket.to(group_id).emit("checkboxUpdated", { interview_number, checked });
   });
+
   // Listen for the "studentPageChanged" event, which is emitted by the client when a student changes their page
   socket.on("studentPageChanged", ({ studentId, currentPage }) => {
     if (onlineStudents[studentId]) {
@@ -412,6 +414,7 @@ io.on("connection", (socket) => {
     });
   });
 
+  // Listen for the "makeOfferRequest" event, which is emitted by the client when a student group wants to make an offer to a candidate
   socket.on("makeOfferRequest", ({groupId, candidateId }) => {
     console.log(`Student in group ${groupId} wants to offer candidate ${candidateId}`);
     io.emit("makeOfferRequest", {groupId, candidateId});
@@ -482,6 +485,8 @@ app.get("/auth/user", (req, res) => {
 
 // logout route for logging out the user and destroying the session
 // The server clears the session and redirects the user to the home page
+// logout route for logging out the user and destroying the session
+// The server clears the session and redirects the user to the home page
 app.post("/auth/logout", (req, res, next) => {
   req.logout((err) => {
     if (err) return next(err);
@@ -491,7 +496,6 @@ app.post("/auth/logout", (req, res, next) => {
       res.status(200).json({ message: "Logged out successfully" });
       res.redirect(`${FRONT_URL}`);
     });
-
   });
 });
 
@@ -1035,7 +1039,7 @@ app.post("/jobs", async (req, res) => {
   }
 });
 
-//
+// Gets a specific job description by its title
 app.get("/jobdes/title", (req, res) => {
   const { title } = req.query; // ✅ Extract from query, not params
 
@@ -1139,6 +1143,7 @@ app.get("/canidates/resume/:resume_number", (req, res) => {
 // ✅ Serve Uploaded Files
 app.use("/uploads", express.static(path.join(__dirname, "uploads/")));
 
+//Initializes the server and database connection
 initializeApp().catch(error => {
   console.error("Failed to initialize app:", error);
   process.exit(1);

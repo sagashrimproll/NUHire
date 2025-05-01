@@ -83,17 +83,6 @@ export default function Interview() {
     };
     
     fetchUser();
-
-    // Safety timeout to prevent perpetual loading
-    const safetyTimer = setTimeout(() => {
-      if (loading) {
-        console.log("Safety timeout triggered");
-        setLoading(false);
-        setError("Request timed out. Please refresh the page and try again.");
-      }
-    }, 15000); // 15 seconds
-    
-    return () => clearTimeout(safetyTimer);
   }, []);
 
   // Send interview ratings to backend
@@ -176,58 +165,78 @@ export default function Interview() {
   }, [user, pathname]);
 
   // Fetch candidates data when user is loaded
-  useEffect(() => {
-    if (!user?.group_id) return;
-    
-    console.log("Fetching candidates for group:", user.group_id);
-    
-    const fetchCandidates = async () => {
-      try {
-        // First get the resumes with checked = TRUE
-        const resumeResponse = await axios.get(`${API_BASE_URL}/resume/group/${user.group_id}`);
-        console.log("Resume response:", resumeResponse.data);
-        const allResumes = resumeResponse.data;
-        
-        // Filter to get only checked resumes
-        const checkedResumes = allResumes.filter(resume => resume.checked === 1);
-        console.log("Checked resumes:", checkedResumes);
-        
-        if (!checkedResumes || checkedResumes.length === 0) {
-          console.log("No checked resumes found");
-          return;
-        }
-        
-        // Fetch candidate data for each checked resume
-        const candidatesData = await Promise.all(
-          checkedResumes.map(async (resume) => {
-            try {
-              console.log("Fetching candidate for resume:", resume.resume_number);
-              const candidateResponse = await axios.get(`${API_BASE_URL}/canidates/resume/${resume.resume_number}`);
-              console.log("Candidate response:", candidateResponse.data);
-              return {
-                resume_id: candidateResponse.data.resume_id,
-                title: candidateResponse.data.title || `Candidate ${candidateResponse.data.resume_id}`,
-                interview: candidateResponse.data.interview, // Make sure this matches your backend
-                video_path: candidateResponse.data.interview // Duplicating for compatibility
-              };
-            } catch (err) {
-              console.error(`Error fetching candidate for resume ${resume.resume_number}:`, err);
-              return null;
-            }
-          })
-        );
-        
-        const filteredCandidates = candidatesData.filter(Boolean);
-        console.log("Filtered candidates:", filteredCandidates);
-        setInterviews(filteredCandidates);
-      } catch (err) {
-        console.error("Error fetching interviews:", err);
-        setError('Failed to load interview data');
+// Fetch candidates data when user is loaded
+useEffect(() => {
+  if (!user?.group_id) return;
+  
+  console.log("Fetching candidates for group:", user.group_id);
+  
+  const fetchCandidates = async () => {
+    try {
+      // Get all resumes for the group and filter by class
+      const resumeResponse = await axios.get(
+        `${API_BASE_URL}/resume/group/${user.group_id}?class=${user.class}`, 
+        { timeout: 8000 }
+      );
+      
+      console.log("Resume response:", resumeResponse.data);
+      const allResumes = resumeResponse.data;
+      
+      // Filter to get only checked resumes and ensure no duplicates
+      const checkedResumes = allResumes
+        .filter(resume => resume.checked === 1)
+        .reduce((unique, resume) => {
+          // Only add if this resume_number doesn't exist in our array yet
+          if (!unique.some(r => r.resume_number === resume.resume_number)) {
+            unique.push(resume);
+          }
+          return unique;
+        }, []);
+      
+      console.log("Checked resumes after deduplication:", checkedResumes);
+      
+      if (checkedResumes.length === 0) {
+        console.log("No checked resumes found");
+        setInterviews([]);
+        return;
       }
-    };
-    
-    fetchCandidates();
-  }, [user]); // This will run whenever user changes
+      
+      // Fetch candidate data for each unique checked resume
+      const candidatePromises = checkedResumes.map(resume => 
+        axios.get(`${API_BASE_URL}/canidates/resume/${resume.resume_number}`, { 
+          timeout: 8000 
+        })
+        .then(response => ({
+          resume_id: response.data.resume_id,
+          title: response.data.title || `Candidate ${response.data.resume_id}`,
+          interview: response.data.interview,
+          video_path: response.data.interview
+        }))
+        .catch(err => {
+          console.error(`Error fetching candidate for resume ${resume.resume_number}:`, err);
+          return null;
+        })
+      );
+      
+      // Use allSettled instead of all to prevent one failure from failing everything
+      const results = await Promise.allSettled(candidatePromises);
+      
+      // Filter out rejected promises and null values
+      const candidatesData = results
+        .filter(result => result.status === 'fulfilled' && result.value !== null)
+        .map(result => result.value);
+      
+      console.log("Final candidate data:", candidatesData);
+      setInterviews(candidatesData);
+      
+    } catch (err) {
+      console.error("Error fetching interviews:", err);
+      setError('Failed to load interview data. Please try refreshing the page.');
+    }
+  };
+  
+  fetchCandidates();
+}, [user]); // This will run whenever user changes 
   
   // Listen for popup messages
   useEffect(() => {

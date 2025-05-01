@@ -1,10 +1,14 @@
-'use client';
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import NavbarAdmin from "../components/navbar-admin";
+'use client';// Declares that this page is a client component
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL; // API base URL from environment variables
+import { useState, useEffect } from "react"; // Importing React and hooks for state and effect management
+import { useRouter } from "next/navigation"; // Importing useRouter for navigation
+import NavbarAdmin from "../components/navbar-admin"; // Importing the admin navbar component
 
+//Define the Grouping component
+// This component is responsible for managing groups and job assignments for students
 const Grouping = () => {
+  
+  //Defining the constants and state variables
   const [user, setUser] = useState<{ affiliation: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState([]);
@@ -121,6 +125,7 @@ const Grouping = () => {
     setSelectedStudents(selectedStudents.filter(student => student.email !== email));
   };
 
+  // ✅ Fetch available jobs
   useEffect(() => {
     const fetchJobs = async () => {
       try { 
@@ -225,6 +230,7 @@ const Grouping = () => {
     return <div>This account is not authorized for this page</div>;
   }
 
+  // Render the component
   return (
     <div className=" flex-col min-h-screen bg-sand font-rubik">
       <NavbarAdmin />

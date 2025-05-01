@@ -123,11 +123,11 @@ const Dashboard = () => {
 
       <div className="flex flex-col items-center font-rubik text-navyHeader text-center space-y-7 mb-6">
         <h1 className="text-4xl font-extrabold mb-4">Welcome to NUHire</h1>
-        <p className="text-lg text-gray-800">This is a tool to help you prepare for your job search.</p>
-        <p className="text-lg text-gray-800">We will guide you through what happens after you apply for a job position.</p>
-        <p className="text-lg text-gray-800">This includes what employers see when they get resumes, how they make decisions and what they are looking for.</p>
-        <p className="text-xl font-bold text-black">BUT HERE'S THE TWIST</p>
-        <p className="text-lg text-gray-800">You play employer, we provide applicants.</p>
+        <p className="text-lg text-gray-800">Work in small teams to experience what it’s like to be a hiring manager.</p>
+        <p className="text-lg text-gray-800">Review a job description, evaluate resumes, and decide which candidates deserve an interview.</p>
+        <p className="text-lg text-gray-800">Then, watch interview clips and choose the top two finalists for the role.</p>
+        <p className="text-lg text-gray-800">Who will your group select to be your NUHire?
+        </p>
       </div>
 
         <div className="flex flex-col items-center text-center p-6">

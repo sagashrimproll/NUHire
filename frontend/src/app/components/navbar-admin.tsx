@@ -1,9 +1,11 @@
-"use client"
-import React from "react";
-import Link from "next/link";
-import { useState } from "react";
+"use client" // Declares that this page is a client component
+import React from "react"; // Importing React
+import Link from "next/link"; // Importing Link for client-side navigation
+import { useState } from "react"; // Importing useState for managing state
 
 const NavbarAdmin = () => {
+
+  // State variable to manage the open/close state of the dropdown menu
   const [isOpen, setIsOpen] = useState(false);
   return (
     <nav className="navbar">

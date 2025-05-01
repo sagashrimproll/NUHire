@@ -43,55 +43,6 @@ LOCK TABLES `Candidates` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `Groups`
---
-
-DROP TABLE IF EXISTS `Groups`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Groups` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `group_name` varchar(100) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Groups`
---
-
-LOCK TABLES `Groups` WRITE;
-/*!40000 ALTER TABLE `Groups` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Groups` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Homepage`
---
-
-DROP TABLE IF EXISTS `Homepage`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Homepage` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `visited` datetime DEFAULT CURRENT_TIMESTAMP,
-  `student_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `student_id` (`student_id`),
-  CONSTRAINT `Homepage_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `Users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Homepage`
---
-
-LOCK TABLES `Homepage` WRITE;
-/*!40000 ALTER TABLE `Homepage` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Homepage` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `InterviewPage`
 --
 
@@ -123,33 +74,6 @@ CREATE TABLE `InterviewPage` (
 LOCK TABLES `InterviewPage` WRITE;
 /*!40000 ALTER TABLE `InterviewPage` DISABLE KEYS */;
 /*!40000 ALTER TABLE `InterviewPage` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `Jobdes`
---
-
-DROP TABLE IF EXISTS `Jobdes`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `Jobdes` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `visited` datetime DEFAULT CURRENT_TIMESTAMP,
-  `student_id` int NOT NULL,
-  `timespent` int DEFAULT '0',
-  PRIMARY KEY (`id`),
-  KEY `student_id` (`student_id`),
-  CONSTRAINT `Jobdes_ibfk_1` FOREIGN KEY (`student_id`) REFERENCES `Users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `Jobdes`
---
-
-LOCK TABLES `Jobdes` WRITE;
-/*!40000 ALTER TABLE `Jobdes` DISABLE KEYS */;
-/*!40000 ALTER TABLE `Jobdes` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -271,6 +195,7 @@ CREATE TABLE `Interview_vids` (
   video_path VARCHAR(255) NOT NULL, 
   uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 --
 -- Table structure for table `Resumepage`
 --

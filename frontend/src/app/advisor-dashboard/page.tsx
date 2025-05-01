@@ -1,22 +1,27 @@
-'use client';
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import NavbarAdmin from "../components/navbar-admin";
-import { localservices } from "googleapis/build/src/apis/localservices";
-import NotesPage from "../components/note";
+'use client'; //Declares that this page is a client component
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL; // API base URL from environment variables
+import React, { useState, useEffect } from "react"; // Importing React and hooks for state and effect management
+import { useRouter } from "next/navigation"; // Importing useRouter for navigation
+import Link from "next/link"; // Importing Link for client-side navigation
+import NavbarAdmin from "../components/navbar-admin"; // Importing the admin navbar component
 
 const Dashboard = () => {
+
+  // Define the User interface to match the expected user data structure
   interface User {
+    id: number;
+    name: string;
+    email: string;
     affiliation: string;
-    // Add other user properties here
   }
 
+  // State variables to manage user data and loading state
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
+  // Fetch user data from the API when the component mounts
+  // and handle redirection if the user is not an admin
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -41,14 +46,18 @@ const Dashboard = () => {
     fetchUser();
   }, [router]);
 
+  // If loading, show a loading message
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen text-xl">Loading...</div>;
   }
 
   if (!user || user.affiliation !== "admin") {
-    return null;
+    // If the user is not an admin, redirect to the home page
+    router.push("/");
+    return null; // Return null to avoid rendering anything else
   }
 
+  // Render the dashboard if the user is an admin
   return (
     <div className="flex flex-col min-h-screen bg-sand font-rubik">
       <NavbarAdmin />
