@@ -21,12 +21,20 @@ interface User {
   id: string;
   group_id: string; 
   email: string;
+  class: string;
 }
 
 interface Interview {
   id: number;
   resume_id: number;
   interview: string;
+}
+
+interface Resume {
+  id: number;
+  checked: number;
+  resume_number: number;
+  [key: string]: any; // optional: if resume has more fields
 }
 
 export default function Interview() {
@@ -52,12 +60,6 @@ export default function Interview() {
   const [interviews, setInterviews] = useState<
     { resume_id: number; title: string; video_path: string }[]
   >([]);
-
-  interface User {
-    id: string;
-    group_id: string;
-    email: string;
-  }
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -115,7 +117,7 @@ export default function Interview() {
     const fetchCandidates = async () => {
       try {
         // First get the resumes with checked = TRUE
-        const resumeResponse = await axios.get(`${API_BASE_URL}/resume/group/${user.group_id}?class=${user.class}`);
+        const resumeResponse = await axios.get<Resume[]>(`${API_BASE_URL}/resume/group/${user.group_id}?class=${user.class}`);
         const allResumes = resumeResponse.data;
         
         // Filter to get only checked resumes
@@ -477,7 +479,7 @@ export default function Interview() {
             ) : currentVid ? (
               <iframe
                 className="w-full h-full rounded-lg shadow-lg"
-                src={currentVid.interview}
+                src={currentVid.video_path}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 referrerPolicy="strict-origin-when-cross-origin"
                 allowFullScreen

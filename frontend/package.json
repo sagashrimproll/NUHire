@@ -19,7 +19,7 @@
     "express-session": "^1.18.1",
     "googleapis": "^144.0.0",
     "mysql2": "^3.13.0",
-    "next": "^15.3.0",
+    "next": "^15.1.7",
     "pdf-lib": "^1.17.1",
     "popup": "^0.0.3",
     "python": "^0.0.4",

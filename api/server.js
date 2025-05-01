@@ -931,8 +931,8 @@ app.post("/interview/vote", async (req, res) => {
 
   const query = `
   INSERT INTO InterviewPage
-    (student_id, group_id, question1, question2, question3, question4, timespent, candidate_id)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    (student_id, group_id, class, question1, question2, question3, question4, timespent, candidate_id)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   ON DUPLICATE KEY UPDATE
     question1 = VALUES(question1),
     question2 = VALUES(question2),

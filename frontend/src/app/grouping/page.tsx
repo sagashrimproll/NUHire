@@ -4,17 +4,37 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import NavbarAdmin from "../components/navbar-admin";
 
+interface Student {
+  email: string;
+  f_name: string;
+  l_name: string;
+  [key: string]: any; 
+  current_page?: string;
+  job_des?: string;
+}
+
+interface Job {
+  title: string;
+  [key: string]: any;
+}
+
+interface ClassItem {
+  id: number;
+  name: string;
+  [key: string]: any;
+}
+
 const Grouping = () => {
   const [user, setUser] = useState<{ affiliation: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [students, setStudents] = useState([]);
-  const [selectedStudents, setSelectedStudents] = useState([]);
-  const [jobs, setJobs] = useState([]);
-  const [selectedJobs, setSelectedJobs] = useState([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [selectedJobs, setSelectedJobs] = useState<Job[]>([]);
   const [group_id, setGroupId] = useState("");
   const [job_group_id, setGroupIdJob] = useState(""); 
   const [groups, setGroups] = useState({});
-  const [classes, setClasses] = useState([]);
+  const [classes, setClasses] = useState<ClassItem[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
   const router = useRouter();
 
@@ -98,13 +118,14 @@ const Grouping = () => {
   }, [selectedClass]);
 
   // ✅ Handle class selection change
-  const handleClassChange = (e) => {
-    setSelectedClass(e.target.value);
-    setSelectedStudents([]);
-    setSelectedJobs([]);
-    setGroupId("");
-    setGroupIdJob("");
-  };
+// ✅ Handle class selection change
+const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  setSelectedClass(e.target.value);
+  setSelectedStudents([]);
+  setSelectedJobs([]);
+  setGroupId("");
+  setGroupIdJob("");
+};
 
   // ✅ Handle student selection
   const handleStudentSelection = (event: { target: { value: any; }; }) => {
@@ -135,7 +156,7 @@ const Grouping = () => {
   }, []);
 
   // ✅ Handle job selection
-  const handleJobSelection = (event) => {
+  const handleJobSelection = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedTitle = event.target.value;
     const selectedJob = jobs.find(job => job.title === selectedTitle);
 
@@ -145,7 +166,7 @@ const Grouping = () => {
   };
 
   // ✅ Handle removing a selected job
-  const handleRemoveJob = (title) => {
+  const handleRemoveJob = (title: string) => {
     setSelectedJobs(selectedJobs.filter(job => job.title !== title));
   };
 

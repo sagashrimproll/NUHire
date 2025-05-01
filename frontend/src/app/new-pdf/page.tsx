@@ -5,17 +5,40 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import NavbarAdmin from "../components/navbar-admin";
 
+interface User {
+  id: string;
+  group_id: string;
+  email: string;
+  class: number;
+  job_des: string;
+  affiliation: string;  // ✅ Add affiliation field
+}
+
+interface Job {
+  id: number;
+  title: string;
+  file_path: string;
+  [key: string]: any; // optional: if jobs have other fields you want to ignore for now
+}
+
+interface Resume {
+  id: number;
+  title: string;
+  file_path: string;
+  [key: string]: any;
+}
+
 const Upload = () => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [jobs, setJobs] = useState([]);
-  const [resumes, setResumes] = useState([]);
-  const [file, setFile] = useState(null);
+  const [jobs, setJobs] = useState<Job[]>([]);
+  const [resumes, setResumes] = useState<Resume[]>([]);
+  const [file, setFile] = useState<File | null>(null);
   const [fileName, setFileName] = useState("");
   const [title, setTitle] = useState("");
   const [resTitle, setResTitle] = useState("");
   const [uploading, setUploading] = useState(false);
-  const [selectedResume, setSelectedResume] = useState(null);
+  const [selectedResume, setSelectedResume] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -66,12 +89,14 @@ const Upload = () => {
     }
   };
 
-  const saveFile = (e) => {
-    setFile(e.target.files[0]);
-    setFileName(e.target.files[0].name);
+  const saveFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+      setFileName(e.target.files[0].name);
+    }
   };
 
-  const deleteResume = async (filePath) => {
+  const deleteResume = async (filePath: string) => {
     const fileName = filePath.split("/").pop(); // Extract just the filename
     
     try {
@@ -93,7 +118,7 @@ const Upload = () => {
     }
   };
 
-  const deleteJob = async (filePath) => {
+  const deleteJob = async (filePath: string) => {
     const fileName = filePath.split("/").pop(); // Extract just the filename
     
     try {
@@ -115,7 +140,7 @@ const Upload = () => {
     }
   };
 
-  const uploadFile = async (type) => {
+  const uploadFile = async (type : "job" | "resume") => {
     if (!file) return alert("Please select a file before uploading.");
   
     const formData = new FormData();
@@ -155,7 +180,7 @@ const Upload = () => {
     }
   };  
 
-const handleResumeSelection = (id) => {
+const handleResumeSelection = (id: number) => {
   console.log("Selected Resume ID:", id); // Debugging log
   setSelectedResume(id);
 };

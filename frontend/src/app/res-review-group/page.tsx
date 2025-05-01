@@ -11,6 +11,31 @@ import Footer from "../components/footer";
 const SOCKET_URL = `${API_BASE_URL}`; 
 let socket: Socket; // Define socket with correct type
 
+interface VoteData {
+    yes: number;
+    no: number;
+    undecided: number;
+  }
+
+  interface User { 
+    email: string;
+    group_id: string;
+    class: number;
+    affiliation: string;
+  }
+
+  interface ResumeData {
+    resume_number: number;
+    vote: "yes" | "no" | "unanswered";
+    checked: boolean;
+  }
+
+  interface ResumeFile {
+    id: number;
+    file_path: string;
+    [key: string]: any;
+  }
+
 export default function ResReviewGroup() {
     useProgress();
 
@@ -18,8 +43,8 @@ export default function ResReviewGroup() {
     const [voteCounts, setVoteCounts] = useState<{ [key: number]: VoteData }>({});
     const [loading, setLoading] = useState(true);
     const [isConnected, setIsConnected] = useState<boolean>(false);
-    const [user, setUser] = useState(null);
-    const [resumes, setResumes] =  useState([]);
+    const [user, setUser] = useState<User | null>(null);
+    const [resumes, setResumes] =  useState<ResumeFile[]>([]);
     const router = useRouter();
     const pathname = usePathname();
 
@@ -176,7 +201,7 @@ const handleCheckboxChange = (resumeNumber: number) => {
     const newCheckedState = !checkedState[resumeNumber];
     
     // Create the room ID that combines both group_id and class
-    const roomId = `group_${user.group_id}_class_${user.class}`;
+    const roomId = `group_${user!.group_id}_class_${user!.class}`;
 
     console.log(`Sending checkbox update: Resume ${resumeNumber}, Checked: ${newCheckedState}`);
 

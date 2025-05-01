@@ -7,6 +7,7 @@ import React, { useState } from "react";
  * - onChange?: function to handle changes in the slider's value
  */
 interface RatingSliderProps {
+  value: number;
   onChange?: (value: number) => void;
 }
 

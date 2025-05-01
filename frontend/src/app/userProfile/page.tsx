@@ -5,10 +5,24 @@ import { useRouter } from "next/navigation";
 import Navbar from "../components/navbar";
 import NavbarAdmin from "../components/navbar-admin";
 
+interface User {
+  id: number;
+  f_name: string;
+  l_name: string;
+  email: string;
+  affiliation: string; 
+  group_id?: number | null; 
+  class?: number | null;  
+}
+
+interface ClassItem {
+  id: number;
+  name: string;
+}
 export default function UserProfile() {
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
-    const [classes, setClasses] = useState([]);
+    const [classes, setClasses] = useState<ClassItem[]>([]);
     const [selectedClass, setSelectedClass] = useState("");
     const [isUpdating, setIsUpdating] = useState(false);
     const [updateSuccess, setUpdateSuccess] = useState(false);
@@ -55,7 +69,7 @@ export default function UserProfile() {
       fetchClasses();
     }, []);
 
-    const handleClassChange = (e) => {
+    const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       setSelectedClass(e.target.value);
     };
 
@@ -74,7 +88,7 @@ export default function UserProfile() {
           headers: { "Content-Type": "application/json" },
           credentials: "include",
           body: JSON.stringify({
-            email: user.email,
+            email: user?.email,
             class: selectedClass
           }),
         });
@@ -82,7 +96,10 @@ export default function UserProfile() {
         if (response.ok) {
           setUpdateSuccess(true);
           // Update the user state with the new class
-          setUser(prev => ({ ...prev, class: selectedClass }));
+          setUser(prev => {
+            if (!prev) return prev;
+            return { ...prev, class: Number(selectedClass)};
+          });
         } else {
           alert("Failed to update class. Please try again.");
         }
