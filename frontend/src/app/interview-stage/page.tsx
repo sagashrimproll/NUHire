@@ -19,15 +19,9 @@ const socket = io(API_BASE_URL);
 
 interface User {
   id: string;
-  group_id: string; 
+  group_id: string;
   email: string;
-  class: string;
-}
-
-interface Interview {
-  id: number;
-  resume_id: number;
-  interview: string;
+  class: string | number; // Add class property
 }
 
 interface Resume {
@@ -57,18 +51,28 @@ export default function Interview() {
   const [timeSpent, setTimeSpent] = useState(0);
   const [fadingEffect, setFadingEffect] = useState(false);
   const [finished, setFinished] = useState(false);
-  const [interviews, setInterviews] = useState<
-    { resume_id: number; title: string; video_path: string }[]
-  >([]);
+  const [interviews, setInterviews] = useState<Array<{
+    resume_id: number;
+    title: string;
+    video_path: string;
+    interview: string;
+  }>>([]);
 
+  // Fetch user data
   useEffect(() => {
+    console.log("Starting user fetch");
     const fetchUser = async () => {
       try {
+        console.log("Making auth request");
         const response = await axios.get(`${API_BASE_URL}/auth/user`, { 
-          withCredentials: true 
+          withCredentials: true,
+          timeout: 10000 // 10 second timeout
         });
         
+        console.log("Auth response received:", response.status);
+        
         if (response.status === 200) {
+          console.log("User data:", response.data);
           setUser(response.data);
         } else {
           setError('Authentication failed. Please log in again.');
@@ -80,6 +84,7 @@ export default function Interview() {
         console.error("Error fetching user:", error);
         setError('Failed to authenticate. Make sure the API server is running.');
       } finally {
+        console.log("Setting loading to false");
         setLoading(false);
       }
     };
@@ -87,9 +92,65 @@ export default function Interview() {
     fetchUser();
   }, []);
 
+  // Send interview ratings to backend
+  const sendResponseToBackend = async (
+    overall: number,
+    professionalPresence: number,
+    qualityOfAnswer: number,
+    personality: number,
+    timeSpent: number,
+    candidate_id: number
+  ) => {
+    if (!user || !user.id || !user.group_id) {
+      console.error("Student ID or Group ID not found");
+      return;
+    }
+    
+    // Debug the data we're about to send
+    console.log("Sending data to backend:", {
+      student_id: user.id,
+      group_id: user.group_id,
+      studentClass: user.class,
+      question1: overall,
+      question2: professionalPresence,
+      question3: qualityOfAnswer,
+      question4: personality,
+      timespent: timeSpent,
+      candidate_id
+    });
+    
+    try {
+      const response = await axios.post(`${API_BASE_URL}/interview/vote`, {
+        student_id: user.id,
+        group_id: user.group_id,
+        studentClass: user.class, // Make sure this matches the field in the server
+        question1: overall,
+        question2: professionalPresence,
+        question3: qualityOfAnswer,
+        question4: personality,
+        timespent: timeSpent, // Make sure it's timespent (lowercase), not timeSpent
+        candidate_id
+      });
+      
+      if (response.status !== 200) {
+        console.error("Failed to submit response:", response.statusText);
+      } else {
+        console.log("Interview vote submitted successfully");
+      }
+    } catch (error) {
+      console.error("Error submitting response:", error);
+      if (error.response) {
+        console.error("Error details:", error.response.data);
+        console.error("Status code:", error.response.status);
+      }
+      alert("Failed to submit interview rating. Please try again.");
+    }
+  };
+ 
   // Update current page when user is loaded
   useEffect(() => {
     if (user && user.email) {
+      console.log("User loaded, updating current page");
       // Emit socket events
       socket.emit("studentOnline", { studentId: user.email }); 
       socket.emit("studentPageChanged", { studentId: user.email, currentPage: pathname });
@@ -111,45 +172,78 @@ export default function Interview() {
   }, [user, pathname]);
 
   // Fetch candidates data when user is loaded
-  useEffect(() => {
-    if (!user?.group_id) return;
-    
-    const fetchCandidates = async () => {
-      try {
-        // First get the resumes with checked = TRUE
-        const resumeResponse = await axios.get<Resume[]>(`${API_BASE_URL}/resume/group/${user.group_id}?class=${user.class}`);
-        const allResumes = resumeResponse.data;
-        
-        // Filter to get only checked resumes
-        const checkedResumes = allResumes.filter(resume => resume.checked === 1);
-        
-        if (!checkedResumes || checkedResumes.length === 0) {
-          console.log("No checked resumes found");
-          return;
-        }
-        
-        // Fetch candidate data for each checked resume
-        const candidatesData = await Promise.all(
-          checkedResumes.map(async (resume) => {
-            try {
-              const candidateResponse = await axios.get(`${API_BASE_URL}/canidates/resume/${resume.resume_number}`);
-              return candidateResponse.data;
-            } catch (err) {
-              console.error(`Error fetching candidate for resume ${resume.resume_number}:`, err);
-              return null;
-            }
-          })
-        );
-        
-        setInterviews(candidatesData.filter(Boolean));
-      } catch (err) {
-        console.error("Error fetching interviews:", err);
-        setError('Failed to load interview data');
+// Fetch candidates data when user is loaded
+useEffect(() => {
+  if (!user?.group_id) return;
+  
+  console.log("Fetching candidates for group:", user.group_id);
+  
+  const fetchCandidates = async () => {
+    try {
+      // Get all resumes for the group and filter by class
+      const resumeResponse = await axios.get(
+        `${API_BASE_URL}/resume/group/${user.group_id}?class=${user.class}`, 
+        { timeout: 8000 }
+      );
+      
+      console.log("Resume response:", resumeResponse.data);
+      const allResumes = resumeResponse.data;
+      
+      // Filter to get only checked resumes and ensure no duplicates
+      const checkedResumes = allResumes
+        .filter(resume => resume.checked === 1)
+        .reduce((unique, resume) => {
+          // Only add if this resume_number doesn't exist in our array yet
+          if (!unique.some(r => r.resume_number === resume.resume_number)) {
+            unique.push(resume);
+          }
+          return unique;
+        }, []);
+      
+      console.log("Checked resumes after deduplication:", checkedResumes);
+      
+      if (checkedResumes.length === 0) {
+        console.log("No checked resumes found");
+        setInterviews([]);
+        return;
       }
-    };
-    
-    fetchCandidates();
-  }, [user]);
+      
+      // Fetch candidate data for each unique checked resume
+      const candidatePromises = checkedResumes.map(resume => 
+        axios.get(`${API_BASE_URL}/canidates/resume/${resume.resume_number}`, { 
+          timeout: 8000 
+        })
+        .then(response => ({
+          resume_id: response.data.resume_id,
+          title: response.data.title || `Candidate ${response.data.resume_id}`,
+          interview: response.data.interview,
+          video_path: response.data.interview
+        }))
+        .catch(err => {
+          console.error(`Error fetching candidate for resume ${resume.resume_number}:`, err);
+          return null;
+        })
+      );
+      
+      // Use allSettled instead of all to prevent one failure from failing everything
+      const results = await Promise.allSettled(candidatePromises);
+      
+      // Filter out rejected promises and null values
+      const candidatesData = results
+        .filter(result => result.status === 'fulfilled' && result.value !== null)
+        .map(result => result.value);
+      
+      console.log("Final candidate data:", candidatesData);
+      setInterviews(candidatesData);
+      
+    } catch (err) {
+      console.error("Error fetching interviews:", err);
+      setError('Failed to load interview data. Please try refreshing the page.');
+    }
+  };
+  
+  fetchCandidates();
+}, [user]); // This will run whenever user changes 
   
   // Listen for popup messages
   useEffect(() => {
@@ -227,41 +321,6 @@ export default function Interview() {
     setPersonality(5); 
   }
 
-  // Send interview ratings to backend
-  const sendResponseToBackend = async (
-    overall: number,
-    professionalPresence: number,
-    qualityOfAnswer: number,
-    personality: number,
-    timeSpent: number,
-    candidate_id: number
-  ) => {
-    if (!user || !user.id || !user.group_id || !user.class) {
-      console.error("Student ID or Group ID not found");
-      return;
-    }
-    
-    try {
-      const response = await axios.post(`${API_BASE_URL}/interview/vote`, {
-        student_id: user.id,
-        group_id: user.group_id,
-        studentClass: user.class,
-        question1: overall,
-        question2: professionalPresence,
-        question3: qualityOfAnswer,
-        question4: personality,
-        timespent: timeSpent,
-        candidate_id: candidate_id
-      });
-      
-      if (response.status !== 200) {
-        console.error("Failed to submit response:", response.statusText);
-      }
-    } catch (error) {
-      console.error("Error submitting response:", error);
-    }
-  };
-  
   // Handle submission of current interview
   const handleSubmit = async () => {
     if (!currentVid) {
@@ -269,18 +328,18 @@ export default function Interview() {
       return;
     }
 
-    if(noShow) {
+    if (noShow) {
       await sendResponseToBackend(1, 1, 1, 1, timeSpent, currentVid.resume_id);
     } else {
-    await sendResponseToBackend(
-      overall,
-      professionalPresence,
-      qualityOfAnswer,
-      personality,
-      timeSpent,
-      currentVid.resume_id
-    );
-  }
+      await sendResponseToBackend(
+        overall,
+        professionalPresence,
+        qualityOfAnswer,
+        personality,
+        timeSpent,
+        currentVid.resume_id
+      );
+    }
 
     if (videoIndex < interviews.length - 1) {
       nextVideo();
@@ -494,7 +553,6 @@ export default function Interview() {
           {/* Timer display */}
           <div className="text-sm text-gray-500">
             Time spent: {Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}
-            {/* Time spent debugger: {timeSpent} */}
           </div>
         </div>
 

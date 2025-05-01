@@ -1,10 +1,12 @@
-"use client";
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-import React, { useState, useEffect } from "react";
+"use client"; // Declares that this page is a client component
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL; // API base URL from environment variables
+import React, { useState, useEffect } from "react"; // Importing React and hooks for state and effect management
 
 const NotesPage = () => {
+  // State variables to manage notes and their visibility
   const [isOpen, setIsOpen] = useState(false);
   const [note, setNote] = useState("");
+  
   interface Note {
     id: string;
     content: string;

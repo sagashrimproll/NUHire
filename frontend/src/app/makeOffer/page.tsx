@@ -1,18 +1,20 @@
-"use client";
-import React, { useState, useEffect, use } from "react";
-import { io, Socket } from "socket.io-client";
-import Navbar from "../components/navbar";
-import { usePathname, useRouter } from "next/navigation";
-import { useProgress } from "../components/useProgress";
-import NotesPage from "../components/note";
-import Footer from "../components/footer";
-import Popup from "../components/popup";
-import axios from "axios";
+"use client"; // Declares that this page is a client component
+import React, { useState, useEffect, use } from "react";// Importing React and hooks for state and effect management
+import { io, Socket } from "socket.io-client"; // Importing socket.io for real-time communication
+import Navbar from "../components/navbar"; // Importing the navbar component
+import { usePathname, useRouter } from "next/navigation"; // Importing useRouter and usePathname for navigation
+import { useProgress } from "../components/useProgress"; // Custom hook for progress tracking
+import NotesPage from "../components/note"; // Importing the notes page component
+import Footer from "../components/footer"; // Importing the footer component
+import Popup from "../components/popup"; // Importing the popup component
+import axios from "axios"; // Importing axios for HTTP requests
 
+// Define the API base URL from environment variables
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const SOCKET_URL = `${API_BASE_URL}`;
 let socket: Socket | null = null;
 
+// Define the VoteData interface to match the expected vote data structure
 type VoteData = {
   Overall: number;
   Profesionality: number;
@@ -20,7 +22,9 @@ type VoteData = {
   Personality: number;
 };
 
+// Main component for the MakeOffer page
 export default function MakeOffer() {
+  
   useProgress();
   const router = useRouter();
 

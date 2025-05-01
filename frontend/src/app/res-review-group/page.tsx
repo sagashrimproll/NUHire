@@ -74,17 +74,28 @@ export default function ResReviewGroup() {
     
     
     useEffect(() => {
-        if (!user || socket) return; // Prevent reconnecting if socket already exists
+        if (!user) return; // Only check for user, not socket
   
+        // If socket exists but is not connected, close it
+        if (socket && !socket.connected) {
+          socket.close();
+        }
+        
+        // Initialize new socket
         socket = io(SOCKET_URL, {
-            reconnectionAttempts: 5,
-            timeout: 5000,
+          reconnectionAttempts: 5,
+          timeout: 5000,
         });
-  
+        
         socket.on("connect", () => {
-            setIsConnected(true);
-            socket.emit("joinGroup", `${user.group_id}_${user.class}`);
-        });   
+          console.log("Socket connected:", socket.id);
+          setIsConnected(true);
+          
+          // Join the proper room format
+          const roomId = `group_${user.group_id}_class_${user.class}`;
+          console.log("Joining room:", roomId);
+          socket.emit("joinGroup", roomId);
+        });
   
         socket.on("disconnect", () => {
             setIsConnected(false);
@@ -107,10 +118,16 @@ export default function ResReviewGroup() {
   
         return () => {
             if (socket) {
-                socket.off("checkboxUpdated");
+              console.log("Cleaning up socket connection");
+              socket.off("connect");
+              socket.off("disconnect");
+              socket.off("checkboxUpdated");
+              socket.off("connect_error");
+              socket.off("reconnect_failed");
+              socket.close();
             }
-        };
-    }, [user]);
+          };
+        }, [user]);
     
     useEffect(() => {
         if (user && user.email) {
@@ -192,30 +209,29 @@ export default function ResReviewGroup() {
 
 
     // Handle checkbox toggle
-const handleCheckboxChange = (resumeNumber: number) => {
-    if (!socket || !isConnected) {
-        console.warn("Socket not connected. Checkbox state not sent.");
-        return;
-    }
-
-    const newCheckedState = !checkedState[resumeNumber];
-    
-    // Create the room ID that combines both group_id and class
-    const roomId = `group_${user!.group_id}_class_${user!.class}`;
-
-    console.log(`Sending checkbox update: Resume ${resumeNumber}, Checked: ${newCheckedState}`);
-
-    setCheckedState((prev) => ({
-        ...prev,
-        [resumeNumber]: newCheckedState,
-    }));
-
-    socket.emit("check", {
-        group_id: roomId,
-        resume_number: resumeNumber,
-        checked: newCheckedState,
-    });
-};
+    const handleCheckboxChange = (resumeNumber: number) => {
+        if (!socket || !isConnected) {
+          console.warn("Socket not connected. Checkbox state not sent.");
+          return;
+        }
+      
+        const newCheckedState = !checkedState[resumeNumber];
+        const roomId = `group_${user.group_id}_class_${user.class}`;
+      
+        console.log(`Sending checkbox update to room ${roomId}:`);
+        console.log(`Resume ${resumeNumber}, Checked: ${newCheckedState}`);
+      
+        setCheckedState((prev) => ({
+          ...prev,
+          [resumeNumber]: newCheckedState,
+        }));
+      
+        socket.emit("check", {
+          group_id: roomId,
+          resume_number: resumeNumber,
+          checked: newCheckedState,
+        });
+      };
     
     useEffect(() => {
         if (!socket) return;
@@ -266,7 +282,7 @@ const handleCheckboxChange = (resumeNumber: number) => {
                     Resume Review as a Group
                 </h1>
                 <h2 className = "text-xl italic text-center text-navy mb-6">
-                    Please review the resumes below and as a group select 4 to move on to the next stage.
+                    With your teammates, discuss and select the four candidates you would like to advance to the next round (interview).
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {resumes.map((resume, index) => {

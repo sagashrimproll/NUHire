@@ -26,17 +26,15 @@ export default function Home() {
         <Image
           src="/NUHireImageCuter.png"
           alt="Project Mascot"
-          width={150}
-          height={150}
+          width={300}
+          height={300}
           priority
         />
       </div>
 
-      <main className="bg-sand justify-center items-center flex flex-col p-6 font-rubik">
+      <main className="bg-sand justify-center items-center flex flex-col p-10 font-rubik">
         <h1 className="text-5xl font-bold">Welcome to NUHire!</h1>
-        <p className="text-2xl italic mt-2">Step into the employer's Shoes!</p>
-        <p className="text-xl italic mt-2">Work in small teams to experience what it’s like to be a hiring manager. Review a job description, evaluate resumes, and decide which candidates deserve an interview. Then, watch interview clips and choose the top two finalists for the role. Who will your group select to be your NUHire?
-        </p>
+        <p className="text-2xl italic mt-2">Step into the employer's shoes!</p>
         <button 
           onClick={handleGoogleLogin} 
           className="mt-6 px-6 py-4 bg-white text-black border-4 border-navy rounded-md text-lg transition-opacity hover:opacity-60 active:opacity-30"
