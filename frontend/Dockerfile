@@ -1,12 +1,24 @@
 FROM node:18-alpine as builder
 
+RUN npm install
+RUN apk add --no-cache \
+    python3 \
+    make \
+    g++ \
+    libc-dev \
+    pkgconfig \
+    pixman-dev \
+    cairo-dev \
+    pango-dev \
+    jpeg-dev \
+    giflib-dev \
+    libpng-dev
+
 WORKDIR /app
 
-# Copy package files first for better caching
-COPY package*.json ./
+# COPY package.json package-lock.json ./
+COPY package.json ./
 
-# Install dependencies
-RUN npm config set fetch-retry-maxtimeout 60000
 RUN npm install
 
 # Copy the entire project

@@ -11,31 +11,6 @@ import Footer from "../components/footer";
 const SOCKET_URL = `${API_BASE_URL}`; 
 let socket: Socket; // Define socket with correct type
 
-interface VoteData {
-    yes: number;
-    no: number;
-    undecided: number;
-  }
-
-  interface User { 
-    email: string;
-    group_id: string;
-    class: number;
-    affiliation: string;
-  }
-
-  interface ResumeData {
-    resume_number: number;
-    vote: "yes" | "no" | "unanswered";
-    checked: boolean;
-  }
-
-  interface ResumeFile {
-    id: number;
-    file_path: string;
-    [key: string]: any;
-  }
-
 export default function ResReviewGroup() {
     useProgress();
 
@@ -43,8 +18,8 @@ export default function ResReviewGroup() {
     const [voteCounts, setVoteCounts] = useState<{ [key: number]: VoteData }>({});
     const [loading, setLoading] = useState(true);
     const [isConnected, setIsConnected] = useState<boolean>(false);
-    const [user, setUser] = useState<User | null>(null);
-    const [resumes, setResumes] =  useState<ResumeFile[]>([]);
+    const [user, setUser] = useState(null);
+    const [resumes, setResumes] =  useState([]);
     const router = useRouter();
     const pathname = usePathname();
 

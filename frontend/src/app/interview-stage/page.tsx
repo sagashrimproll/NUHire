@@ -21,14 +21,12 @@ interface User {
   id: string;
   group_id: string;
   email: string;
-  class: string | number; // Add class property
 }
 
-interface Resume {
+interface Interview {
   id: number;
-  checked: number;
-  resume_number: number;
-  [key: string]: any; // optional: if resume has more fields
+  resume_id: number;
+  interview: string;
 }
 
 export default function Interview() {
@@ -538,7 +536,7 @@ useEffect(() => {
             ) : currentVid ? (
               <iframe
                 className="w-full h-full rounded-lg shadow-lg"
-                src={currentVid.video_path}
+                src={currentVid.interview}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 referrerPolicy="strict-origin-when-cross-origin"
                 allowFullScreen

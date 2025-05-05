@@ -117,7 +117,7 @@ const SendPopups = () => {
   }, [selectedClass]);
 
   useEffect(() => {
-    const onRequest = ({ groupId, candidateId } : {groupId : number; candidateId : number}) => {
+    const onRequest = ({ groupId, candidateId }) => {
       setPendingOffers((prev) => [...prev, { groupId, candidateId }]);
     };
     socket.on("makeOfferRequest", onRequest);
@@ -132,7 +132,7 @@ const SendPopups = () => {
         return <div>This account is not authorized to access this page. Please log in with an admin account.</div>;
     }
 
-    const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const handleClassChange = (e) => {
         setSelectedClass(e.target.value);
         setSelectedGroups([]); // Reset selected groups when class changes
     };
