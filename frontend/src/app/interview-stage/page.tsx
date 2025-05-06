@@ -24,13 +24,6 @@ interface User {
   class: string | number; // Add class property
 }
 
-interface Resume {
-  id: number;
-  checked: number;
-  resume_number: number;
-  [key: string]: any; // optional: if resume has more fields
-}
-
 export default function Interview() {
   useProgress();
   const [user, setUser] = useState<User | null>(null);
@@ -538,7 +531,7 @@ useEffect(() => {
             ) : currentVid ? (
               <iframe
                 className="w-full h-full rounded-lg shadow-lg"
-                src={currentVid.video_path}
+                src={currentVid.interview}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 referrerPolicy="strict-origin-when-cross-origin"
                 allowFullScreen

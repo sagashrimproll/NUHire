@@ -30,14 +30,6 @@ interface CommentType {
   isEditing?: boolean;
 }
 
-interface User {
-  id: string;
-  group_id: string;
-  email: string;
-  class: number;
-  job_des: string;
-}
-
 export default function JobDescriptionPage() { 
   const [fileUrl, setJob] = useState("");
   const [numPages, setNumPages] = useState<number | null>(null);
@@ -50,7 +42,7 @@ export default function JobDescriptionPage() {
   const pathname = usePathname();
 
 
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const fetchUser = async () => {

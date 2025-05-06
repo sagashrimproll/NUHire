@@ -44,7 +44,6 @@ export default function ResumesPage() {
     id: string;
     group_id: string;
     email: string;
-    class: string;
   }
 
   const [user, setUser] = useState<User | null>(null);

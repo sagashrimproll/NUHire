@@ -1,21 +1,18 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState } from "react";
 import io from "socket.io-client";
+import { usePathname } from "next/navigation";
 
 const socket = io("http://localhost:5001");
 
-const StudentPageInner = () => {
-    const searchParams = useSearchParams();
-    const studentId = searchParams.get('studentId');
-    const pathname = usePathname();
+const StudentPage = ({ studentId }: { studentId: string }) => {
     const [popup, setPopup] = useState<{ headline: string; message: string } | null>(null);
+    const pathname = usePathname(); 
 
     useEffect(() => {
-        if (!studentId) return;
-
         socket.emit("studentOnline", { studentId });
+
         socket.emit("updateStudentPageChange", { studentId, currentPage: pathname });
 
         socket.on("sendPopupToGroup", ({ headline, message }) => {
@@ -25,7 +22,7 @@ const StudentPageInner = () => {
         return () => {
             socket.disconnect();
         };
-    }, [studentId, pathname]);
+    }, [studentId, pathname]); 
 
     return (
         <div className="p-6 min-h-screen">
@@ -43,11 +40,5 @@ const StudentPageInner = () => {
         </div>
     );
 };
-
-const StudentPage = () => (
-  <Suspense fallback={<div>Loading...</div>}>
-    <StudentPageInner />
-  </Suspense>
-);
 
 export default StudentPage;
