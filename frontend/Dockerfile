@@ -1,30 +1,15 @@
-FROM node:18-alpine as builder
+FROM node:18-alpine AS builder
 
-RUN npm install
+# Install system build dependencies
 RUN apk add --no-cache \
-    python3 \
-    make \
-    g++ \
-    libc-dev \
-    pkgconfig \
-    pixman-dev \
-    cairo-dev \
-    pango-dev \
-    jpeg-dev \
-    giflib-dev \
-    libpng-dev
+    python3 make g++ libc-dev pkgconfig \
+    pixman-dev cairo-dev pango-dev jpeg-dev \
+    giflib-dev libpng-dev
 
 WORKDIR /app
-
-# COPY package.json package-lock.json ./
-COPY package.json ./
-
+COPY package.json package-lock.json ./
 RUN npm install
-
-# Copy the entire project
 COPY . .
-
-# Build the application
 RUN npm run build
 
 FROM node:18-alpine
