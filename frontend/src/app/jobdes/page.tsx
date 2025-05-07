@@ -1,5 +1,6 @@
 'use client'
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+export const dynamic = 'force-dynamic';
 
 import { useState, useEffect, JSX, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -30,6 +31,11 @@ interface CommentType {
   isEditing?: boolean;
 }
 
+interface User { 
+  email: string;
+  job_des: string;
+}
+
 export default function JobDescriptionPage() { 
   const [fileUrl, setJob] = useState("");
   const [numPages, setNumPages] = useState<number | null>(null);
@@ -42,7 +48,7 @@ export default function JobDescriptionPage() {
   const pathname = usePathname();
 
 
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {

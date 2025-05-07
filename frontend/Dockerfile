@@ -1,4 +1,4 @@
-FROM node:18-alpine AS builder
+FROM node:21-alpine AS builder
 
 # Install system build dependencies
 RUN apk add --no-cache \
@@ -12,7 +12,7 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-FROM node:18-alpine
+FROM node:21-alpine
 
 WORKDIR /app
 

@@ -6,14 +6,20 @@ import { usePathname } from "next/navigation";
 
 const socket = io("http://localhost:5001");
 
-const StudentPage = ({ studentId }: { studentId: string }) => {
+const StudentPage = () => {
     const [popup, setPopup] = useState<{ headline: string; message: string } | null>(null);
     const pathname = usePathname(); 
 
     useEffect(() => {
-        socket.emit("studentOnline", { studentId });
+        const storedId = localStorage.getItem("studentId");
+        
+        if (!storedId) {
+            console.error("No student ID found in local storage.");
+            return;
+        }
+        socket.emit("studentOnline", { studentId: storedId });
 
-        socket.emit("updateStudentPageChange", { studentId, currentPage: pathname });
+        socket.emit("updateStudentPageChange", { studentId: storedId, currentPage: pathname });
 
         socket.on("sendPopupToGroup", ({ headline, message }) => {
             setPopup({ headline, message });
@@ -22,7 +28,7 @@ const StudentPage = ({ studentId }: { studentId: string }) => {
         return () => {
             socket.disconnect();
         };
-    }, [studentId, pathname]); 
+    }, [pathname]); 
 
     return (
         <div className="p-6 min-h-screen">

@@ -1,4 +1,7 @@
 "use client";
+export const dynamic = "force-dynamic";
+
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import React, { useEffect, useState, useRef } from "react";
 import { useProgress } from "../components/useProgress";
@@ -44,6 +47,7 @@ export default function ResumesPage() {
     id: string;
     group_id: string;
     email: string;
+    class: number;
   }
 
   const [user, setUser] = useState<User | null>(null);
