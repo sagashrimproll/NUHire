@@ -35,9 +35,17 @@ export default function MakeOffer() {
   const [popup, setPopup] = useState<{ headline: string; message: string } | null>(null);
   const pathname = usePathname();
   const [offerPending, setOfferPending] = useState(false);
+  interface User {
+    id: string;
+    group_id: string;
+    email: string;
+    class: number;
+    affiliation: string;
+  }
 
 
-  const [user, setUser] = useState<any>(null);
+
+  const [user, setUser] = useState<User | null>(null);
   const [resumes, setResumes] = useState<any[]>([]);
   const [interviewVids, setInterviewVids] = useState<any[]>([]);
   const [interviews, setInterviews] = useState<any[]>([]);
@@ -210,7 +218,7 @@ export default function MakeOffer() {
 
     socket.on("connect", () => {
       setIsConnected(true);
-      socket?.emit("joinGroup", `${user.group_id}_${user.class}`);
+      socket?.emit("joinGroup", `group_${user.group_id}_class_${user.class}`);
     });
 
     socket.on("disconnect", () => {
@@ -218,8 +226,9 @@ export default function MakeOffer() {
     });
 
     // Listens to Advisor's response
-    socket.on("makeOfferResponse", ({ groupId, candidateId, accepted }: { groupId: number; candidateId: number; accepted: boolean }) => {
-      if (groupId !== user.group_id) return;
+    socket.on("makeOfferResponse", ({classId, groupId, candidateId, accepted }: { classId: number, groupId: string; candidateId: number; accepted: boolean }) => {
+      console.log("Received Response: ", {classId, groupId, candidateId, accepted });
+      if (classId !== user.class || groupId !== user.group_id) return;
       if (accepted) {
         setPopup({
           headline: "Offer accepted!",
@@ -263,7 +272,7 @@ export default function MakeOffer() {
   const handleCheckboxChange = (interviewNumber: number) => {
     if (!socket || !isConnected) return;
 
-    const roomId = `group_${user.group_id}_class_${user.class}`;
+    const roomId = `group_${user!.group_id}_class_${user!.class}`;
 
     const newCheckedState = !checkedState[interviewNumber];
     setCheckedState((prev) => ({ ...prev, [interviewNumber]: newCheckedState }));
@@ -283,7 +292,8 @@ export default function MakeOffer() {
     const candidateId = selectedIds[0];
   
     socket?.emit("makeOfferRequest", {
-      groupId: user.group_id,
+      classId: user!.class,
+      groupId: user!.group_id,
       candidateId,
     });
   

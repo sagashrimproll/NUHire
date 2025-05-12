@@ -415,15 +415,16 @@ io.on("connection", (socket) => {
   });
 
   // Listen for the "makeOfferRequest" event, which is emitted by the client when a student group wants to make an offer to a candidate
-  socket.on("makeOfferRequest", ({groupId, candidateId }) => {
-    console.log(`Student in group ${groupId} wants to offer candidate ${candidateId}`);
-    io.emit("makeOfferRequest", {groupId, candidateId});
+  socket.on("makeOfferRequest", ({classId, groupId, candidateId }) => {
+    console.log(`Student in class ${classId}, group ${groupId} wants to offer candidate ${candidateId}`);
+    io.emit("makeOfferRequest", {classId, groupId, candidateId});
   });
 
   // Advisor’s decision → notify the student group
-  socket.on('makeOfferResponse', ({ groupId, candidateId, accepted }) => {
-    console.log(`Advisor responded to group ${groupId} for candidate ${candidateId}: accepted=${accepted}`);
-    io.to(groupId).emit('makeOfferResponse', { groupId, candidateId, accepted });
+  socket.on('makeOfferResponse', ({classId, groupId, candidateId, accepted }) => {
+    console.log(`Advisor responded to class ${classId}, group ${groupId} for candidate ${candidateId}: accepted=${accepted}`);
+    const room = `group_${groupId}_class_${classId}`;
+    io.to(room).emit('makeOfferResponse', { groupId, candidateId, accepted });
   });
 
   // Listens for the "disconnect" event, which is emitted when a client disconnects from the server
@@ -935,8 +936,8 @@ app.post("/interview/vote", async (req, res) => {
 
   const query = `
   INSERT INTO InterviewPage
-    (student_id, group_id, question1, question2, question3, question4, timespent, candidate_id)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    (student_id, group_id, class, question1, question2, question3, question4, timespent, candidate_id)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   ON DUPLICATE KEY UPDATE
     question1 = VALUES(question1),
     question2 = VALUES(question2),

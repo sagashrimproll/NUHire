@@ -1,22 +1,16 @@
 FROM node:18-alpine
 
-RUN apk add --no-cache netcat-openbsd
-
 WORKDIR /apicode
 
-# Copy wait-for script
-COPY wait-for.sh /usr/local/bin/wait-for
-RUN chmod +x /usr/local/bin/wait-for
-
-# Copy package.json and install dependencies
+# Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install
 
-# Copy the rest of the application
+# Copy remaining application files
 COPY . .
 
-# Expose the backend port
+# Expose backend port
 EXPOSE 5001
 
-# Wait for MySQL to be ready, then start the application
-CMD ["wait-for", "db:3306", "--", "node", "server.js"]
+# Wait for MySQL to be ready, then start the app
+CMD ["node", "server.js"]
