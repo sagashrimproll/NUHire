@@ -14,12 +14,41 @@ let socket: Socket; // Define socket with correct type
 export default function ResReviewGroup() {
     useProgress();
 
+
+    interface VoteData {
+        yes: number;
+        no: number;
+        undecided: number;
+      }
+
+      interface User {
+        id: number;
+        name: string;
+        email: string;
+        affiliation: string;
+        group_id: number;
+        class: number;
+      }
+
+      interface ResumeData {
+        resume_number: number;
+        vote: "yes" | "no" | "unanswered";
+        checked: boolean;
+      }
+
+      interface Resume {
+        resume_number: number;
+        file_path: string;
+        checked: boolean;
+        vote: "yes" | "no" | "unanswered";
+      }
+
     const [checkedState, setCheckedState] = useState<{ [key: number]: boolean }>({});
     const [voteCounts, setVoteCounts] = useState<{ [key: number]: VoteData }>({});
     const [loading, setLoading] = useState(true);
     const [isConnected, setIsConnected] = useState<boolean>(false);
-    const [user, setUser] = useState(null);
-    const [resumes, setResumes] =  useState([]);
+    const [user, setUser] = useState<User | null>(null);
+    const [resumes, setResumes] = useState<Resume[]>([]);
     const router = useRouter();
     const pathname = usePathname();
 
@@ -191,7 +220,7 @@ export default function ResReviewGroup() {
         }
       
         const newCheckedState = !checkedState[resumeNumber];
-        const roomId = `group_${user.group_id}_class_${user.class}`;
+        const roomId = `group_${user!.group_id}_class_${user!.class}`;
       
         console.log(`Sending checkbox update to room ${roomId}:`);
         console.log(`Resume ${resumeNumber}, Checked: ${newCheckedState}`);

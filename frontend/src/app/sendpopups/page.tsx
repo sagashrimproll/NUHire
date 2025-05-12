@@ -31,7 +31,7 @@ const SendPopups = () => {
     const router = useRouter(); 
     const [isConnected, setIsConntected] = useState(false);
     const [pendingOffers, setPendingOffers] = useState<
-    { groupId: number; candidateId: number }[]
+    { classId: number; groupId: number; candidateId: number }[]
   >([]);
     
   const presetPopups = [
@@ -46,12 +46,6 @@ const SendPopups = () => {
       headline: "Abandoned Interview",
       message:
         "This candidate did not show up for the interview. You can change the scores, but everything will be saved as the lowest score.",
-    },
-    {
-      title: "Accepted Another Offer",
-      headline: "Candidate Accepted Another Offer",
-      message:
-        "This candidate has chosen to accept another offer, please choose again",
     },
   ];
 
@@ -117,9 +111,11 @@ const SendPopups = () => {
   }, [selectedClass]);
 
   useEffect(() => {
-    const onRequest = ({ groupId, candidateId }) => {
-      setPendingOffers((prev) => [...prev, { groupId, candidateId }]);
+    const onRequest = (data: { classId: number; groupId: number; candidateId: number }) => {
+      const { classId, groupId, candidateId } = data;
+      setPendingOffers((prev) => [...prev, {classId, groupId, candidateId }]);
     };
+  
     socket.on("makeOfferRequest", onRequest);
     return () => {
       socket.off("makeOfferRequest", onRequest);
@@ -132,7 +128,7 @@ const SendPopups = () => {
         return <div>This account is not authorized to access this page. Please log in with an admin account.</div>;
     }
 
-    const handleClassChange = (e) => {
+    const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setSelectedClass(e.target.value);
         setSelectedGroups([]); // Reset selected groups when class changes
     };
@@ -155,13 +151,19 @@ const SendPopups = () => {
   };
 
   const respondToOffer = (
+    classId: number,
     groupId: number,
     candidateId: number,
     accepted: boolean
   ) => {
-    socket.emit("makeOfferResponse", { groupId, candidateId, accepted });
+    socket.emit("makeOfferResponse", {
+      classId: selectedClass,
+      groupId,
+      candidateId,
+      accepted,
+    });
     setPendingOffers((prev) =>
-      prev.filter((o) => o.groupId !== groupId || o.candidateId !== candidateId)
+      prev.filter((o) => o.classId != classId || o.groupId !== groupId || o.candidateId !== candidateId)
     );
   };
 
@@ -337,13 +339,13 @@ const SendPopups = () => {
           {sending ? "Sending..." : "Send Popups"}
         </button>
 
-        {pendingOffers.map(({ groupId, candidateId }) => (
+        {pendingOffers.map(({classId, groupId, candidateId }) => (
           <div
-            key={`offer-${groupId}-${candidateId}`}
+            key={`offer-${classId}-${groupId}-${candidateId}`}
             className="mt-6 p-4 bg-springWater rounded-md shadow-md max-w-md mx-auto"
           >
             <Popup
-              headline={`Group ${groupId} wants to offer Candidate ${candidateId}`}
+              headline={`Group ${groupId} from Class ${classId} wants to offer Candidate ${candidateId}`}
               message="Do you approve?"
               onDismiss={() =>
                 setPendingOffers((prev) =>
@@ -357,13 +359,13 @@ const SendPopups = () => {
 
             <div className="mt-2 flex justify-between">
               <button
-                onClick={() => respondToOffer(groupId, candidateId, false)}
+                onClick={() => respondToOffer(classId, groupId, candidateId, false)}
                 className="px-4 py-2 rounded-md bg-red-200 text-red-800 hover:bg-red-300 transition"
               >
                 Reject
               </button>
               <button
-                onClick={() => respondToOffer(groupId, candidateId, true)}
+                onClick={() => respondToOffer(classId, groupId, candidateId, true)}
                 className="px-4 py-2 rounded-md bg-green-200 text-green-800 hover:bg-green-300 transition"
               >
                 Accept

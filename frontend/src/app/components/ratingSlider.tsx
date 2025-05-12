@@ -1,22 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 
 /**
  * Props:
+ * - value: current value of the slider
  * - onChange?: function to handle changes in the slider's value
  */
 interface RatingSliderProps {
+  value: number;
   onChange?: (value: number) => void;
 }
 
-export default function RatingSlider({ onChange }: RatingSliderProps) {
-  const [value, setValue] = useState<number>(5); // default to 5
-
+export default function RatingSlider({ value, onChange }: RatingSliderProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = Number(e.target.value);
-    setValue(newValue);
-
     if (onChange) {
       onChange(newValue);
     }

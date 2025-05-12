@@ -1,17 +1,15 @@
 #!/bin/sh
+# wait-for.sh host:port -- command to run
 
-# wait-for.sh host:port -- command args...
 set -e
 
 hostport="$1"
 shift
 
-host=$(echo "$hostport" | cut -d: -f1)
-port=$(echo "$hostport" | cut -d: -f2)
-
-until nc -z "$host" "$port"; do
-  echo "Waiting for $host:$port..."
+echo "Waiting for $hostport..."
+while ! nc -z $(echo "$hostport" | cut -d: -f1) $(echo "$hostport" | cut -d: -f2); do
   sleep 1
 done
 
+echo "$hostport is available. Starting app..."
 exec "$@"

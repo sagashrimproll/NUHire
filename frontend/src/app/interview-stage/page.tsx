@@ -21,7 +21,18 @@ interface User {
   id: string;
   group_id: string;
   email: string;
-  class: string | number; // Add class property
+  class: number;
+}
+
+interface Interview {
+  id: number;
+  resume_id: number;
+  interview: string;
+}
+
+interface Resume {
+  resume_number: number;
+  checked: number;
 }
 
 export default function Interview() {
@@ -132,7 +143,7 @@ export default function Interview() {
       }
     } catch (error) {
       console.error("Error submitting response:", error);
-      if (error.response) {
+      if (axios.isAxiosError(error) && error.response) {
         console.error("Error details:", error.response.data);
         console.error("Status code:", error.response.status);
       }
@@ -180,18 +191,17 @@ useEffect(() => {
       );
       
       console.log("Resume response:", resumeResponse.data);
-      const allResumes = resumeResponse.data;
+      const allResumes: Resume[] = resumeResponse.data;
       
       // Filter to get only checked resumes and ensure no duplicates
       const checkedResumes = allResumes
-        .filter(resume => resume.checked === 1)
-        .reduce((unique, resume) => {
-          // Only add if this resume_number doesn't exist in our array yet
-          if (!unique.some(r => r.resume_number === resume.resume_number)) {
-            unique.push(resume);
-          }
-          return unique;
-        }, []);
+      .filter((resume: Resume) => resume.checked === 1)
+      .reduce<Resume[]>((unique, resume) => {
+        if (!unique.some((r) => r.resume_number === resume.resume_number)) {
+          unique.push(resume);
+        }
+        return unique;
+      }, []);
       
       console.log("Checked resumes after deduplication:", checkedResumes);
       
@@ -223,8 +233,10 @@ useEffect(() => {
       
       // Filter out rejected promises and null values
       const candidatesData = results
-        .filter(result => result.status === 'fulfilled' && result.value !== null)
-        .map(result => result.value);
+      .filter((result): result is PromiseFulfilledResult<{ resume_id: any; title: any; interview: any; video_path: any }> => 
+        result.status === 'fulfilled' && result.value !== null
+      )
+      .map(result => result.value);
       
       console.log("Final candidate data:", candidatesData);
       setInterviews(candidatesData);

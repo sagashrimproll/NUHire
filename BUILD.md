@@ -14,7 +14,7 @@ Before building the application, ensure to have the following have been installe
 #### Clone the Repo:
 
 ``` bash
-git clone <https://github.com/sagashrimproll/Panployer.git >
+git clone <https://github.com/sagashrimproll/NUHire.git >
 cd panployer
 ```
 
