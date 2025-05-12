@@ -1,16 +1,15 @@
 #!/bin/sh
+# wait-for.sh host:port -- command to run
 
 set -e
 
-host="$1"
+hostport="$1"
 shift
-cmd="$@"
 
-until nc -z "$host" 3306; do
-    >&2 echo "MySQL is unavailable - sleeping"
-    sleep 1
+echo "Waiting for $hostport..."
+while ! nc -z $(echo "$hostport" | cut -d: -f1) $(echo "$hostport" | cut -d: -f2); do
+  sleep 1
 done
 
-
->&2 echo "MySQL is up - executing command"
-exec $cmd
+echo "$hostport is available. Starting app..."
+exec "$@"
