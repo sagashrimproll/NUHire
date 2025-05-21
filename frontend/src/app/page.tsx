@@ -24,7 +24,7 @@ export default function Home() {
 
       <div className="mt-20 mb-4">
         <Image
-          src="/NUHireImageCuter.png"
+          src="/nuhire_vector.png"
           alt="Project Mascot"
           width={300}
           height={300}

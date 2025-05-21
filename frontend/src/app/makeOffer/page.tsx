@@ -24,15 +24,19 @@ type VoteData = {
 
 // Main component for the MakeOffer page
 export default function MakeOffer() {
-  
   useProgress();
   const router = useRouter();
 
-  const [checkedState, setCheckedState] = useState<{ [key: number]: boolean }>({});
+  const [checkedState, setCheckedState] = useState<{ [key: number]: boolean }>(
+    {}
+  );
   const [voteCounts, setVoteCounts] = useState<{ [key: number]: VoteData }>({});
   const [loading, setLoading] = useState(true);
   const [isConnected, setIsConnected] = useState(false);
-  const [popup, setPopup] = useState<{ headline: string; message: string } | null>(null);
+  const [popup, setPopup] = useState<{
+    headline: string;
+    message: string;
+  } | null>(null);
   const pathname = usePathname();
   const [offerPending, setOfferPending] = useState(false);
   interface User {
@@ -43,22 +47,21 @@ export default function MakeOffer() {
     affiliation: string;
   }
 
-
-
   const [user, setUser] = useState<User | null>(null);
   const [resumes, setResumes] = useState<any[]>([]);
   const [interviewVids, setInterviewVids] = useState<any[]>([]);
   const [interviews, setInterviews] = useState<any[]>([]);
   const [candidates, setCandidates] = useState<any[]>([]);
   const [interviewsWithVideos, setInterviewsWithVideos] = useState<any[]>([]);
-  const [acceptedOffer, setAcceptedOffer] = useState(false); 
-  
+  const [acceptedOffer, setAcceptedOffer] = useState(false);
 
   // Load user
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" });
+        const response = await fetch(`${API_BASE_URL}/auth/user`, {
+          credentials: "include",
+        });
         const userData = await response.json();
         if (response.ok) setUser(userData);
         else router.push("/login");
@@ -71,83 +74,114 @@ export default function MakeOffer() {
     fetchUser();
   }, [router]);
 
+  // Update current page when user is loaded
+  useEffect(() => {
+    if (user && user.email) {
+      // Emit socket events
+      socket?.emit("studentOnline", { studentId: user.email });
+      socket?.emit("studentPageChanged", {
+        studentId: user.email,
+        currentPage: pathname,
+      });
+
+      // Update current page in database
+      const updateCurrentPage = async () => {
+        try {
+          await axios.post(`${API_BASE_URL}/update-currentpage`, {
+            page: "makeofferpage",
+            user_email: user.email,
+          });
+        } catch (error) {
+          console.error("Error updating current page:", error);
+        }
+      };
+
+      updateCurrentPage();
+    }
+  }, [user, pathname]);
+
   useEffect(() => {
     if (!user?.group_id) return;
-  
+
     const fetchInterviews = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/interview/group/${user.group_id}?class=${user.class}`);
+        const response = await fetch(
+          `${API_BASE_URL}/interview/group/${user.group_id}?class=${user.class}`
+        );
+        console.log("fetching interviews for class: ", user.class);
         const data = await response.json();
-        
+
         setInterviews(data);
       } catch (err) {
         console.error("Error fetching interviews:", err);
       }
     };
-    
+
     fetchInterviews();
   }, [user]);
-  
 
   useEffect(() => {
     if (!interviews.length) return;
-  
+
     const fetchCandidates = async () => {
       try {
         const fetchedCandidates = await Promise.all(
           interviews.map(async (interview) => {
             const id = interview.candidate_id;
             const res = await fetch(`${API_BASE_URL}/canidates/${id}`);
-  
+
             if (!res.ok) {
-              throw new Error(`Invalid response for candidate ${interview.candidate_id}`);
+              throw new Error(
+                `Invalid response for candidate ${interview.candidate_id}`
+              );
             }
-  
+
             const data = await res.json();
             return data;
           })
         );
-  
+
         console.log("Setting candidates:", fetchedCandidates);
         setCandidates(fetchedCandidates); // triggers re-render
       } catch (err) {
         console.error("Error fetching candidates:", err);
       }
     };
-  
+
     fetchCandidates();
   }, [interviews]);
 
-
   useEffect(() => {
     if (!candidates.length) return;
-  
+
     const fetchResumes = async () => {
       try {
         const fetchedResumes = await Promise.all(
           candidates.map(async (candidate) => {
             const id = candidate.resume_id;
             const res = await fetch(`${API_BASE_URL}/resume_pdf/id/${id}`);
-  
+
             if (!res.ok) {
-              throw new Error(`Invalid response for resume ${candidate.resume_id}`);
+              throw new Error(
+                `Invalid response for resume ${candidate.resume_id}`
+              );
             }
-  
+
             const data = await res.json();
             return data;
           })
         );
-  
+
         console.log("Setting candidates:", fetchedResumes);
         setResumes(fetchedResumes); // triggers re-render
       } catch (err) {
         console.error("Error fetching candidates:", err);
       }
     };
-  
+
     fetchResumes();
   }, [candidates]);
-  
+
   const groupInterviewsByCandidate = (interviews: any[]) => {
     const grouped: { [candidate_id: number]: any[] } = {};
     for (const interview of interviews) {
@@ -160,52 +194,60 @@ export default function MakeOffer() {
     return grouped;
   };
 
-  
   // Calculate vote totals and checkbox state
   useEffect(() => {
     if (!user || !interviews.length) return;
-  
+
     const grouped = groupInterviewsByCandidate(interviews);
     const voteData: { [key: number]: VoteData } = {};
     const checkboxData: { [key: number]: boolean } = {};
-  
-    for (const [candidateIdStr, candidateInterviews] of Object.entries(grouped)) {
+
+    for (const [candidateIdStr, candidateInterviews] of Object.entries(
+      grouped
+    )) {
       const candidateId = parseInt(candidateIdStr);
-      voteData[candidateId] = { Overall: 0, Profesionality: 0, Quality: 0, Personality: 0 };
-  
+      voteData[candidateId] = {
+        Overall: 0,
+        Profesionality: 0,
+        Quality: 0,
+        Personality: 0,
+      };
+
       candidateInterviews.forEach((interview) => {
         voteData[candidateId].Overall += interview.question1;
         voteData[candidateId].Profesionality += interview.question2;
         voteData[candidateId].Quality += interview.question3;
         voteData[candidateId].Personality += interview.question4;
-  
-        checkboxData[candidateId] = checkboxData[candidateId] || interview.checked;
+
+        checkboxData[candidateId] =
+          checkboxData[candidateId] || interview.checked;
       });
     }
-  
+
     setVoteCounts(voteData);
     setCheckedState(checkboxData);
   }, [interviews, user]);
-  
 
   useEffect(() => {
     if (!interviews.length || !candidates.length) return;
-  
-    const uniqueCandidateIds = [...new Set(interviews.map((i) => i.candidate_id))];
-  
+
+    const uniqueCandidateIds = [
+      ...new Set(interviews.map((i) => i.candidate_id)),
+    ];
+
     const merged = uniqueCandidateIds.map((id) => {
       const candidate = candidates.find((c) => c.id === id);
       const resume = resumes.find((r) => r.id === candidate?.resume_id);
       return {
         candidate_id: id,
-        video_path: candidate?.interview || "https://www.youtube.com/embed/srw4r3htm4U",
-        resume_path: resume?.file_path || 'uploads/resumes/sample1.pdf',
+        video_path:
+          candidate?.interview || "https://www.youtube.com/embed/srw4r3htm4U",
+        resume_path: resume?.file_path || "uploads/resumes/sample1.pdf",
       };
     });
-  
+
     setInterviewsWithVideos(merged);
   }, [interviews, candidates]);
-  
 
   // Setup socket.io
   useEffect(() => {
@@ -219,6 +261,7 @@ export default function MakeOffer() {
     socket.on("connect", () => {
       setIsConnected(true);
       socket?.emit("joinGroup", `group_${user.group_id}_class_${user.class}`);
+      console.log()
     });
 
     socket.on("disconnect", () => {
@@ -226,47 +269,79 @@ export default function MakeOffer() {
     });
 
     // Listens to Advisor's response
-    socket.on("makeOfferResponse", ({classId, groupId, candidateId, accepted }: { classId: number, groupId: string; candidateId: number; accepted: boolean }) => {
-      console.log("Received Response: ", {classId, groupId, candidateId, accepted });
-      if (classId !== user.class || groupId !== user.group_id) return;
-      if (accepted) {
-        setPopup({
-          headline: "Offer accepted!",
-          message: "Congratulations—you’ve extended the offer successfully.",
-        });
-        setAcceptedOffer(true);
-      } else {
-        setPopup({
-          headline: "Offer rejected",
-          message: "That candidate wasn’t available or has chosen another offer. Please choose again.",
-        });
-
-        // filter the candidates based on the id to remove the rejected candidate.
-        setInterviewsWithVideos((prev) => 
-        prev.filter((iv) => iv.candidate_id !== candidateId));
-
-
-
-        setCheckedState((prev) => {
-          const next = { ...prev };
-          delete next[candidateId];
-          return next;
+    socket.on(
+      "makeOfferResponse",
+      ({
+        classId,
+        groupId,
+        candidateId,
+        accepted,
+      }: {
+        classId: number;
+        groupId: string;
+        candidateId: number;
+        accepted: boolean;
+      }) => {
+        console.log("Received Response: ", {
+          classId,
+          groupId,
+          candidateId,
+          accepted,
         });
 
+        if(classId !== user.class) {
+          console.log("Class Id is not defined");
+          return
+        }
+        if(groupId !== user.group_id) {
+          console.log("GroupId is not defined");
+          return
+        }
+        if (accepted) {
+          setPopup({
+            headline: "Offer accepted!",
+            message: "Congratulations—you’ve extended the offer successfully.",
+          });
+          setAcceptedOffer(true);
+        } else {
+          setPopup({
+            headline: "Offer rejected",
+            message:
+              "That candidate wasn’t available or has chosen another offer. Please choose again.",
+          });
 
-        setOfferPending(false);
+          // filter the candidates based on the id to remove the rejected candidate.
+          setInterviewsWithVideos((prev) =>
+            prev.filter((iv) => iv.candidate_id !== candidateId)
+          );
+
+          setCheckedState((prev) => {
+            const next = { ...prev };
+            delete next[candidateId];
+            return next;
+          });
+
+          setOfferPending(false);
+        }
       }
-    });
+    );
 
-    socket.on("checkboxUpdated", ({ interview_number, checked }: { interview_number: number; checked: boolean }) => {
-      setCheckedState((prev) => ({ ...prev, [interview_number]: checked }));
-    });
+    socket.on(
+      "checkboxUpdated",
+      ({
+        interview_number,
+        checked,
+      }: {
+        interview_number: number;
+        checked: boolean;
+      }) => {
+        setCheckedState((prev) => ({ ...prev, [interview_number]: checked }));
+      }
+    );
 
     return () => {
       socket?.disconnect();
     };
-  
-  
   }, [user]);
 
   const handleCheckboxChange = (interviewNumber: number) => {
@@ -275,14 +350,17 @@ export default function MakeOffer() {
     const roomId = `group_${user!.group_id}_class_${user!.class}`;
 
     const newCheckedState = !checkedState[interviewNumber];
-    setCheckedState((prev) => ({ ...prev, [interviewNumber]: newCheckedState }));
+    setCheckedState((prev) => ({
+      ...prev,
+      [interviewNumber]: newCheckedState,
+    }));
 
     socket.emit("checkint", {
       group_id: roomId,
       interview_number: interviewNumber,
       checked: newCheckedState,
     });
-  };  
+  };
 
   const handleMakeOffer = () => {
     const selectedIds = Object.entries(checkedState)
@@ -290,46 +368,21 @@ export default function MakeOffer() {
       .map(([id]) => Number(id));
     if (selectedIds.length !== 1) return;
     const candidateId = selectedIds[0];
-  
+
+    console.log("user class: ", user!.class); // delete later -> seeing if user class is being fetched.  
+
     socket?.emit("makeOfferRequest", {
       classId: user!.class,
       groupId: user!.group_id,
       candidateId,
     });
-  
+
     setPopup({
       headline: "Offer submitted",
       message: "Awaiting approval from your advisor…",
     });
     setOfferPending(true);
   };
-  
-
-    // Update current page when user is loaded
-    useEffect(() => {
-      if (user && user.email) {
-        // Emit socket events
-        socket?.emit("studentOnline", { studentId: user.email }); 
-        socket?.emit("studentPageChanged", { studentId: user.email, currentPage: pathname });
-        
-        // Update current page in database
-        const updateCurrentPage = async () => {
-          try {
-            await axios.post(`${API_BASE_URL}/update-currentpage`, {
-              page: 'makeofferpage', 
-              user_email: user.email
-            });
-          } catch (error) {
-            console.error("Error updating current page:", error);
-          }
-        };
-        
-        updateCurrentPage(); 
-      }
-    }, [user, pathname]);
-  
-
-
 
   const completeMakeOffer = () => {
     const selectedCount = Object.values(checkedState).filter(Boolean).length;
@@ -344,7 +397,11 @@ export default function MakeOffer() {
   const selectedCount = Object.values(checkedState).filter(Boolean).length;
 
   if (loading) {
-    return <div className="flex items-center justify-center min-h-screen text-xl">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen text-xl">
+        Loading...
+      </div>
+    );
   }
 
   if (!user || user.affiliation !== "student") return null;
@@ -360,7 +417,8 @@ export default function MakeOffer() {
           Make an Offer as a Group
         </h1>
         <h2 className="text-xl italic text-center text-navy mb-6">
-          Please review the Candidates below and as a group select 1 to give an offer.
+          Please review the Candidates below and as a group select 1 to give an
+          offer.
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -431,7 +489,6 @@ export default function MakeOffer() {
             );
           })}
 
-
           {popup && (
             <Popup
               headline={popup.headline}
@@ -439,17 +496,19 @@ export default function MakeOffer() {
               onDismiss={() => setPopup(null)}
             />
           )}
-          </div>
+        </div>
         {selectedCount === 1 && (
           <div className="flex justify-center my-6">
             <button
               onClick={handleMakeOffer}
               disabled={offerPending}
               className={`px-6 py-3 bg-navyHeader text-white rounded-lg shadow-md font-rubik transition duration-300 ${
-                offerPending ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'
+                offerPending
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-blue-700"
               }`}
             >
-              {offerPending ? 'Awaiting Advisor…' : 'Make an Offer'}
+              {offerPending ? "Awaiting Advisor…" : "Make an Offer"}
             </button>
           </div>
         )}

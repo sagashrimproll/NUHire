@@ -423,8 +423,7 @@ io.on("connection", (socket) => {
   // Advisor’s decision → notify the student group
   socket.on('makeOfferResponse', ({classId, groupId, candidateId, accepted }) => {
     console.log(`Advisor responded to class ${classId}, group ${groupId} for candidate ${candidateId}: accepted=${accepted}`);
-    const room = `group_${groupId}_class_${classId}`;
-    io.to(room).emit('makeOfferResponse', { groupId, candidateId, accepted });
+    io.emit('makeOfferResponse', {classId, groupId, candidateId, accepted });
   });
 
   // Listens for the "disconnect" event, which is emitted when a client disconnects from the server
