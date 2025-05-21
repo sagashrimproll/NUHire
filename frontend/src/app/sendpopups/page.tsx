@@ -157,7 +157,7 @@ const SendPopups = () => {
     accepted: boolean
   ) => {
     socket.emit("makeOfferResponse", {
-      classId: selectedClass,
+      classId,
       groupId,
       candidateId,
       accepted,
