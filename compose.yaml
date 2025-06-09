@@ -39,9 +39,9 @@ services:
   frontend:
     build: ./frontend  # Uses frontend/Dockerfile
     container_name: frontend_container
-    volumes: 
-      - './frontend:/app'
-      - '/app/node_modules'
+    # volumes: Don't use this during proudction build.
+    #   - './frontend:/app'
+    #   - '/app/node_modules'
     ports:
       - "3000:3000"
     depends_on:
