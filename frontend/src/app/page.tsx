@@ -2,11 +2,12 @@
 import Image from "next/image";
 import React from "react";
 import './globals.css';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 
 export default function Home() {
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:5001/auth/google"; // Redirect to OAuth
+    window.location.href = `${API_BASE_URL}/auth/google`;
   };
 
   return (

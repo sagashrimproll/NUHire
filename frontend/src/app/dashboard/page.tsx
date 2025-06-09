@@ -10,11 +10,12 @@ import io from "socket.io-client";
 import { usePathname } from "next/navigation";
 import Popup from "../components/popup";
 
-const socket = io("http://localhost:5001"); 
+const socket = io(API_BASE_URL); 
 
 interface User {
   email: string;
   affiliation: string;
+  job_des: string;
 }
 
 const Dashboard = () => {
@@ -107,6 +108,7 @@ const Dashboard = () => {
   ];
 
   const isStepUnlocked = (stepKey: string) => {
+    if(stepKey === "jobdes" && !user?.job_des) return false;
     const completedSteps = steps.map((s) => s.key);
     return completedSteps.indexOf(stepKey) <= completedSteps.indexOf(progress);
   };
@@ -157,6 +159,11 @@ const Dashboard = () => {
               key={step.key}
               onClick={() => window.location.replace(step.path)}
               disabled={!isStepUnlocked(step.key)}
+              title={
+                step.key === "jobdes" && !user?.job_des
+                ? "You have not been assigned a job description yet."
+                : ""
+              }
               className={`px-4 py-2 text-lg rounded-md transition-all mb-10
                 ${isStepUnlocked(step.key) ? "bg-[#455763] text-white cursor-pointer hover:bg-[#142050]" : "bg-gray-300 text-gray-600 cursor-not-allowed opacity-60"}`}
             >

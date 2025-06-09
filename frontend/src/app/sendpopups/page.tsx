@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import NavbarAdmin from "../components/navbar-admin";
 import { io } from "socket.io-client";
 import Popup from "../components/popup";
+import AdminReactionPopup from "../components/adminReactionPopup";
 
 const socket = io(`${API_BASE_URL}`);
 
@@ -201,19 +202,19 @@ const SendPopups = () => {
     <div className="flex flex-col min-h-screen bg-sand font-rubik">
       <NavbarAdmin />
 
-      <div className="max-w-3xl mx-auto justify-center items-center p-6 mt-6">
-        <h1 className="text-3xl font-bold text-center text-navyHeader mb-6">
+      <div className="max-w-3xl mx-auto bg-navy justify-center rounded-md items-center p-6 mt-6">
+        <h1 className="text-3xl font-bold text-center text-sand mb-6">
           Send Popups
         </h1>
 
-        <p className="text-lg text-center text-navyHeader mb-4">
+        <p className="text-lg text-center text-sand mb-4">
           Select a preset or create a custom message to send to selected groups
           of students.
         </p>
 
           {/* Class Selection Dropdown */}
           <div className="mb-6">
-            <label className="text-lg font-rubik block mb-2">Select Class:</label>
+            <label className="text-lg text-sand font-rubik block mb-2">Select Class:</label>
             <select
               value={selectedClass}
               onChange={handleClassChange}
@@ -231,7 +232,7 @@ const SendPopups = () => {
           {selectedClass && (
             <>
               <div className="mb-6">
-                <label className="text-lg font-rubik block mb-2">Choose a Preset:</label>
+                <label className="text-lg font-rubik text-sand block mb-2">Choose a Preset:</label>
                 <select
                   value={selectedPreset}
                   onChange={(e) => handlePresetSelection(e.target.value)}
@@ -246,43 +247,41 @@ const SendPopups = () => {
                 </select>
               </div>
 
-              <div className="flex items-center gap-4 mb-6">
-                <label className="text-lg font-rubik">Headline:</label>
+              <div className="flex flex-col gap-4 mb-6">
+                <label className="text-lg text-sand font-rubik">Headline:</label>
                 <input
                   type="text"
                   placeholder="Enter subject for popup"
                   value={headline}
                   onChange={(e) => setHeadline(e.target.value)}
                   className="p-3 border border-wood text-left bg-springWater rounded-md 
-                       focus:outline-none focus:ring-2 focus:ring-blue-500 w-full max-w-lg"
+                       focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
                 />
-              </div>
 
-              <div className="flex gap-4 mb-6">
-                <label className="text-lg font-rubik">Content: </label>
+                <label className="text-lg text-sand font-rubik">Content:</label>
                 <textarea
                   placeholder="Enter your message here"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  className="w-[600px] max-w-1xl h-32 p-4 border border-wood text-left bg-springWater 
+                  className="w-full h-32 p-4 border border-wood text-left bg-springWater 
                     rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 
                     mb-4 resize-none overflow-hidden text-lg whitespace-pre-wrap"
                   rows={3}
                 />
               </div>
 
-              <div className="w-full max-w-2xl bg-navy shadow-lg rounded-lg p-6">
-                <h2 className="text-xl font-bold text-sand mb-4">
+              <div className="w-full max-w-2xl bg-sand shadow-lg rounded-lg p-6">
+                <h2 className="text-xl font-bold text-navyHeader mb-4">
                   Groups in Class {selectedClass}
                 </h2>
                 {groups && Object.keys(groups).length > 0 ? (
                   Object.entries(groups).map(([group_id, students]) => (
                     <div
                       key={group_id}
-                      className="bg-springWater mb-4 p-4 border rounded-lg shadow-sm"
+                      className="bg-navy mb-4 p-4 border rounded-lg shadow-sm"
                     >
                       <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-semibold text-navy">
+                        <h3 className="text-lg font-semibold text-springWater">
                           Group {group_id}
                         </h3>
                         <input
@@ -298,7 +297,7 @@ const SendPopups = () => {
                           students.map((student, index) => (
                             <li
                               key={index}
-                              className="bg-springWater p-3 rounded-md shadow-sm border flex items-center gap-3"
+                              className="bg-white p-3 rounded-md shadow-sm border flex items-center gap-3"
                             >
                               <div className="text-navy font-medium">
                                 {student.name}
@@ -344,33 +343,17 @@ const SendPopups = () => {
             key={`offer-${classId}-${groupId}-${candidateId}`}
             className="mt-6 p-4 bg-springWater rounded-md shadow-md max-w-md mx-auto"
           >
-            <Popup
+            <AdminReactionPopup
               headline={`Group ${groupId} from Class ${classId} wants to offer Candidate ${candidateId}`}
               message="Do you approve?"
-              onDismiss={() =>
-                setPendingOffers((prev) =>
-                  prev.filter(
-                    (o) =>
-                      o.groupId !== groupId || o.candidateId !== candidateId
-                  )
-                )
+              onAccept={() => 
+                respondToOffer(classId, groupId, candidateId, true)
               }
+              onReject={() => 
+                respondToOffer(classId, groupId, candidateId, false)
+              }
+        
             />
-
-            <div className="mt-2 flex justify-between">
-              <button
-                onClick={() => respondToOffer(classId, groupId, candidateId, false)}
-                className="px-4 py-2 rounded-md bg-red-200 text-red-800 hover:bg-red-300 transition"
-              >
-                Reject
-              </button>
-              <button
-                onClick={() => respondToOffer(classId, groupId, candidateId, true)}
-                className="px-4 py-2 rounded-md bg-green-200 text-green-800 hover:bg-green-300 transition"
-              >
-                Accept
-              </button>
-            </div>
           </div>
         ))}
       </>
