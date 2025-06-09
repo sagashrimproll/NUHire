@@ -2,9 +2,11 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 export default function SignupPage() {
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:5001/auth/google"; // Redirect to OAuth
+    window.location.href = `${API_BASE_URL}/auth/google`; // Redirect to OAuth
   };
 
   return (

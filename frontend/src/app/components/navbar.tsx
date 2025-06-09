@@ -12,6 +12,7 @@ const Navbar = () => {
     if (typeof window !== "undefined") {
       const storedProgress = localStorage.getItem("progress") || "job-description";
       setProgress(storedProgress);
+      
     }
   }, []);
   const steps = [

@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 // Define API base URL with fallback
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+
 
 export default function SignupDetails() {
   const [firstName, setFirstName] = useState('');

@@ -96,7 +96,7 @@ export default function JobDescriptionPage() {
     const fetchJob = async () => {
       if (!user || !user.job_des) {
         setLoading(false);
-        return;
+        return; 
       }
       
       try {
