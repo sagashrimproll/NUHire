@@ -4,6 +4,7 @@ services:
   db:
     image: mysql:latest  # Uses official MySQL image
     container_name: panployer-mysql
+    platform: linux/amd64
     restart: always
     environment: 
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -19,7 +20,8 @@ services:
     volumes:
       - ./database-files:/docker-entrypoint-initdb.d/:ro
   api:
-    build: ./api # Uses api/Dockerfile
+    platform: linux/amd64
+    build: ./api
     container_name: api_container
     restart: on-failure:5
     volumes:
@@ -37,6 +39,7 @@ services:
       DB_NAME: ${DB_NAME}
 
   frontend:
+    platform: linux/amd64
     build: ./frontend  # Uses frontend/Dockerfile
     container_name: frontend_container
     # volumes: Don't use this during proudction build.
