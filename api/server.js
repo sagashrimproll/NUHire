@@ -525,7 +525,7 @@ app.get("/res-review"), (req, res) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ message: "Unauthorized" });
   }
-  res.redirect(`http://localhost:3000/res-review?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
+  res.redirect(`${FRONT_URL}/res-review?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
 }
 
 //get route for the group resume review page, which checks if the user is authenticated and redirects them to the frontend group resume review page with their name as a query parameter
@@ -534,7 +534,7 @@ app.get("/res-review-group"), (req, res) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  res.redirect(`http://localhost:3000/res-review-group?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
+  res.redirect(`${FRONT_URL}/res-review-group?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
 }
 
 // get route for the interview stage page, which checks if the user is authenticated and redirects them to the frontend interview stage page with their name as a query parameter
@@ -543,7 +543,7 @@ app.get("/interview-stage"), (req, res) => {
     return res.status(401).json({ message: "Unauthorized" });
   }
 
-  res.redirect(`http://localhost:3000/interview-stage?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
+  res.redirect(`${FRONT_URL}/interview-stage?name=${encodeURIComponent(req.user.f_name + " " + req.user.l_name)}`);
 }
 
 // Logout route

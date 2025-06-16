@@ -25,7 +25,6 @@ services:
     container_name: api_container
     restart: on-failure:5
     volumes:
-    - './api:/apicode'
     - '/apicode/node_modules'
     ports:
       - "5001:5001"
