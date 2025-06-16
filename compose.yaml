@@ -24,8 +24,9 @@ services:
     build: ./api
     container_name: api_container
     restart: on-failure:5
-    volumes:
-    - '/apicode/node_modules'
+    # volumes: Don't need to use during Production build 
+    # - './api:/apicode'
+    # - '/apicode/node_modules'
     ports:
       - "5001:5001"
     depends_on:
