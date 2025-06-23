@@ -53,7 +53,8 @@ services:
     image: quay.io/keycloak/keycloak:24.0.1
     container_name: keycloak
     entrypoint: /bin/bash
-    command: -c "/opt/keycloak/bin/kc.sh build && /opt/keycloak/bin/kc.sh start --optimized --hostname=localhost"
+    command: >
+      -c "/opt/keycloak/bin/kc.sh build && /opt/keycloak/bin/kc.sh start --optimized --hostname=localhost --https-certificate-file=/etc/x509/https/tls.crt --https-certificate-key-file=/etc/x509/https/tls.key"
     environment:
       KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
       KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
@@ -61,12 +62,10 @@ services:
       KC_DB_URL: jdbc:mysql://db:3306/keycloak
       KC_DB_USERNAME: root
       KC_DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      KC_HTTPS_CERTIFICATE_FILE: /etc/x509/https/tls.crt
-      KC_HTTPS_CERTIFICATE_KEY_FILE: /etc/x509/https/tls.key
     volumes:
       - ./certs:/etc/x509/https
     ports:
-      - "8080:8080"
+      - "8443:8443"
     depends_on:
       db:
         condition: service_healthy
