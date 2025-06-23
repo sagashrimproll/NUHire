@@ -17,6 +17,7 @@
     "next": "^15.3.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
+    "passport-keycloak-oauth2-oidc": "^1.0.5",
     "popup": "^0.0.3",
     "python": "^0.0.4",
     "socket": "^0.14.103",
