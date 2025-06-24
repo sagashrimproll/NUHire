@@ -23,6 +23,7 @@
     "passport": "^0.7.0",
     "passport-google-oauth2": "^0.2.0",
     "passport-google-oauth20": "^2.0.0",
+    "passport-keycloak-oauth2-oidc": "^1.0.5",
     "passport-oauth2": "^1.8.0",
     "socket": "^0.14.103",
     "socket.io": "^4.8.1"
