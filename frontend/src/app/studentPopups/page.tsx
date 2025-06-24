@@ -5,7 +5,7 @@ import io from "socket.io-client";
 import { usePathname } from "next/navigation";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-const socket = io(`${API_BASE_URL}`);
+const socket = io(API_BASE_URL); 
 
 const StudentPage = () => {
     const [popup, setPopup] = useState<{ headline: string; message: string } | null>(null);

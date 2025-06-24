@@ -14,7 +14,7 @@ import { usePathname } from "next/navigation";
 import { io } from "socket.io-client";
 import router from "next/router";
 
-const socket = io(`${API_BASE_URL}`)
+const socket = io(API_BASE_URL); 
 
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.mjs',
