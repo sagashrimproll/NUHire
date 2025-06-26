@@ -73,8 +73,12 @@ The api directory controls everything between the frontend and the database. All
 **Rest Api** 
 
 
-**Google OAuth**
+**Keycloak**
+In order to set up keycloak, within the .env file for the overall application, there is KEYCLOAK_ADMIN a spot for and KEYCLOAK_ADMIN_PASSWORD
+which is the apps admin user name and password for access. In the api of the app there are those same stored values along with KEYCLOAK_CLIENT_ID,
+KEYCLOAK_CLIENT_SECRET, KEYCLOAK_REALM, and KEYCLOAK_URL. 
 
+As of right now the keycloak part of the application is under development. In order to be able to continue development and testing of the inner workings of the application we have created 2 branches without keycloak. One branch has the production build of the application while the other branch has the development build.
 
 **Socket connection** 
 
@@ -87,7 +91,7 @@ We are using MySQL database to store and mangage student information and other i
 
 **Here is some important information to know about the database** 
 
-When new users signup from the landing page, we use google OAuth and the student's information, such as their First and Last name, their email that the logged in with, their affiliation as a student or advisor and their class number is stored in the *USERS* table. **We don't store any passwords because everything is authenticated through google**. 
+When new users signup from the landing page, we use google OAuth and the student's information, such as their First and Last name, their email that the logged in with, their affiliation as a student or advisor and their class number is stored in the *USERS* table. **We don't store any passwords because everything is authenticated through google** (The is a new change in this due to the changing of OAuth). 
 
 After the user as signed up, everytime they log in with the same email, we get the user from the database with their email -- this way the user can log in and sign in with the same button. Based on if they're a student or Advisor they are directed to the Student Dashboard or the Advisor dashboard. The Advisor will be able to see all the students that are signed up for their specific class so other classes and students don't overlap. Below is a picture of the users table, some of the information is collected when users signup and other information is filled out as they go through the activity. 
 
