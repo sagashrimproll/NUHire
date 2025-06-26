@@ -3,7 +3,7 @@ const express = require("express"); //Api framework
 const mysql = require("mysql2"); //MySQL database driver
 const passport = require("passport"); //Authentication middleware
 const session = require("express-session"); //Session management middleware, which is used for creating and managing user sessions
-const GoogleStrategy = require("passport-google-oauth20").Strategy; // Google OAuth 2.0 authentication strategy for Passport
+const KeycloakStrategy = require('passport-keycloak-oauth2-oidc').Strategy; // Keycloak authentication strategy for Passport
 const dotenv = require("dotenv");// dotenv package to load environment variables from a .env file into process.env
 const cors = require("cors"); //CORS middleware for enabling Cross-Origin Resource Sharing
 const bodyParser = require("body-parser"); //Middleware for parsing incoming request bodies in a middleware before your handlers, available under the req.body property.
@@ -186,7 +186,7 @@ function connectToDatabase() {
       user: process.env.DB_USER,
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
-      port: 3306,
+      port: process.env.DB_PORT,
       connectTimeout: 20000 // Increase timeout to 20 seconds
     });
     
@@ -256,10 +256,13 @@ async function initializeApp() {
 // Separate passport configuration function
 function configurePassport() {
   // Passport.js configuration for Google OAuth 2.0 authentication
-  passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/auth/google/callback"
+  passport.use(new KeycloakStrategy({
+    clientID: process.env.KEYCLOAK_CLIENT_ID,
+    realm: process.env.KEYCLOAK_REALM,
+    clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
+    sslRequired: 'external',
+    authServerURL: process.env.KEYCLOAK_URL,
+    callbackURL: '/auth/callback'
   }, (accessToken, refreshToken, profile, done) => {
     const email = profile.emails[0].value.toLowerCase();
     
@@ -273,6 +276,13 @@ function configurePassport() {
     });
   }));
   
+  app.get('/auth/keycloak', passport.authenticate('keycloak'));
+
+  app.get('/auth/callback',
+    passport.authenticate('keycloak', { failureRedirect: '/login' }),
+    (req, res) => res.redirect('/'));
+  
+
   // serializeUser and deserializeUser methods
   passport.serializeUser((user, done) => {
     done(null, user.id || user.email);
@@ -292,6 +302,7 @@ function configurePassport() {
     });
   });
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Socket.io configuration for real-time communication between the server and clients
 
@@ -439,15 +450,15 @@ io.on("connection", (socket) => {
 });
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Google OAuth 2.0 authentication routes
+// Keycloak OAuth authentication routes
 
 // The "/auth/google" route initiates the authentication process by redirecting the user to the Google login page
-app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+app.get('/auth/keycloak', passport.authenticate('keycloak'));
 
 // The "/auth/google/callback" route is the callback URL that Google redirects to after the user has authenticated
 // The server handles the authentication response and checks if the user exists in the database
-app.get("/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/" }),
+app.get("/auth/callback",
+  passport.authenticate('keycloak', { failureRedirect: '/' }),
   (req, res) => {
     const email = req.user.email;
 

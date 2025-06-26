@@ -17,6 +17,10 @@ USE `pandployer`;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
+CREATE DATABASE keycloak;
+CREATE USER 'keycloak'@'%' IDENTIFIED BY 'strongpassword';
+GRANT ALL PRIVILEGES ON keycloak.* TO 'keycloak'@'%';
+
 --
 -- Table structure for table `Candidates`
 --

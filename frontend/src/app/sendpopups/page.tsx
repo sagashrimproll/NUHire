@@ -7,7 +7,7 @@ import { io } from "socket.io-client";
 import Popup from "../components/popup";
 import AdminReactionPopup from "../components/adminReactionPopup";
 
-const socket = io(`${API_BASE_URL}`);
+const socket = io(API_BASE_URL); 
 
 const SendPopups = () => {
   interface User {
