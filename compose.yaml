@@ -24,9 +24,9 @@ services:
     build: ./api
     container_name: api_container
     restart: on-failure:5
-    # volumes: Don't need to use during Production build 
-    # - './api:/apicode'
-    # - '/apicode/node_modules'
+    volumes:
+    - './api:/apicode'
+    - '/apicode/node_modules'
     ports:
       - "5001:5001"
     depends_on:
@@ -42,9 +42,9 @@ services:
     platform: linux/amd64
     build: ./frontend  # Uses frontend/Dockerfile
     container_name: frontend_container
-    # volumes: Don't use this during proudction build.
-    #   - './frontend:/app'
-    #   - '/app/node_modules'
+    volumes:
+      - './frontend:/app'
+      - '/app/node_modules'
     ports:
       - "3000:3000"
     depends_on:
