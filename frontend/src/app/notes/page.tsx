@@ -24,6 +24,7 @@ const NotesPage: React.FC = () => {
     }
   };
 
+  // Notes page allows user to take and save notes that sustain throughout the application
   return (
     <div>
         <Navbar/>

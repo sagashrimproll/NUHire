@@ -35,6 +35,9 @@ const SendPopups = () => {
     { classId: number; groupId: number; candidateId: number }[]
   >([]);
     
+  // These are preset popusp that the Admin can select on their side. They have special permissions: 
+  // The internal refferal popup, when sent to a group if they are in the resume review stage, makes it so that the resume that group is reviewing is moved on.
+  // The No Show popup is useful in the interview stage, where when the popup is sent, the person who is being interviewed their video is cut off, and any score they get is set to null
   const presetPopups = [
     {
       title: "Internal Referral",
@@ -151,6 +154,8 @@ const SendPopups = () => {
     }
   };
 
+  // Only in this page is when the admin gets the respond to offer popup, if they are in any other page then they won't get the popup. 
+  // This could be changed to be included in other pages as well, but for now it's in this page as the admin can just sit in this page thorughout the activity sending popups to different groups
   const respondToOffer = (
     classId: number,
     groupId: number,

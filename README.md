@@ -69,6 +69,7 @@ Advisor dashboard:
 ### Authentication and Authorization
 
 - Google OAuth 2.0 for user authentication
+- Currently working on Keycloak authentication prior to deployment
 - Session-based authentication using express-session
 - MySQL session store for persistence
 - Role-based authorization (student vs. admin)

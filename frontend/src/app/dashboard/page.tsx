@@ -18,6 +18,7 @@ interface User {
   job_des: string;
 }
 
+// First place everyone lands on after authentication
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,6 +50,8 @@ const Dashboard = () => {
     fetchUser();
   }, [router]);
 
+  // Student page changed, a db variable that detects what pages a user is on and updates everytime they change
+  // not to be confused with useProgress; this is to update user page on Admin side
   useEffect(() => {
     if (user && user.email) {
       socket.emit("studentOnline", { studentId: user.email }); 
@@ -71,7 +74,7 @@ const Dashboard = () => {
     }
   }, [user, pathname]);
 
- 
+ // Popup information, sockets always listens for a popup and displays information
   useEffect(() => {
     socket.on("receivePopup", ({ headline, message }) => {
       setPopup({ headline, message });
@@ -107,6 +110,10 @@ const Dashboard = () => {
     { key: "employerPannel", label: "Employer Panel", path: "/employerPannel" },
   ];
 
+
+  // jobdes is locked untill the admin sides assings them a job description.
+  // Fix this: if you've already accessed the application and went through some pages, 
+  // then when you login next time, all the other pages except the job-des open up, fix that. 
   const isStepUnlocked = (stepKey: string) => {
     if(stepKey === "jobdes" && !user?.job_des) return false;
     const completedSteps = steps.map((s) => s.key);
@@ -181,6 +188,7 @@ const Dashboard = () => {
           </button>
         )}
 
+      {/* Necessary to display popup */}
       {popup && (
         <Popup
         headline = {popup.headline}

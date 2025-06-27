@@ -75,8 +75,21 @@ For Google Client Id and Session secret keys, the student recreating this would 
 ### Using Docker
 
 ``` bash
-docker-compose up --build
+docker-compose build --no-cache
 ```
+
+After it builds successfully 
+
+```bash
+docker-compose up
+```
+
+OR
+
+```bash
+docker-compose up -d
+```
+To run it in deatched mode (keeps terminal clean and run in the docker application)
 
 ### If Running manually (without docker):
 

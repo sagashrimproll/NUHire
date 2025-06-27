@@ -8,6 +8,7 @@ interface PopupProps {
   onDismiss: () => void;
 }
 
+// Normal Popups with just a dismiss button, not to be consufsed with the adminReaction popup
 const Popup = ({ headline, message, onDismiss }: PopupProps) => {
   return (
     <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-springWater p-8 w-96 rounded-md shadow-lg z-50">

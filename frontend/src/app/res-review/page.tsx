@@ -19,6 +19,7 @@ import { usePathname } from "next/navigation";
 
 const socket = io(API_BASE_URL);
 
+// Necessary for any page that requires to display pdfs
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url
@@ -28,10 +29,14 @@ export default function ResumesPage() {
   useProgress();
 
   const [resumes, setResumes] = useState(0);
-  const [resumesList, setResumesList] = useState<{ file_path: string }[]>([]);
-  const [accepted, setAccepted] = useState(0);
+  const [resumesList, setResumesList] = useState<{ file_path: string }[]>([]); // list of all resumes
+  
+  // out of all resumes, how many were accepted, rejected and skipped
+  const [accepted, setAccepted] = useState(0); 
   const [rejected, setRejected] = useState(0);
   const [noResponse, setNoResponse] = useState(0);
+
+  // each resume has a 30 second time limit, and if a decision is not made by then, it's skipped and the resume is stored as no-response
   const [timeRemaining, setTimeRemaining] = useState(30);
   const [currentResumeIndex, setCurrentResumeIndex] = useState(0);
   const [fadingEffect, setFadingEffect] = useState(false);
@@ -110,6 +115,9 @@ export default function ResumesPage() {
     }
   }, [user, pathname]);
 
+  // There special types of Popups; the advisor sends an internal refferal popup, then the users have to accept this Resume
+  // Suggestions: In the next stage of the application, the users can still not select the resume to send to interview stage, that's not how it works
+  // Make it so that any resume that has an internal refferal has an automatic check and is selected to send to the resume stage and it cannot be unchecked.
   useEffect(() => {
     socket.on("receivePopup", ({ headline, message }) => {
       setPopup({ headline, message });
@@ -148,6 +156,7 @@ export default function ResumesPage() {
     return () => clearInterval(timer);
   }, [currentResumeIndex]);
 
+  // each resume based on yes no or skipped, is saved in the backend so it's useful in other stages in the application
   const sendVoteToBackend = async (vote: "yes" | "no" | "unanswered") => {
     if (!user || !user.id || !user.group_id) {
       console.error("Student ID not found");
@@ -156,7 +165,7 @@ export default function ResumesPage() {
 
     try {
       const response = await fetch(`${API_BASE_URL}/resume/vote`, {
-        method: "POST",
+        method: "POST", 
         headers: {
           "Content-Type": "application/json",
         },

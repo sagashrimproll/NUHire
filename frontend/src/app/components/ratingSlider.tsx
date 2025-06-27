@@ -12,6 +12,7 @@ interface RatingSliderProps {
   onChange?: (value: number) => void;
 }
 
+// rating slider for the interview stage;
 export default function RatingSlider({ value, onChange }: RatingSliderProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = Number(e.target.value);
@@ -24,7 +25,7 @@ export default function RatingSlider({ value, onChange }: RatingSliderProps) {
     <div className="flex flex-col items-center w-full max-w-xl">
       <div className="flex flex-row justify-between w-full text-xl mb-2">
         {[...Array(10)].map((_, i) => (
-          <span key={i}>{i + 1}</span>
+          <span key={i}>{i + 1}</span> // just to print numbers from 1 - 10
         ))}
       </div>
 

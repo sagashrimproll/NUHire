@@ -11,7 +11,7 @@ import RatingSlider from "../components/ratingSlider";
 import Popup from "../components/popup";
 import axios from "axios";
 
-// Define API_BASE_URL with a fallback
+// Define API_BASE_URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 // Initialize socket only after API_BASE_URL is defined

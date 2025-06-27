@@ -1,6 +1,6 @@
-'use client'
+"use client";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 import { useState, useEffect, JSX, useRef } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
@@ -14,13 +14,13 @@ import { usePathname } from "next/navigation";
 import { io } from "socket.io-client";
 import router from "next/router";
 
-const socket = io(API_BASE_URL); 
+const socket = io(API_BASE_URL);
 
+// worker source to display the pdf on the page
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.min.mjs',
+  "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url
 ).toString();
-
 
 interface CommentType {
   id: string;
@@ -31,29 +31,33 @@ interface CommentType {
   isEditing?: boolean;
 }
 
-interface User { 
+interface User {
   email: string;
   job_des: string;
 }
 
-export default function JobDescriptionPage() { 
+export default function JobDescriptionPage() {
   const [fileUrl, setJob] = useState("");
   const [numPages, setNumPages] = useState<number | null>(null);
-  const [pageNumber, setPageNumber] = useState(1);
-  const [comments, setComments] = useState<CommentType[]>([]);
-  const [tool, setTool] = useState<"pointer" | "comment">("pointer");
+  const [pageNumber, setPageNumber] = useState(1); // the pdf is paginated
+  const [comments, setComments] = useState<CommentType[]>([]); // list of all the comments
+  const [tool, setTool] = useState<"pointer" | "comment">("pointer"); // set 2 tools, a pointer for a mouse cursor and a comment tool that allows for comments | default is set to pointer
   const [loading, setLoading] = useState(true);
-  const [popup, setPopup] = useState<{ headline: string; message: string } | null>(null);
+  const [popup, setPopup] = useState<{
+    headline: string;
+    message: string;
+  } | null>(null);
   const [pdfLoaded, setPdfLoaded] = useState(false);
   const pathname = usePathname();
-
 
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" });
+        const response = await fetch(`${API_BASE_URL}/auth/user`, {
+          credentials: "include",
+        });
         const userData = await response.json();
         if (response.ok) {
           setUser(userData);
@@ -71,44 +75,52 @@ export default function JobDescriptionPage() {
 
   useEffect(() => {
     if (user && user.email) {
-      socket.emit("studentOnline", { studentId: user.email }); 
+      socket.emit("studentOnline", { studentId: user.email });
 
-      socket.emit("studentPageChanged", { studentId: user.email, currentPage: pathname });
+      socket.emit("studentPageChanged", {
+        studentId: user.email,
+        currentPage: pathname,
+      });
 
       const updateCurrentPage = async () => {
         try {
           const response = await fetch(`${API_BASE_URL}/update-currentPage`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ page: 'jobdes', user_email: user.email }),
+            body: JSON.stringify({ page: "jobdes", user_email: user.email }),
           });
         } catch (error) {
           console.error("Error updating current page:", error);
         }
       };
 
-      updateCurrentPage(); 
+      updateCurrentPage();
     }
   }, [user]);
 
-
+  // pdfs assigned by the advisor and updated in the database for that user once assigned
   useEffect(() => {
     const fetchJob = async () => {
       if (!user || !user.job_des) {
         setLoading(false);
-        return; 
+        return;
       }
-      
+
       try {
-        const response = await fetch(`${API_BASE_URL}/jobdes/title?title=${encodeURIComponent(user.job_des)}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
-  
+        const response = await fetch(
+          `${API_BASE_URL}/jobdes/title?title=${encodeURIComponent(
+            user.job_des
+          )}`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+
         if (!response.ok) {
           throw new Error("Failed to fetch job description");
         }
-  
+
         const job = await response.json();
         setJob(`${API_BASE_URL}/${job.file_path}`);
       } catch (error) {
@@ -117,92 +129,99 @@ export default function JobDescriptionPage() {
         setLoading(false);
       }
     };
-  
+
     fetchJob();
-  }, [user]); 
+  }, [user]);
 
+  // comments are in local storage in the browser of the user, so once a user logs off and signs in again the comments won't dissapear
+  // Improve Suggestion: Make comments a database value instead of local storage, so that as soon as the user is done with the last stage all comments are automatically wiped to a new array
+  useEffect(() => {
+    const savedComments = localStorage.getItem("pdf-comments");
+    if (savedComments) {
+      setComments(JSON.parse(savedComments));
+    }
+  }, []);
 
-      useEffect(() => {
-        const savedComments = localStorage.getItem("pdf-comments");
-        if (savedComments) {
-          setComments(JSON.parse(savedComments));
-        }
-      }, []);
-    
-      useEffect(() => {
-        localStorage.setItem("pdf-comments", JSON.stringify(comments));
-      }, [comments]);
+  useEffect(() => {
+    localStorage.setItem("pdf-comments", JSON.stringify(comments));
+  }, [comments]);
 
+  useEffect(() => {
+    socket.on("receivePopup", ({ headline, message }) => {
+      setPopup({ headline, message });
+    });
+    return () => {
+      socket.off("receivePopup");
+    };
+  }, []);
 
-      useEffect(() => {
-        socket.on("receivePopup", ({ headline, message }) => {
-          setPopup({ headline, message });
-        });
-        return () => {
-          socket.off("receivePopup");
-        };
-      }, []);
-    
-      const handlePdfClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        if (tool !== "comment") return;
-        const pdfPage = document.querySelector(".react-pdf__Page") as HTMLElement | null;
-        if (!pdfPage) {
-          console.log("PDF page not found.");
-          return;
-        }
-        const pageRect = pdfPage.getBoundingClientRect();
-        if (
-          event.clientX >= pageRect.left &&
-          event.clientX <= pageRect.right &&
-          event.clientY >= pageRect.top &&
-          event.clientY <= pageRect.bottom
-        ) {
-          // Calculate coordinates relative to PDF
-          const x = (event.clientX - pageRect.left) / pageRect.width * 100;
-          const y = (event.clientY - pageRect.top) / pageRect.height * 100;
-          const newComment: CommentType = {
-            id: String(Date.now()),
-            x,
-            y,
-            text: "",
-            page: pageNumber,
-            isEditing: true,
-          };
-          setComments([...comments, newComment]);
-        } else {
-          console.log("Clicked outside the PDF page, comment not added.");
-        }
+  // Record mouse even to check if comment mode, and allows to add comments anywhere in the PDF only not the page itsef. 
+  // comments are also filtered by the page of the pdf.
+  const handlePdfClick = (
+    event: React.MouseEvent<HTMLDivElement, MouseEvent>
+  ) => {
+    if (tool !== "comment") return;
+    const pdfPage = document.querySelector(
+      ".react-pdf__Page"
+    ) as HTMLElement | null;
+    if (!pdfPage) {
+      console.log("PDF page not found.");
+      return;
+    }
+    const pageRect = pdfPage.getBoundingClientRect();
+    if (
+      event.clientX >= pageRect.left &&
+      event.clientX <= pageRect.right &&
+      event.clientY >= pageRect.top &&
+      event.clientY <= pageRect.bottom
+    ) {
+      // Calculate coordinates relative to PDF
+      const x = ((event.clientX - pageRect.left) / pageRect.width) * 100;
+      const y = ((event.clientY - pageRect.top) / pageRect.height) * 100;
+      const newComment: CommentType = {
+        id: String(Date.now()),
+        x,
+        y,
+        text: "",
+        page: pageNumber,
+        isEditing: true,
       };
-    
-      // Update comment text and turn off editing mode
-      const updateComment = (id: string, newText: string) => {
-        setComments((prevComments) =>
-          prevComments.map((comment) =>
-            comment.id === id ? { ...comment, text: newText, isEditing: false } : comment
-          )
-        );
-      };
-    
-      const deleteComment = (id: string) => {
-        setComments((prevComments) => prevComments.filter((comment) => comment.id !== id));
-      };
-    
-      const toggleEditComment = (id: string) => {
-        setComments((prevComments) =>
-          prevComments.map((comment) =>
-            comment.id === id ? { ...comment, isEditing: true } : comment
-          )
-        );
-      };
-    
-      if (loading) return <div>Loading...</div>;
-      if (!user) return <div>Error: User not found.</div>;
+      setComments([...comments, newComment]);
+    } else {
+      console.log("Clicked outside the PDF page, comment not added.");
+    }
+  };
 
+  // Update comment text and turn off editing mode
+  const updateComment = (id: string, newText: string) => {
+    setComments((prevComments) =>
+      prevComments.map((comment) =>
+        comment.id === id
+          ? { ...comment, text: newText, isEditing: false }
+          : comment
+      )
+    );
+  };
 
+  const deleteComment = (id: string) => {
+    setComments((prevComments) =>
+      prevComments.filter((comment) => comment.id !== id)
+    );
+  };
+
+  const toggleEditComment = (id: string) => {
+    setComments((prevComments) =>
+      prevComments.map((comment) =>
+        comment.id === id ? { ...comment, isEditing: true } : comment
+      )
+    );
+  };
+
+  if (loading) return <div>Loading...</div>;
+  if (!user) return <div>Error: User not found.</div>;
 
   return (
     <div className="bg-sand font-rubik">
-    
       <Navbar />
       <div className="flex items-right justify-end">
         <NotesPage />
@@ -254,52 +273,55 @@ export default function JobDescriptionPage() {
             scale={1.3}
           />
 
-        {comments
-          .filter((comment) => comment.page === pageNumber)
-          .map((comment) => (
-            <div
-              key={comment.id}
-              className="comment-overlay absolute bg-white shadow-md p-2 rounded-md"
-              style={{
-                left: `${comment.x}%`,
-                top: `${comment.y}%`,
-              }}
-            >
-              {comment.isEditing ? (
-                <input
-                  type="text"
-                  placeholder="Enter comment..."
-                  autoFocus
-                  className="border border-gray-400 rounded-md p-1 text-sm"
-                  defaultValue={comment.text}
-                  onBlur={(e) => updateComment(comment.id, e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      updateComment(comment.id, (e.target as HTMLInputElement).value);
-                    }
-                  }}
-                />
-              ) : (
-                <div className="relative">
-                  <div
-                    className="bg-gray-200 text-sm p-2 rounded-md cursor-pointer"
-                    onClick={() => toggleEditComment(comment.id)}
-                  >
-                    {comment.text}
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteComment(comment.id);
+          {comments
+            .filter((comment) => comment.page === pageNumber)
+            .map((comment) => (
+              <div
+                key={comment.id}
+                className="comment-overlay absolute bg-white shadow-md p-2 rounded-md"
+                style={{
+                  left: `${comment.x}%`,
+                  top: `${comment.y}%`,
+                }}
+              >
+                {comment.isEditing ? (
+                  <input
+                    type="text"
+                    placeholder="Enter comment..."
+                    autoFocus
+                    className="border border-gray-400 rounded-md p-1 text-sm"
+                    defaultValue={comment.text}
+                    onBlur={(e) => updateComment(comment.id, e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        updateComment(
+                          comment.id,
+                          (e.target as HTMLInputElement).value
+                        );
+                      }
                     }}
-                    className="absolute top-0 right-0 text-red-500 text-xs"
-                  >
-                    X
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+                  />
+                ) : (
+                  <div className="relative">
+                    <div
+                      className="bg-gray-200 text-sm p-2 rounded-md cursor-pointer"
+                      onClick={() => toggleEditComment(comment.id)}
+                    >
+                      {comment.text}
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteComment(comment.id);
+                      }}
+                      className="absolute top-0 right-0 text-red-500 text-xs"
+                    >
+                      X
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
         </Document>
 
         {popup && (
@@ -338,7 +360,7 @@ export default function JobDescriptionPage() {
           <button
             onClick={() => {
               localStorage.setItem("progress", "res-review");
-              window.location.href = '/res-review';
+              window.location.href = "/res-review";
             }}
             className="px-4 py-2 bg-navyHeader text-white rounded-lg shadow-md hover:bg-navy transition duration-300 font-rubik"
           >

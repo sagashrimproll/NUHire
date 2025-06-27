@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const socket = io(API_BASE_URL); 
 
+// Students just get a popup with a header and a message and can dismiss it.
 const StudentPage = () => {
     const [popup, setPopup] = useState<{ headline: string; message: string } | null>(null);
     const pathname = usePathname(); 
