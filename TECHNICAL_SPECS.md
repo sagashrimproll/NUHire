@@ -80,6 +80,8 @@ KEYCLOAK_CLIENT_SECRET, KEYCLOAK_REALM, and KEYCLOAK_URL.
 
 As of right now the keycloak part of the application is under development. In order to be able to continue development and testing of the inner workings of the application we have created 2 branches without keycloak. One branch has the production build of the application while the other branch has the development build.
 
+In those 2 banches you
+
 **Socket connection** 
 
 

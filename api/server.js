@@ -255,7 +255,7 @@ async function initializeApp() {
 
 // Separate passport configuration function
 function configurePassport() {
-  // Passport.js configuration for Google OAuth 2.0 authentication
+  // Passport.js configuration for Keycloak authentication
   passport.use(new KeycloakStrategy({
     clientID: process.env.KEYCLOAK_CLIENT_ID,
     realm: process.env.KEYCLOAK_REALM,
@@ -452,10 +452,10 @@ io.on("connection", (socket) => {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Keycloak OAuth authentication routes
 
-// The "/auth/google" route initiates the authentication process by redirecting the user to the Google login page
+// The "/auth/keycloak" route initiates the authentication process by redirecting the user to the keycloak login page
 app.get('/auth/keycloak', passport.authenticate('keycloak'));
 
-// The "/auth/google/callback" route is the callback URL that Google redirects to after the user has authenticated
+// The "/auth/callback" route is the callback URL that keycloak redirects to after the user has authenticated
 // The server handles the authentication response and checks if the user exists in the database
 app.get("/auth/callback",
   passport.authenticate('keycloak', { failureRedirect: '/' }),
@@ -721,6 +721,7 @@ app.post("/update-user-class", (req, res) => {
     return res.status(400).json({ error: "Email and class are required." });
   }
 
+  
   db.query("UPDATE Users SET `class` = ? WHERE email = ?", [classId, email], (err, result) => {
     if (err) {
       console.error("Database error:", err);
@@ -999,7 +1000,7 @@ app.get("/interview/group/:group_id", (req, res) => {
   });
 });
 
-// just to test something with postman 
+// delete route for deleting an interview vote, which checks if the student ID is provided in the request parameters
 app.delete("/interview/:student_id", (req, res) => {
   const { student_id } = req.params;
   db.query("DELETE FROM Interview WHERE student_id = ?", [student_id], (err) => {
