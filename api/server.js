@@ -1,12 +1,11 @@
 //Importing necessary modules and packages
 const express = require("express"); //Api framework
 const mysql = require("mysql2"); //MySQL database driver
-const passport = require("passport"); //Authentication middleware
-const session = require("express-session"); //Session management middleware, which is used for creating and managing user sessions
-const GoogleStrategy = require("passport-google-oauth20").Strategy; // Google OAuth 2.0 authentication strategy for Passport
+const session = require("express-session"); //Session management middleware
+const axios = require("axios"); // HTTP client for Keycloak API calls
 const dotenv = require("dotenv");// dotenv package to load environment variables from a .env file into process.env
 const cors = require("cors"); //CORS middleware for enabling Cross-Origin Resource Sharing
-const bodyParser = require("body-parser"); //Middleware for parsing incoming request bodies in a middleware before your handlers, available under the req.body property.
+const bodyParser = require("body-parser"); //Middleware for parsing incoming request bodies
 const multer = require("multer"); //Middleware for handling multipart/form-data, which is primarily used for uploading files
 const fs = require("fs"); //File system module for interacting with the file system
 const path = require("path");  // Path module for working with file and directory paths
@@ -255,11 +254,14 @@ async function initializeApp() {
 
 // Separate passport configuration function
 function configurePassport() {
-  // Passport.js configuration for Google OAuth 2.0 authentication
-  passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/auth/google/callback"
+  // Passport.js configuration for Keycloak authentication
+  passport.use(new KeycloakStrategy({
+    clientID: process.env.KEYCLOAK_CLIENT_ID,
+    realm: process.env.KEYCLOAK_REALM,
+    clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
+    sslRequired: 'external',
+    authServerURL: process.env.KEYCLOAK_URL,
+    callbackURL: '/auth/callback'
   }, (accessToken, refreshToken, profile, done) => {
     const email = profile.emails[0].value.toLowerCase();
     
@@ -271,8 +273,15 @@ function configurePassport() {
         return done(null, { email });
       }
     });
-  }));
+    }));
+  }
+  app.get('/auth/keycloak', passport.authenticate('keycloak'));
+
+  app.get('/auth/callback',
+    passport.authenticate('keycloak', { failureRedirect: '/login' }),
+    (req, res) => res.redirect('/'));
   
+
   // serializeUser and deserializeUser methods
   passport.serializeUser((user, done) => {
     done(null, user.id || user.email);
@@ -291,7 +300,7 @@ function configurePassport() {
       return done(null, results[0]);
     });
   });
-}
+  
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Socket.io configuration for real-time communication between the server and clients
 
@@ -439,18 +448,63 @@ io.on("connection", (socket) => {
 });
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Google OAuth 2.0 authentication routes
+// Keycloak authentication routes
 
-// The "/auth/google" route initiates the authentication process by redirecting the user to the Google login page
-app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+// The "/auth/keycloak" route initiates the authentication process by redirecting the user to Keycloak login page
+app.get("/auth/keycloak", (req, res) => {
+  const authUrl = `${process.env.KEYCLOAK_AUTH_SERVER_URL}/realms/${process.env.KEYCLOAK_REALM}/protocol/openid-connect/auth?client_id=${process.env.KEYCLOAK_CLIENT_ID}&redirect_uri=${process.env.KEYCLOAK_REDIRECT_URI}&response_type=code&scope=openid`;
+  res.redirect(authUrl);
+});
 
-// The "/auth/google/callback" route is the callback URL that Google redirects to after the user has authenticated
-// The server handles the authentication response and checks if the user exists in the database
-app.get("/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/" }),
-  (req, res) => {
-    const email = req.user.email;
+// The "/auth/callback" route is the callback URL that Keycloak redirects to after the user has authenticated
+app.get("/auth/callback", async (req, res) => {
+  const code = req.query.code;
+  
+  if (!code) {
+    return res.redirect("/");
+  }
 
+  try {
+    // Exchange authorization code for access token
+    const tokenResponse = await axios.post(
+      `${process.env.KEYCLOAK_AUTH_SERVER_URL}/realms/${process.env.KEYCLOAK_REALM}/protocol/openid-connect/token`,
+      new URLSearchParams({
+        grant_type: 'authorization_code',
+        client_id: process.env.KEYCLOAK_CLIENT_ID,
+        client_secret: process.env.KEYCLOAK_CLIENT_SECRET,
+        code: code,
+        redirect_uri: process.env.KEYCLOAK_REDIRECT_URI
+      }),
+      {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }
+    );
+
+    const { access_token } = tokenResponse.data;
+
+    // Get user info from Keycloak
+    const userInfoResponse = await axios.get(
+      `${process.env.KEYCLOAK_AUTH_SERVER_URL}/realms/${process.env.KEYCLOAK_REALM}/protocol/openid-connect/userinfo`,
+      {
+        headers: {
+          'Authorization': `Bearer ${access_token}`
+        }
+      }
+    );
+
+    const userInfo = userInfoResponse.data;
+    const email = userInfo.email.toLowerCase();
+
+    // Store user info in session
+    req.session.user = {
+      email: email,
+      name: userInfo.name,
+      access_token: access_token
+    };
+
+    // Check if user exists in database
     db.query("SELECT * FROM Users WHERE email = ?", [email], (err, results) => {
       if (err) {
         console.error("Database error:", err);
@@ -470,32 +524,46 @@ app.get("/auth/google/callback",
         return res.redirect(`${FRONT_URL}/signupform?email=${email}`);
       }
     });
+
+  } catch (error) {
+    console.error("Authentication error:", error);
+    res.redirect("/");
   }
-);
+});
 
 //check if the user is authenticated and return the user information
 app.get("/auth/user", (req, res) => {
-  console.log("Checking authentication for user:", req.user);
+  console.log("Checking authentication for user:", req.session.user);
 
-  if (!req.session.passport || !req.isAuthenticated()) {
+  if (!req.session.user) {
     return res.status(401).json({ message: "Unauthorized" });
   }
-  res.json(req.user);
+  
+  // Get user details from database
+  db.query("SELECT * FROM Users WHERE email = ?", [req.session.user.email], (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({ message: "Database error" });
+    }
+    if (results.length > 0) {
+      res.json(results[0]);
+    } else {
+      res.status(404).json({ message: "User not found" });
+    }
+  });
 });
 
 // logout route for logging out the user and destroying the session
 // The server clears the session and redirects the user to the home page
-// logout route for logging out the user and destroying the session
-// The server clears the session and redirects the user to the home page
-app.post("/auth/logout", (req, res, next) => {
-  req.logout((err) => {
-    if (err) return next(err);
-
-    req.session.destroy(() => {
-      res.clearCookie("connect.sid");
-      res.status(200).json({ message: "Logged out successfully" });
-      res.redirect(`${FRONT_URL}`);
-    });
+app.post("/auth/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error("Logout error:", err);
+      return res.status(500).json({ message: "Logout failed" });
+    }
+    
+    res.clearCookie("connect.sid");
+    res.status(200).json({ message: "Logged out successfully" });
   });
 });
 
@@ -729,9 +797,10 @@ app.post("/update-user-class", (req, res) => {
 
 // get route for retrieving all notes from the database
 app.get("/notes", (req, res) => {
-  db.query("SELECT * FROM Notes", (err, results) => {
+  db.query("SELECT * FROM Notes ORDER BY created_at DESC", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
+    console.log(results)
   });
 });
 
