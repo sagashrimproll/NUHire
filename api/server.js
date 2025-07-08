@@ -385,6 +385,12 @@ io.on("connection", (socket) => {
     }
   });
 
+  // Listen for the "jobAssigned" event, which is emitted by the client when a student is assigned their jobdes by an admin
+  socket.on("studentPageChanged", ({ groupId, jobdes }) => {
+    console.log(`Student ${groupId} assigned ${jobdes}`);
+    io.emit("studentPageChange", { groupId, jobdes });
+  });
+
   // Listen for the "sendPopupToGroups" event, which is emitted by the client when an admin wants to send a popup message to specific groups
   // The server queries the database to get the email addresses of students in the specified groups
   socket.on("sendPopupToGroups", ({ groups, headline, message, class: classId }) => {

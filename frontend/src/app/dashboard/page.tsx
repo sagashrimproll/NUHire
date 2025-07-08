@@ -77,10 +77,43 @@ const Dashboard = () => {
       setPopup({ headline, message });
     });
 
+    // Listen for job assignments
+    socket.on("jobAssigned", ({ group_id, job_des }) => {
+      console.log(`Job assigned: ${job_des} to group ${group_id}`);
+      
+      // Check if this user is in the assigned group
+        console.log("This user received a job assignment!");
+        
+        // Update the user state with the new job
+        setUser(prevUser => prevUser ? { ...prevUser, job_des: job_des } : null);
+        
+        // Show a popup notification
+        setPopup({
+          headline: "New Job Assignment!",
+          message: `You have been assigned: ${job_des}. You can now start the workflow!`
+        });
+        
+        // Force a refresh of user data from the server
+        const refreshUserData = async () => {
+          try {
+            const response = await fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" });
+            const userData = await response.json();
+            if (response.ok) {
+              setUser(userData);
+            }
+          } catch (error) {
+            console.error("Error refreshing user data:", error);
+          }
+        };
+        
+        refreshUserData();
+      });
+
     return () => {
       socket.off("receivePopup");
+      socket.off("jobAssigned");
     };
-  }, []);
+  }, [user]); // Added user dependency to check group_id
 
  
   useEffect(() => {

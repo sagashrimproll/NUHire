@@ -3,6 +3,16 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL; // API base URL from 
 import { useState, useEffect } from "react"; // Importing React and hooks for state and effect management
 import { useRouter } from "next/navigation"; // Importing useRouter for navigation
 import NavbarAdmin from "../components/navbar-admin"; // Importing the admin navbar component
+import { Socket, io } from "socket.io-client";
+
+const SOCKET_URL = `${API_BASE_URL}`; 
+let socket: Socket; // Define socket with correct type
+        
+// Initialize new socket
+socket = io(SOCKET_URL, {
+  reconnectionAttempts: 5,
+  timeout: 5000,
+});
 
 //Define the Grouping component
 // This component is responsible for managing groups and job assignments for students
@@ -32,6 +42,16 @@ const Grouping = () => {
   const [classes, setClasses] = useState<{ id: number; name: string }[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
   const router = useRouter();
+
+  if (socket && !socket.connected) {
+            socket.close();
+}
+          
+          // Initialize new socket
+          socket = io(SOCKET_URL, {
+            reconnectionAttempts: 5,
+            timeout: 5000,
+          });
 
   // ✅ Fetch the logged-in user
   useEffect(() => {
@@ -225,6 +245,7 @@ const Grouping = () => {
         const groupsResponse = await fetch(`${API_BASE_URL}/groups?class=${selectedClass}`);
         const groupsData = await groupsResponse.json();
         setGroups(groupsData);
+        socket.emit("jobAssigned", { group_id: job_group_id, job_des: selectedJobs[0].title }); 
       } else {
         alert("Failed to assign job to group.");
       }
