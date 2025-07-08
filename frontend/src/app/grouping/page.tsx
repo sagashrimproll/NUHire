@@ -3,6 +3,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL; // API base URL from 
 import { useState, useEffect } from "react"; // Importing React and hooks for state and effect management
 import { useRouter } from "next/navigation"; // Importing useRouter for navigation
 import NavbarAdmin from "../components/navbar-admin"; // Importing the admin navbar component
+import { io, Socket } from "socket.io-client";
 
 //Define the Grouping component
 // This component is responsible for managing groups and job assignments for students
@@ -28,11 +29,11 @@ const Grouping = () => {
   const [selectedJobs, setSelectedJobs] = useState<Job[]>([]);
   const [group_id, setGroupId] = useState("");
   const [job_group_id, setGroupIdJob] = useState(""); 
-  const [groups, setGroups] = useState({});
+  const [groups, setGroups] = useState<{[key: string]: any}>({});
   const [classes, setClasses] = useState<{ id: number; name: string }[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
   const router = useRouter();
-
+  
   // ✅ Fetch the logged-in user
   useEffect(() => {
     const fetchUser = async () => {
@@ -111,6 +112,84 @@ const Grouping = () => {
       fetchGroups();
     }
   }, [selectedClass]);
+
+  // ✅ Socket.IO setup for real-time updates
+  useEffect(() => {
+    const socket = io(API_BASE_URL, {
+      reconnectionAttempts: 5,
+      timeout: 5000,
+    });
+
+    socket.on("connect", () => {
+      console.log("Admin connected to socket:", socket.id);
+    });
+
+    // Listen for student page changes (correct event name from server)
+    socket.on("studentPageChange", ({ studentId, currentPage }) => {
+      console.log(`Received update: Student ${studentId} changed to ${currentPage}`);
+      
+      // Update students state to reflect the current page
+      setStudents(prevStudents => 
+        prevStudents.map(student =>
+          student.email === studentId 
+            ? { ...student, current_page: currentPage }
+            : student
+        )
+      );
+
+      // Update groups state as well if needed
+      setGroups(prevGroups => {
+        const updatedGroups = { ...prevGroups };
+        Object.keys(updatedGroups).forEach(groupId => {
+          if (Array.isArray(updatedGroups[groupId])) {
+            updatedGroups[groupId] = updatedGroups[groupId].map((student: any) =>
+              student.email === studentId
+                ? { ...student, current_page: currentPage }
+                : student
+            );
+          }
+        });
+        return updatedGroups;
+      });
+    });
+
+    // Listen for online student updates
+    socket.on("updateOnlineStudents", ({ studentId, group_id, current_page }) => {
+      console.log(`Student ${studentId} is online in group ${group_id} on page ${current_page}`);
+      
+      // Update both students and groups state
+      setStudents(prevStudents => 
+        prevStudents.map(student =>
+          student.email === studentId 
+            ? { ...student, current_page, online: true }
+            : student
+        )
+      );
+
+      setGroups(prevGroups => {
+        const updatedGroups = { ...prevGroups };
+        Object.keys(updatedGroups).forEach(groupId => {
+          if (Array.isArray(updatedGroups[groupId])) {
+            updatedGroups[groupId] = updatedGroups[groupId].map((student: any) =>
+              student.email === studentId
+                ? { ...student, current_page, online: true }
+                : student
+            );
+          }
+        });
+        return updatedGroups;
+      });
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Admin disconnected from socket");
+    });
+
+    // Cleanup function
+    return () => {
+      socket.disconnect();
+    };
+  }, []); // Empty dependency array so it only runs once
 
   // ✅ Handle class selection change
   const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -270,6 +349,7 @@ const Grouping = () => {
 
         {selectedClass && (
           <>
+
             {/* Group ID Input */}
             <input 
               type="text" 
@@ -370,11 +450,24 @@ const Grouping = () => {
             Object.entries(groups).map(([group_id, students]) => (
               <div key={group_id} className="bg-springWater p-4 rounded-md mb-4 shadow">
                 <h3 className="text-xl font-semibold text-navy">Group {group_id}</h3>
-                <ul className="list-disc pl-5 text-navy mt-2">
+                <ul className="list-none pl-0 text-navy mt-2">
                   {Array.isArray(students) && students.length > 0 ? (
                     students.map((student, index) => (
-                      <li key={index}>
-                        {student.name} ({student.email}) - {student.current_page || 'No page'} - {student.job_des || 'No job'}
+                      <li key={index} className="mb-2 flex items-center justify-between p-2 bg-white rounded border">
+                        <div className="flex items-center space-x-3">
+                          <span className={`w-3 h-3 rounded-full ${student.online ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></span>
+                          <span className="font-medium">
+                            {student.name} ({student.email})
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-4 text-sm">
+                          <span className={`px-2 py-1 rounded ${student.online ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                            {student.current_page || 'No page'}
+                          </span>
+                          <span className="text-gray-600">
+                            {student.job_des || 'No job'}
+                          </span>
+                        </div>
                       </li>
                     ))
                   ) : (

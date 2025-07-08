@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCollapse } from 'react-collapsed';
 import axios from 'axios';
 import Navbar from '../components/navbar';

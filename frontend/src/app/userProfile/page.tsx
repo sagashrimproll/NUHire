@@ -1,10 +1,9 @@
 "use client";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Navbar from "../components/navbar";
 import NavbarAdmin from "../components/navbar-admin";
-
+import { useRouter } from "next/navigation";
 interface User {
     id: number;
     f_name: string;

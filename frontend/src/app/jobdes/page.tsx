@@ -89,7 +89,7 @@ export default function JobDescriptionPage() {
 
       updateCurrentPage(); 
     }
-  }, [user]);
+  }, [user, pathname]);
 
 
   useEffect(() => {
