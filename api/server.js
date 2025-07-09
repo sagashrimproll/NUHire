@@ -684,11 +684,9 @@ app.post("/update-currentpage", (req, res) => {
 //Updates a group of Users stored job description as long as it's given the id of the group and the job descrption title
 app.post("/update-job", (req, res) => {
   const { job_group_id, class_id, job } = req.body;
-
-  if (!job_group_id || job.length === 0) {
-    return res.status(400).json({ error: "Group ID and job are required." });
+  if (!job_group_id || job.length === 0 || !class_id) {
+    return res.status(400).json({ error: "Group ID, Class ID, and job are required." });
   }
-
   const queries = job.map(title => {
     return new Promise((resolve, reject) => {
       db.query("UPDATE Users SET `job_des` = ? WHERE group_id = ? AND class = ?", [title, job_group_id, class_id], (err, result) => {
@@ -697,6 +695,10 @@ app.post("/update-job", (req, res) => {
       });
     });
   });
+
+  Promise.all(queries)
+    .then(() => res.json({ message: "Job updated successfully!" }))
+    .catch(error => res.status(500).json({ error: error.message }));
 });
 
 // Update user's class
@@ -803,7 +805,6 @@ app.post("/update-group", (req, res) => {
   if (!group_id || students.length === 0) {
     return res.status(400).json({ error: "Group ID and students are required." });
   }
-
   const queries = students.map(email => {
     return new Promise((resolve, reject) => {
       db.query("UPDATE Users SET `group_id` = ? WHERE email = ?", [group_id, email], (err, result) => {

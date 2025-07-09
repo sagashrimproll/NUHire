@@ -178,6 +178,7 @@ const Grouping = () => {
     if (selectedJob && !selectedJobs.some(job => job.title === selectedTitle)) {
       setSelectedJobs([selectedJob]);
     }
+    console.log("Selected job:", selectedJob);
   };
 
   // ✅ Handle removing a selected job
@@ -220,12 +221,11 @@ const Grouping = () => {
   };
 
   // ✅ Handle job assignment with class
-  const handleAssignJob = async () => {
-    if (!job_group_id || selectedJobs.length === 0 || !selectedClass) {
-      alert("Please enter a valid group ID, select a class, and select a Job.");
+    const handleAssignJob = async () => {
+    if (!job_group_id || selectedJobs.length === 0) {
+      alert("Please enter a valid group ID and select a job.");
       return;
     }
-
     try {
       const response = await fetch(`${API_BASE_URL}/update-job`, {
         method: "POST",
@@ -233,24 +233,23 @@ const Grouping = () => {
         body: JSON.stringify({
           job_group_id,
           class_id: selectedClass,
-          job: selectedJobs.map(job => job.title)
+          job: selectedJobs.map(j => j.title)
         }),
       });
 
-      if (response.ok) {
-        alert("Job assigned to group successfully!");
-        setSelectedJobs([]);
-        setGroupIdJob("");
+       if (response.ok) {
+        alert("Jobs assigned to group successfully!");
+        setSelectedStudents([]);
+        setGroupId("");
         // Refresh groups after assignment
         const groupsResponse = await fetch(`${API_BASE_URL}/groups?class=${selectedClass}`);
         const groupsData = await groupsResponse.json();
         setGroups(groupsData);
-        socket.emit("jobAssigned", { group_id: job_group_id, job_des: selectedJobs[0].title }); 
       } else {
-        alert("Failed to assign job to group.");
+        alert("Failed to assign jobs to group.");
       }
     } catch (error) {
-      console.error("Error updating job assignment:", error);
+      console.error("Error updating group:", error);
     }
   };
 

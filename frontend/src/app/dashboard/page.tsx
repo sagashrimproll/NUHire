@@ -118,6 +118,7 @@ const Dashboard = () => {
  
   useEffect(() => {
     if (typeof window !== "undefined") {
+      //make a request to backend to get the jobdes of a user and add a null check
       const storedProgress = localStorage.getItem("progress") || "jobdes";
       setProgress(storedProgress);
     }
