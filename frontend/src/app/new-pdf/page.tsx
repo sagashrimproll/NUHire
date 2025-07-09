@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import NavbarAdmin from "../components/navbar-admin";
+import AdminReactionPopup from "../components/adminReactionPopup"; // Importing popup component for offers
+import { io, Socket } from "socket.io-client";
 
 interface User {
   id: number;
@@ -37,6 +39,10 @@ const Upload = () => {
   const [uploading, setUploading] = useState(false);
   const [selectedResume, setSelectedResume] = useState<number | null>(null);
   const router = useRouter();
+  const [pendingOffers, setPendingOffers] = useState<
+  { classId: number; groupId: number; candidateId: number }[]
+  >([]);  
+  const socket = io(API_BASE_URL);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -60,6 +66,36 @@ const Upload = () => {
 
     fetchUser();
   }, [router]);
+
+  useEffect(() => {
+    const onRequest = (data: { classId: number; groupId: number; candidateId: number }) => {
+      const { classId, groupId, candidateId } = data;
+      setPendingOffers((prev) => [...prev, {classId, groupId, candidateId }]);
+    };
+      
+      socket.on("makeOfferRequest", onRequest);
+      return () => {
+        socket.off("makeOfferRequest", onRequest);
+      };
+    }, []);
+  
+    const respondToOffer = (
+      classId: number,
+      groupId: number,
+      candidateId: number,
+      accepted: boolean
+    ) => {
+      socket.emit("makeOfferResponse", {
+        classId,
+        groupId,
+        candidateId,
+        accepted,
+      });
+      setPendingOffers((prev) =>
+        prev.filter((o) => o.classId != classId || o.groupId !== groupId || o.candidateId !== candidateId)
+      );
+    };
+    
 
   useEffect(() => {
     fetchJobs();
@@ -221,29 +257,48 @@ const handleResumeSelection = (id: number) => {
             {uploading ? "Uploading..." : "Upload"}
           </button>
           <h3 className="text-xl font-bold mt-4">Existing Resumes</h3>
-<ul>
-  {resumes.length === 0 ? (
-    <p>No resumes uploaded yet.</p>
-  ) : (
-    resumes.map((resume) => (
-      <li key={resume.id} className="border-b py-2 flex justify-between items-center">
-        <div>
-          <strong>{resume.title}</strong> - 
-          <a href={`${API_BASE_URL}/${resume.file_path}`} target="_blank" className="text-blue-500 ml-2">View</a>
-        </div>
-        <div className="flex gap-2">
-          <button 
-            onClick={() => deleteResume(resume.file_path)} 
-            className="p-1 bg-red-500 text-white rounded">
-            Delete
-          </button>
-        </div>
-      </li>
-    ))
-  )}
-</ul>
-
-
+        <div/>
+        <ul>
+          {resumes.length === 0 ? (
+            <p>No resumes uploaded yet.</p>
+          ) : (
+            resumes.map((resume) => (
+              <li key={resume.id} className="border-b py-2 flex justify-between items-center">
+                <div>
+                  <strong>{resume.title}</strong> - 
+                  <a href={`${API_BASE_URL}/${resume.file_path}`} target="_blank" className="text-blue-500 ml-2">View</a>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => deleteResume(resume.file_path)} 
+                    className="p-1 bg-red-500 text-white rounded">
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))
+          )}
+        </ul>
+        {/* Render pending offers as popups */}
+        {pendingOffers.map(({classId, groupId, candidateId }) => (
+          <div
+            key={`offer-${classId}-${groupId}-${candidateId}`}
+            className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+          >
+          <div className="bg-springWater p-6 rounded-lg shadow-lg max-w-md mx-auto">
+            <AdminReactionPopup
+                headline={`Group ${groupId} from Class ${classId} wants to offer Candidate ${candidateId}`}
+                message="Do you approve?"
+                onAccept={() => 
+                  respondToOffer(classId, groupId, candidateId, true)
+                }
+                onReject={() => 
+                  respondToOffer(classId, groupId, candidateId, false)
+                }
+              />
+            </div>
+          </div>
+        ))}
         </div>
       </div>
     </div>

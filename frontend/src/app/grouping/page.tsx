@@ -63,18 +63,17 @@ const Grouping = () => {
     fetchUser();
   }, [router]);
 
-    // Set up Socket.IO event listeners after component mounts
-    useEffect(() => {
-      const onRequest = (data: { classId: number; groupId: number; candidateId: number }) => {
-        const { classId, groupId, candidateId } = data;
-        setPendingOffers((prev) => [...prev, {classId, groupId, candidateId }]);
-      };
+  useEffect(() => {
+    const onRequest = (data: { classId: number; groupId: number; candidateId: number }) => {
+      const { classId, groupId, candidateId } = data;
+      setPendingOffers((prev) => [...prev, {classId, groupId, candidateId }]);
+    };
     
-      socket.on("makeOfferRequest", onRequest);
-      return () => {
-        socket.off("makeOfferRequest", onRequest);
-      };
-    }, []);
+    socket.on("makeOfferRequest", onRequest);
+    return () => {
+      socket.off("makeOfferRequest", onRequest);
+    };
+  }, []);
 
   const respondToOffer = (
     classId: number,
