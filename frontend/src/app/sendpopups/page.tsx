@@ -279,7 +279,8 @@ const SendPopups = () => {
       <NavbarAdmin />
 
       <div className="max-w-3xl mx-auto bg-navy justify-center rounded-md items-center p-6 mt-6">
-        <h1 className="text-3xl font-bold text-center text-sand mb-6">
+        <h1 className="text-3xl 
+        font-bold text-center text-sand mb-6">
           Send Popups
         </h1>
 
@@ -384,18 +385,20 @@ const SendPopups = () => {
             )}
           </div>
 
-        <button
-          onClick={sendPopups}
-          disabled={sending || selectedGroups.length === 0}
-          className={`mt-6 px-6 py-3 font-semibold rounded-md transition 
-                        ${
-                          sending || selectedGroups.length === 0
-                            ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-blue-600 text-white hover:bg-blue-700"
-                        }`}
-        >
-          {sending ? "Sending..." : "Send Popups"}
-        </button>
+        <div className="flex justify-center">
+          <button
+            onClick={sendPopups}
+            disabled={sending || selectedGroups.length === 0}
+            className={`mt-6 px-6 py-3 font-semibold rounded-md transition 
+                          ${
+                            sending || selectedGroups.length === 0
+                              ? "bg-gray-400 cursor-not-allowed"
+                              : "bg-blue-600 text-white hover:bg-blue-700"
+                          }`}
+          >
+            {sending ? "Sending..." : "Send Popups"}
+          </button>
+        </div>
 
         {pendingOffers.map(({classId, groupId, candidateId }) => (
           <div
