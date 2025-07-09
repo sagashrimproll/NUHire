@@ -18,6 +18,13 @@ const SendPopups = () => {
         group_id: string;
         students: any[];
     }
+
+  interface Student {
+    f_name: string;
+    l_name: string;
+    email: string;
+    [key: string]: any; // optionally allow other props
+  }
     
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
@@ -26,6 +33,7 @@ const SendPopups = () => {
     const [headline, setHeadline] = useState("");
     const [message, setMessage] = useState(""); 
     const [sending, setSending] = useState(false);
+    const [students, setStudents] = useState<Student[]>([]);
     const [selectedPreset, setSelectedPreset] = useState<string>("");
     const [classes, setClasses] = useState<{id: number, name: string}[]>([]);
     const [selectedClass, setSelectedClass] = useState<string>("");
@@ -110,6 +118,74 @@ const SendPopups = () => {
         fetchGroups();
         }
   }, [selectedClass]);
+
+  useEffect(() => {
+    // Listen for student page changes (correct event name from server)
+    socket.on("studentPageChange", ({ studentId, currentPage }) => {
+      console.log(`Received update: Student ${studentId} changed to ${currentPage}`);
+      
+      // Update students state to reflect the current page
+      setStudents(prevStudents => 
+        prevStudents.map(student =>
+          student.email === studentId 
+            ? { ...student, current_page: currentPage }
+            : student
+        )
+      );
+
+      // Update groups state as well if needed
+      setGroups(prevGroups => {
+        const updatedGroups = { ...prevGroups };
+        Object.keys(updatedGroups).forEach(groupId => {
+          if (Array.isArray(updatedGroups[groupId])) {
+            updatedGroups[groupId] = updatedGroups[groupId].map((student: any) =>
+              student.email === studentId
+                ? { ...student, current_page: currentPage }
+                : student
+            );
+          }
+        });
+        return updatedGroups;
+      });
+    });
+
+    // Listen for online student updates
+    socket.on("updateOnlineStudents", ({ studentId, group_id, current_page }) => {
+      console.log(`Student ${studentId} is online in group ${group_id} on page ${current_page}`);
+      
+      // Update both students and groups state
+      setStudents(prevStudents => 
+        prevStudents.map(student =>
+          student.email === studentId 
+            ? { ...student, current_page, online: true }
+            : student
+        )
+      );
+
+      setGroups(prevGroups => {
+        const updatedGroups = { ...prevGroups };
+        Object.keys(updatedGroups).forEach(groupId => {
+          if (Array.isArray(updatedGroups[groupId])) {
+            updatedGroups[groupId] = updatedGroups[groupId].map((student: any) =>
+              student.email === studentId
+                ? { ...student, current_page, online: true }
+                : student
+            );
+          }
+        });
+        return updatedGroups;
+      });
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Admin disconnected from socket");
+    });
+
+    // Cleanup function
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     const onRequest = (data: { classId: number; groupId: number; candidateId: number }) => {
@@ -270,60 +346,43 @@ const SendPopups = () => {
                 />
               </div>
 
-              <div className="w-full max-w-2xl bg-sand shadow-lg rounded-lg p-6">
-                <h2 className="text-xl font-bold text-navyHeader mb-4">
-                  Groups in Class {selectedClass}
-                </h2>
-                {groups && Object.keys(groups).length > 0 ? (
-                  Object.entries(groups).map(([group_id, students]) => (
-                    <div
-                      key={group_id}
-                      className="bg-navy mb-4 p-4 border rounded-lg shadow-sm"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-semibold text-springWater">
-                          Group {group_id}
-                        </h3>
-                        <input
-                          type="checkbox"
-                          className="h-5 w-5 text-blue-500 accent-navy cursor-pointer"
-                          checked={selectedGroups.includes(group_id)}
-                          onChange={() => handleCheckboxChange(group_id)}
-                        />
-                      </div>
-
-                      <ul className="mt-2 space-y-2">
-                        {Array.isArray(students) && students.length > 0 ? (
-                          students.map((student, index) => (
-                            <li
-                              key={index}
-                              className="bg-white p-3 rounded-md shadow-sm border flex items-center gap-3"
-                            >
-                              <div className="text-navy font-medium">
-                                {student.name}
-                                <span className="text-gray-500 text-sm ml-2">
-                                  ({student.email})
-                                </span>
-                              </div>
-                              <span className="ml-auto text-sm italic text-gray-600">
-                                {student.current_page
-                                  ? `- ${student.current_page}`
-                                  : ""}
-                              </span>
-                            </li>
-                          ))
-                        ) : (
-                          <li className="text-gray-500 text-sm italic">
-                            No Students Added
-                          </li>
-                        )}
-                      </ul>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-sand text-center">No groups found in this class.</p>
-                )}
-              </div>
+          {/* Groups Display Section */}
+          <div className="mt-6">
+            <h2 className="text-2xl font-bold text-sand mb-4">Groups in {selectedClass ? `Class ${selectedClass}` : 'All Classes'}</h2>
+            {groups && Object.keys(groups).length > 0 ? (
+              Object.entries(groups).map(([group_id, students]) => (
+                <div key={group_id} className="bg-springWater p-4 rounded-md mb-4 shadow">
+                  <h3 className="text-xl font-semibold text-navy">Group {group_id}</h3>
+                  <ul className="list-none pl-0 text-navy mt-2">
+                    {Array.isArray(students) && students.length > 0 ? (
+                      students.map((student, index) => (
+                        <li key={index} className="mb-2 flex items-center justify-between p-2 bg-white rounded border">
+                          <div className="flex items-center space-x-3">
+                            <span className={`w-3 h-3 rounded-full ${student.online ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></span>
+                            <span className="font-medium">
+                              {student.name} ({student.email})
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-4 text-sm">
+                            <span className={`px-2 py-1 rounded ${student.online ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'}`}>
+                              {student.current_page || 'No page'}
+                            </span>
+                            <span className="text-gray-600">
+                              {student.job_des || 'No job'}
+                            </span>
+                          </div>
+                        </li>
+                      ))
+                    ) : (
+                      <li>No students assigned</li>
+                    )}
+                  </ul>
+                </div>
+              ))
+            ) : (
+              <p className="text-sand text-center">No groups found for this class.</p>
+            )}
+          </div>
 
         <button
           onClick={sendPopups}
