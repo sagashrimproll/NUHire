@@ -746,7 +746,7 @@ app.post("/update-user-class", (req, res) => {
 
 // get route for retrieving all notes from the database
 app.get("/notes", (req, res) => {
-  db.query("SELECT * FROM Notes", (err, results) => {
+  db.query("SELECT * FROM Notes ORDER BY created_at DESC", (err, results) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json(results);
   });

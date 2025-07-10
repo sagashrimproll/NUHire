@@ -14,10 +14,10 @@ const SendPopups = () => {
     affiliation: string;
   }
 
-    interface Group {
-        group_id: string;
-        students: any[];
-    }
+  interface Group {
+    group_id: string;
+    students: any[];
+  }
 
   interface Student {
     f_name: string;
@@ -40,6 +40,7 @@ const SendPopups = () => {
     const router = useRouter(); 
     const [isConnected, setIsConntected] = useState(false);
     const [pendingOffers, setPendingOffers] = useState<
+
     { classId: number; groupId: number; candidateId: number }[]
   >([]);
     
@@ -352,8 +353,21 @@ const SendPopups = () => {
             <h2 className="text-2xl font-bold text-sand mb-4">Groups in {selectedClass ? `Class ${selectedClass}` : 'All Classes'}</h2>
             {groups && Object.keys(groups).length > 0 ? (
               Object.entries(groups).map(([group_id, students]) => (
-                <div key={group_id} className="bg-springWater p-4 rounded-md mb-4 shadow">
-                  <h3 className="text-xl font-semibold text-navy">Group {group_id}</h3>
+                <div
+                  key={group_id}
+                  className="bg-navy mb-4 p-4 border rounded-lg shadow-sm"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-lg font-semibold text-springWater">
+                      Group {group_id}
+                    </h3>
+                    <input
+                      type="checkbox"
+                      className="h-5 w-5 text-blue-500 accent-navy cursor-pointer"
+                      checked={selectedGroups.includes(group_id)}
+                      onChange={() => handleCheckboxChange(group_id)}
+                    />
+                  </div>
                   <ul className="list-none pl-0 text-navy mt-2">
                     {Array.isArray(students) && students.length > 0 ? (
                       students.map((student, index) => (
