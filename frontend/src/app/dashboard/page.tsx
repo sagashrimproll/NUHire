@@ -131,16 +131,11 @@ const Dashboard = () => {
   ];
 
   const isStepUnlocked = (stepKey: string) => {
-    // If no job description, only allow jobdes step to show as disabled
     if (!user?.job_des) {
       return false;
     }
-    
-    // If user has job description, unlock steps sequentially based on progress
     const stepIndex = steps.findIndex(step => step.key === stepKey);
     const progressIndex = steps.findIndex(step => step.key === progress);
-    
-    // Allow current step and all previous steps to be unlocked
     return stepIndex <= progressIndex;
   };
 
