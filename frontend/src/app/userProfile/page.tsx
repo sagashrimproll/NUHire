@@ -4,6 +4,11 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/navbar";
 import NavbarAdmin from "../components/navbar-admin";
 import { useRouter } from "next/navigation";
+import io from "socket.io-client";
+import { usePathname } from "next/navigation";
+import Popup from "../components/popup";
+
+const socket = io(API_BASE_URL);
 
 interface User {
     id: number;
@@ -29,6 +34,7 @@ export default function UserProfile() {
     const [updateSuccess, setUpdateSuccess] = useState(false);
     const [popup, setPopup] = useState<{ headline: string; message: string } | null>(null);  
     const router = useRouter();
+    const pathname = usePathname(); 
   
     useEffect(() => {
       const fetchUser = async () => {
@@ -71,6 +77,35 @@ export default function UserProfile() {
       fetchClasses();
     }, []);
 
+  useEffect(() => {
+    if (user && user.email) {
+      const emitOnlineStatus = () => {
+        socket.emit("studentOnline", { studentId: user.email });
+        socket.emit("studentPageChanged", { studentId: user.email, currentPage: pathname });
+      };
+      emitOnlineStatus();
+      socket.on("connect", () => {
+        console.log("Socket connected, emitting online status");
+        emitOnlineStatus();
+      });
+      const updateCurrentPage = async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/update-currentpage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ page: 'profile', user_email: user.email }),
+          });
+        } catch (error) {
+          console.error("Error updating current page:", error);
+        }
+      };
+      updateCurrentPage();
+      return () => {
+        socket.off("connect");
+      };
+    }
+  }, [user, pathname]);
+
     const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       setSelectedClass(e.target.value);
     };
@@ -112,13 +147,24 @@ export default function UserProfile() {
 
     const handleLogout = async () => {
       try {
+        if (user?.email) {
+          await fetch(`${API_BASE_URL}/update-currentpage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ page: 'No page', user_email: user.email }),
+          });
+          socket.emit("studentPageChanged", { studentId: user.email, currentPage: 'No page' });
+          socket.emit("studentOffline", { studentId: user.email });
+        }
+        
         const response = await fetch(`${API_BASE_URL}/auth/logout`, {
           method: "POST",
-          credentials: "include", // Ensures cookies clear if using sessions
+          credentials: "include", 
         });
     
         if (response.ok) {
-          router.push("/"); // Redirect to home page
+          socket.disconnect();
+          router.push("/");
         } else {
           console.error("Failed to logout:", response.statusText);
         }

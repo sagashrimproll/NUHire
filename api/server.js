@@ -306,16 +306,8 @@ io.on("connection", (socket) => {
 
   // Listen for the "studentOnline" event, which is emitted by the client when a student comes online
   socket.on("studentOnline", ({ studentId }) => {
+    console.log(`Student ${studentId} came online with socket ${socket.id}`);
     onlineStudents[studentId] = socket.id;
-
-    // Listen for the "message" event, which is emitted by the client when a message is sent
-    // The server logs the message and broadcasts it to all connected clients
-    socket.on("message", (data) => {
-      console.log("Received message:", data);
-
-      // Broadcast the message to all connected clients
-      io.emit("message", data);
-    });
 
     // Query the database to get the group ID and current page for the student
     // The server emits the "updateOnlineStudents" event to all connected clients with the student's information
@@ -327,8 +319,28 @@ io.on("connection", (socket) => {
         io.emit("updateOnlineStudents", { studentId, group_id, current_page });
       }
     });
+  });
 
+  // Listen for the "message" event, which is emitted by the client when a message is sent
+  // The server logs the message and broadcasts it to all connected clients
+  socket.on("message", (data) => {
+    console.log("Received message:", data);
 
+    // Broadcast the message to all connected clients
+    io.emit("message", data);
+  });
+
+  // Listen for the "studentOffline" event, which is emitted by the client when a student goes offline
+  socket.on("studentOffline", ({ studentId }) => {
+    console.log(`Student ${studentId} is going offline`);
+    
+    // Remove the student from the onlineStudents object
+    if (onlineStudents[studentId]) {
+      delete onlineStudents[studentId];
+      
+      // Emit an update to notify admin dashboards that the student is offline
+      io.emit("studentWentOffline", { studentId });
+    }
   });
 
   // Listen for the "joinGroup" event, which is emitted by the client when a student joins a group
@@ -429,10 +441,15 @@ io.on("connection", (socket) => {
   // Listens for the "disconnect" event, which is emitted when a client disconnects from the server
   // The server removes the student from the onlineStudents object and emits the "updateOnlineStudents" event to all connected clients
   socket.on("disconnect", () => {
+    console.log(`Socket ${socket.id} disconnected`);
+    
     Object.keys(onlineStudents).forEach((studentId) => {
       if (onlineStudents[studentId] === socket.id) {
-        console.log(`Student ${studentId} disconnected`);
+        console.log(`Student ${studentId} disconnected unexpectedly`);
         delete onlineStudents[studentId];
+        
+        // Emit offline event to update admin dashboards
+        io.emit("studentWentOffline", { studentId });
       }
     });
   });

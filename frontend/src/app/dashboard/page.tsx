@@ -51,10 +51,22 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (user && user.email) {
-      socket.emit("studentOnline", { studentId: user.email }); 
+      // Function to emit online status
+      const emitOnlineStatus = () => {
+        socket.emit("studentOnline", { studentId: user.email });
+        socket.emit("studentPageChanged", { studentId: user.email, currentPage: pathname });
+      };
 
-      socket.emit("studentPageChanged", { studentId: user.email, currentPage: pathname });
+      // Emit online status immediately
+      emitOnlineStatus();
 
+      // Listen for socket connection events to re-emit online status
+      socket.on("connect", () => {
+        console.log("Socket connected, emitting online status");
+        emitOnlineStatus();
+      });
+
+      // Update current page in database
       const updateCurrentPage = async () => {
         try {
           const response = await fetch(`${API_BASE_URL}/update-currentpage`, {
@@ -67,7 +79,12 @@ const Dashboard = () => {
         }
       };
 
-      updateCurrentPage(); 
+      updateCurrentPage();
+
+      // Cleanup function
+      return () => {
+        socket.off("connect");
+      };
     }
   }, [user, pathname]);
 

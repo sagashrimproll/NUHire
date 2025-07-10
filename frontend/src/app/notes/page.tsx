@@ -4,9 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { useCollapse } from 'react-collapsed';
 import axios from 'axios';
 import Navbar from '../components/navbar';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import io from "socket.io-client";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const socket = io(API_BASE_URL); 
 
 const NotesPage: React.FC = () => {
   const router = useRouter();
@@ -22,6 +24,7 @@ const NotesPage: React.FC = () => {
   const [newNote, setNewNote] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const { getCollapseProps, getToggleProps, isExpanded } = useCollapse();
+  const pathname = usePathname();
 
   interface User {
       id: string;
@@ -87,7 +90,44 @@ const NotesPage: React.FC = () => {
     fetchUser();
   }, [router]);
 
+  useEffect(() => {
+    if (user && user.email) {
+      // Function to emit online status
+      const emitOnlineStatus = () => {
+        socket.emit("studentOnline", { studentId: user.email });
+        socket.emit("studentPageChanged", { studentId: user.email, currentPage: pathname });
+      };
+
+      // Emit online status immediately
+      emitOnlineStatus();
+
+      // Listen for socket connection events to re-emit online status
+      socket.on("connect", () => {
+        console.log("Socket connected, emitting online status");
+        emitOnlineStatus();
+      });
   
+      // Update current page in database
+      const updateCurrentPage = async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/update-currentpage`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ page: 'notes', user_email: user.email }),
+          });
+        } catch (error) {
+          console.error("Error updating current page:", error);
+        }
+      };
+  
+      updateCurrentPage();
+  
+      // Cleanup function
+      return () => {
+        socket.off("connect");
+      };
+    }
+  }, [user, pathname]);
 
   return (
     <div>

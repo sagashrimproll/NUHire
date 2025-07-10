@@ -297,7 +297,7 @@ CREATE TABLE `Users` (
   `group_id` int DEFAULT NULL,
   `job_des` varchar(100) DEFAULT NULL,
   `class` int DEFAULT NULL,
-  `current_page` enum('dashboard','resumepage','resumepage2','jobdes','interviewpage','makeofferpage') DEFAULT NULL,
+  `current_page` enum('dashboard','resumepage','resumepage2','jobdes','interviewpage','makeofferpage','notes','profile') DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;

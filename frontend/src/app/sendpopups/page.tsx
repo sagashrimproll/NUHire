@@ -178,6 +178,26 @@ const SendPopups = () => {
       });
     });
 
+    // Listen for student offline events
+    socket.on("studentWentOffline", ({ studentId }) => {
+      console.log(`Student ${studentId} went offline`);
+      
+      // Update groups state to mark student as offline
+      setGroups(prevGroups => {
+        const updatedGroups = { ...prevGroups };
+        Object.keys(updatedGroups).forEach(groupId => {
+          if (Array.isArray(updatedGroups[groupId])) {
+            updatedGroups[groupId] = updatedGroups[groupId].map((student: any) =>
+              student.email === studentId
+                ? { ...student, online: false }
+                : student
+            );
+          }
+        });
+        return updatedGroups;
+      });
+    });
+
     // Listen for new student events and refresh groups
     socket.on("newStudent", ({ classId }) => {
       console.log(`New student added to class ${classId}`);
