@@ -76,7 +76,25 @@ const Dashboard = () => {
     socket.on("jobUpdated", ({ job }) => {
       setPopup({ headline: "You have been assigned a new job!", 
         message: `You are an employer for ${job}!` });
-      });
+      const refreshUser = async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/auth/user`, { credentials: "include" });
+          const userData = await response.json();
+          
+          if (response.ok) {
+            setUser(userData);
+            if (userData.job_des && (!user?.job_des || progress === "jobdes")) {
+              setProgress("jobdes");
+              localStorage.setItem("progress", "jobdes");
+            }
+          }
+        } catch (error) {
+          console.error("Error refreshing user data:", error);
+        }
+      };
+      
+      refreshUser();
+    });
 
     socket.on("receivePopup", ({ headline, message }) => {
       setPopup({ headline, message });
@@ -113,9 +131,17 @@ const Dashboard = () => {
   ];
 
   const isStepUnlocked = (stepKey: string) => {
-    if(stepKey === "jobdes" && !user?.job_des) return false;
-    const completedSteps = steps.map((s) => s.key);
-    return completedSteps.indexOf(stepKey) <= completedSteps.indexOf(progress);
+    // If no job description, only allow jobdes step to show as disabled
+    if (!user?.job_des) {
+      return false;
+    }
+    
+    // If user has job description, unlock steps sequentially based on progress
+    const stepIndex = steps.findIndex(step => step.key === stepKey);
+    const progressIndex = steps.findIndex(step => step.key === progress);
+    
+    // Allow current step and all previous steps to be unlocked
+    return stepIndex <= progressIndex;
   };
 
   if (loading) return <div>Loading...</div>;
@@ -165,9 +191,13 @@ const Dashboard = () => {
               onClick={() => window.location.replace(step.path)}
               disabled={!isStepUnlocked(step.key)}
               title={
-                step.key === "jobdes" && !user?.job_des
-                ? "You have not been assigned a job description yet."
-                : ""
+                !user?.job_des && step.key !== "jobdes"
+                  ? "You need to be assigned a job description first."
+                  : step.key === "jobdes" && !user?.job_des
+                  ? "You have not been assigned a job description yet."
+                  : !isStepUnlocked(step.key)
+                  ? "Complete previous steps to unlock this stage."
+                  : ""
               }
               className={`px-4 py-2 text-lg rounded-md transition-all mb-10
                 ${isStepUnlocked(step.key) ? "bg-[#455763] text-white cursor-pointer hover:bg-[#142050]" : "bg-gray-300 text-gray-600 cursor-not-allowed opacity-60"}`}
