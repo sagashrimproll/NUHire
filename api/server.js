@@ -485,8 +485,6 @@ app.get("/auth/user", (req, res) => {
 
 // logout route for logging out the user and destroying the session
 // The server clears the session and redirects the user to the home page
-// logout route for logging out the user and destroying the session
-// The server clears the session and redirects the user to the home page
 app.post("/auth/logout", (req, res, next) => {
   req.logout((err) => {
     if (err) return next(err);
@@ -616,6 +614,14 @@ app.post("/users", (req, res) => {
       // Log successful user creation
       console.log(`User created: ${First_name} ${Last_name} (${Email}) as ${Affiliation}${group_id ? `, group: ${group_id}` : ''}${course_id ? `, class: ${course_id}` : ''}`);
       
+      if (Affiliation === 'student') {
+        io.emit("newStudent", { 
+          id: result.insertId, 
+          First_name, 
+          Last_name,
+          classId: course_id
+        });
+      }
       // Return success response
       res.status(201).json({ 
         id: result.insertId, 
