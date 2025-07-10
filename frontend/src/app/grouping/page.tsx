@@ -3,6 +3,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL; // API base URL from 
 import { useState, useEffect } from "react"; // Importing React and hooks for state and effect management
 import { useRouter } from "next/navigation"; // Importing useRouter for navigation
 import NavbarAdmin from "../components/navbar-admin"; // Importing the admin navbar component
+import { io, Socket } from "socket.io-client";
+import AdminReactionPopup from "../components/adminReactionPopup"; // Importing popup component for offers
 
 //Define the Grouping component
 // This component is responsible for managing groups and job assignments for students
@@ -32,6 +34,10 @@ const Grouping = () => {
   const [classes, setClasses] = useState<{ id: number; name: string }[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
   const router = useRouter();
+  const [pendingOffers, setPendingOffers] = useState<
+    { classId: number; groupId: number; candidateId: number }[]
+  >([]);  
+  const socket = io(API_BASE_URL);
 
   // ✅ Fetch the logged-in user
   useEffect(() => {
@@ -56,6 +62,36 @@ const Grouping = () => {
 
     fetchUser();
   }, [router]);
+
+  useEffect(() => {
+    const onRequest = (data: { classId: number; groupId: number; candidateId: number }) => {
+      const { classId, groupId, candidateId } = data;
+      setPendingOffers((prev) => [...prev, {classId, groupId, candidateId }]);
+    };
+    
+    socket.on("makeOfferRequest", onRequest);
+    return () => {
+      socket.off("makeOfferRequest", onRequest);
+    };
+  }, []);
+
+  const respondToOffer = (
+    classId: number,
+    groupId: number,
+    candidateId: number,
+    accepted: boolean
+  ) => {
+    socket.emit("makeOfferResponse", {
+      classId,
+      groupId,
+      candidateId,
+      accepted,
+    });
+    setPendingOffers((prev) =>
+      prev.filter((o) => o.classId != classId || o.groupId !== groupId || o.candidateId !== candidateId)
+    );
+  };
+  
 
   // ✅ Fetch available classes
   useEffect(() => {
@@ -387,6 +423,26 @@ const Grouping = () => {
             <p className="text-sand text-center">No groups found for this class.</p>
           )}
         </div>
+        {/* Render pending offers as popups */}
+        {pendingOffers.map(({classId, groupId, candidateId }) => (
+          <div
+            key={`offer-${classId}-${groupId}-${candidateId}`}
+            className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
+          >
+            <div className="bg-springWater p-6 rounded-lg shadow-lg max-w-md mx-auto">
+              <AdminReactionPopup
+                headline={`Group ${groupId} from Class ${classId} wants to offer Candidate ${candidateId}`}
+                message="Do you approve?"
+                onAccept={() => 
+                  respondToOffer(classId, groupId, candidateId, true)
+                }
+                onReject={() => 
+                  respondToOffer(classId, groupId, candidateId, false)
+                }
+              />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
