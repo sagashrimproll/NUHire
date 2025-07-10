@@ -691,6 +691,12 @@ app.post("/update-job", (req, res) => {
       });
     });
   });
+
+  socket.emit("jobUpdated", { job_group_id, class_id, job });
+
+  Promise.all(queries)
+  .then(() => res.json({ message: "Group updated successfully!" }))
+  .catch(error => res.status(500).json({ error: error.message }));
 });
 
 // Update user's class
