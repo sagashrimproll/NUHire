@@ -40,3 +40,15 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 node_modules/
+
+# Certificates and keys
+*.crt
+*.key
+*.p12
+*.jks
+certs/
+certificates/
+secrets/
+
+# API keys and sensitive config
+config/secrets/

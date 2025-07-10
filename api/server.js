@@ -692,6 +692,19 @@ app.post("/update-job", (req, res) => {
     });
   });
   
+  db.query("SELECT email FROM Users WHERE group_id = ? AND class = ? AND affiliation = 'student'", [job_group_id, class_id], (err, results) => {
+    if (!err && results.length > 0) {
+      results.forEach(({ email }) => {
+        const studentSocketId = onlineStudents[email];
+        if (studentSocketId) {
+          io.to(studentSocketId).emit("jobUpdated", { 
+            job,
+          });
+        }
+      });
+    }
+  });
+
   Promise.all(queries)
   .then(() => res.json({ message: "Group updated successfully!" }))
   .catch(error => res.status(500).json({ error: error.message }));

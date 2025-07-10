@@ -26,20 +26,21 @@ const SendPopups = () => {
     [key: string]: any; // optionally allow other props
   }
     
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [groups, setGroups] = useState<Record<string, any>>({});
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
-  const [headline, setHeadline] = useState("");
-  const [message, setMessage] = useState(""); 
-  const [sending, setSending] = useState(false);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [selectedPreset, setSelectedPreset] = useState<string>("");
-  const [classes, setClasses] = useState<{id: number, name: string}[]>([]);
-  const [selectedClass, setSelectedClass] = useState<string>("");
-  const router = useRouter(); 
-  const [isConnected, setIsConntected] = useState(false);
-  const [pendingOffers, setPendingOffers] = useState<
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [groups, setGroups] = useState<Record<string, any>>({});
+    const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+    const [headline, setHeadline] = useState("");
+    const [message, setMessage] = useState(""); 
+    const [sending, setSending] = useState(false);
+    const [students, setStudents] = useState<Student[]>([]);
+    const [selectedPreset, setSelectedPreset] = useState<string>("");
+    const [classes, setClasses] = useState<{id: number, name: string}[]>([]);
+    const [selectedClass, setSelectedClass] = useState<string>("");
+    const router = useRouter(); 
+    const [isConnected, setIsConntected] = useState(false);
+    const [pendingOffers, setPendingOffers] = useState<
+
     { classId: number; groupId: number; candidateId: number }[]
   >([]);
     
@@ -118,6 +119,74 @@ const SendPopups = () => {
         fetchGroups();
         }
   }, [selectedClass]);
+
+  useEffect(() => {
+    // Listen for student page changes (correct event name from server)
+    socket.on("studentPageChange", ({ studentId, currentPage }) => {
+      console.log(`Received update: Student ${studentId} changed to ${currentPage}`);
+      
+      // Update students state to reflect the current page
+      setStudents(prevStudents => 
+        prevStudents.map(student =>
+          student.email === studentId 
+            ? { ...student, current_page: currentPage }
+            : student
+        )
+      );
+
+      // Update groups state as well if needed
+      setGroups(prevGroups => {
+        const updatedGroups = { ...prevGroups };
+        Object.keys(updatedGroups).forEach(groupId => {
+          if (Array.isArray(updatedGroups[groupId])) {
+            updatedGroups[groupId] = updatedGroups[groupId].map((student: any) =>
+              student.email === studentId
+                ? { ...student, current_page: currentPage }
+                : student
+            );
+          }
+        });
+        return updatedGroups;
+      });
+    });
+
+    // Listen for online student updates
+    socket.on("updateOnlineStudents", ({ studentId, group_id, current_page }) => {
+      console.log(`Student ${studentId} is online in group ${group_id} on page ${current_page}`);
+      
+      // Update both students and groups state
+      setStudents(prevStudents => 
+        prevStudents.map(student =>
+          student.email === studentId 
+            ? { ...student, current_page, online: true }
+            : student
+        )
+      );
+
+      setGroups(prevGroups => {
+        const updatedGroups = { ...prevGroups };
+        Object.keys(updatedGroups).forEach(groupId => {
+          if (Array.isArray(updatedGroups[groupId])) {
+            updatedGroups[groupId] = updatedGroups[groupId].map((student: any) =>
+              student.email === studentId
+                ? { ...student, current_page, online: true }
+                : student
+            );
+          }
+        });
+        return updatedGroups;
+      });
+    });
+
+    socket.on("disconnect", () => {
+      console.log("Admin disconnected from socket");
+    });
+
+    // Cleanup function
+    return () => {
+      socket.disconnect();
+    };
+  }, []);
 
   useEffect(() => {
     const onRequest = (data: { classId: number; groupId: number; candidateId: number }) => {
@@ -211,7 +280,8 @@ const SendPopups = () => {
       <NavbarAdmin />
 
       <div className="max-w-3xl mx-auto bg-navy justify-center rounded-md items-center p-6 mt-6">
-        <h1 className="text-3xl font-bold text-center text-sand mb-6">
+        <h1 className="text-3xl 
+        font-bold text-center text-sand mb-6">
           Send Popups
         </h1>
 
@@ -298,7 +368,6 @@ const SendPopups = () => {
                       onChange={() => handleCheckboxChange(group_id)}
                     />
                   </div>
-
                   <ul className="list-none pl-0 text-navy mt-2">
                     {Array.isArray(students) && students.length > 0 ? (
                       students.map((student, index) => (
@@ -330,18 +399,20 @@ const SendPopups = () => {
             )}
           </div>
 
-        <button
-          onClick={sendPopups}
-          disabled={sending || selectedGroups.length === 0}
-          className={`mt-6 px-6 py-3 font-semibold rounded-md transition 
-                        ${
-                          sending || selectedGroups.length === 0
-                            ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-blue-600 text-white hover:bg-blue-700"
-                        }`}
-        >
-          {sending ? "Sending..." : "Send Popups"}
-        </button>
+        <div className="flex justify-center">
+          <button
+            onClick={sendPopups}
+            disabled={sending || selectedGroups.length === 0}
+            className={`mt-6 px-6 py-3 font-semibold rounded-md transition 
+                          ${
+                            sending || selectedGroups.length === 0
+                              ? "bg-gray-400 cursor-not-allowed"
+                              : "bg-blue-600 text-white hover:bg-blue-700"
+                          }`}
+          >
+            {sending ? "Sending..." : "Send Popups"}
+          </button>
+        </div>
 
         {pendingOffers.map(({classId, groupId, candidateId }) => (
           <div
