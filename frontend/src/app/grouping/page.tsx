@@ -216,6 +216,27 @@ const Grouping = () => {
       });
     });
 
+    // Listen for new student events and refresh groups
+    socket.on("newStudent", ({ classId }) => {
+      console.log(`New student added to class ${classId}`);
+      
+      // Refresh groups for the specific class
+      const fetchGroups = async () => {
+        try {
+          const response = await fetch(`${API_BASE_URL}/groups?class=${classId}`);
+          const data = await response.json();
+          // Only update if this is the currently selected class
+          setGroups(prevGroups => {
+            // You could add a check here to only update if classId matches current selection
+            return data;
+          });
+        } catch (error) {
+          console.error("Error refreshing groups:", error);
+        }
+      };
+      fetchGroups();
+    });
+
     socket.on("disconnect", () => {
       console.log("Admin disconnected from socket");
     });

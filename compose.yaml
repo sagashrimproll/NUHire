@@ -40,7 +40,10 @@ services:
 
   frontend:
     platform: linux/amd64
-    build: ./frontend  # Uses frontend/Dockerfile
+    build:
+    #./frontend uncomment this line if you want to use the Dockerfile
+      context: ./frontend # remove this line if you want to use the Dockerfile.dev
+      dockerfile: Dockerfile.dev # remove this line if you want to use the Dockerfile
     container_name: frontend_container
     volumes:
       - './frontend:/app'
