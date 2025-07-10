@@ -73,8 +73,9 @@ const Dashboard = () => {
 
 
   useEffect(() => {
-    socket.on("jobAssigned", ({ job_group_id, class_id, job }) => {
-      setPopup({ headline: "You have been assigned a job!", message: "The job is" + job });
+    socket.on("jobUpdated", ({ job }) => {
+      setPopup({ headline: "You have been assigned a new job!", 
+        message: `You are an employer for ${job}!` });
       });
 
     socket.on("receivePopup", ({ headline, message }) => {

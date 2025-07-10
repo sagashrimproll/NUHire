@@ -123,7 +123,7 @@ const Grouping = () => {
     socket.on("connect", () => {
       console.log("Admin connected to socket:", socket.id);
     });
-    
+
     // Listen for student page changes (correct event name from server)
     socket.on("studentPageChange", ({ studentId, currentPage }) => {
       console.log(`Received update: Student ${studentId} changed to ${currentPage}`);
@@ -270,6 +270,7 @@ const Grouping = () => {
         const groupsResponse = await fetch(`${API_BASE_URL}/groups?class=${selectedClass}`);
         const groupsData = await groupsResponse.json();
         setGroups(groupsData);
+        
       } else {
         alert("Failed to assign students to group.");
       }

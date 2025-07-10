@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Navbar from "../components/navbar";
 import NavbarAdmin from "../components/navbar-admin";
 import { useRouter } from "next/navigation";
+
 interface User {
     id: number;
     f_name: string;
@@ -26,6 +27,7 @@ export default function UserProfile() {
     const [selectedClass, setSelectedClass] = useState("");
     const [isUpdating, setIsUpdating] = useState(false);
     const [updateSuccess, setUpdateSuccess] = useState(false);
+    const [popup, setPopup] = useState<{ headline: string; message: string } | null>(null);  
     const router = useRouter();
   
     useEffect(() => {
