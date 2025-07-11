@@ -573,7 +573,7 @@ app.get("/users/:id", (req, res) => {
 
 // post route for creating a new user, which checks if the user already exists in the database and inserts a new user record if not
 app.post("/users", (req, res) => {
-  const { First_name, Last_name, Email, Affiliation, group_id, course_id } = req.body;
+  const { First_name, Last_name, Email, Affiliation, group_id, course_id, job_des } = req.body;
 
   // Validate required fields
   if (!First_name || !Last_name || !Email || !Affiliation) {
@@ -591,48 +591,104 @@ app.post("/users", (req, res) => {
       return res.status(409).json({ message: "User already exists" });
     }
 
-    // Create SQL query based on whether group_id is provided
-    let sql, params;
-    
-    if (Affiliation === 'student' && group_id && course_id) {
-      // Include group_id for students
-      sql = "INSERT INTO Users (f_name, l_name, email, affiliation, group_id, class) VALUES (?, ?, ?, ?, ?, ?)";
-      params = [First_name, Last_name, Email, Affiliation, group_id, course_id];
-    } else {
-      // Don't include group_id for faculty
-      sql = "INSERT INTO Users (f_name, l_name, email, affiliation) VALUES (?, ?, ?, ?)";
-      params = [First_name, Last_name, Email, Affiliation];
-    }
-    
-    // Execute the query
-    db.query(sql, params, (err, result) => {
-      if (err) {
-        console.error("Failed to create user:", err);
-        return res.status(500).json({ error: err.message });
+    // Helper function to create user with determined job assignment
+    const createUser = (assignedJob) => {
+      let sql, params;
+      
+      if (Affiliation === 'student' && group_id && course_id) {
+        // Include group_id, class, and job_des for students
+        sql = "INSERT INTO Users (f_name, l_name, email, affiliation, group_id, class, job_des) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        params = [First_name, Last_name, Email, Affiliation, group_id, course_id, assignedJob];
+      } else if (Affiliation === 'student' && course_id) {
+        // Include class and job_des for students without group
+        sql = "INSERT INTO Users (f_name, l_name, email, affiliation, class, job_des) VALUES (?, ?, ?, ?, ?, ?)";
+        params = [First_name, Last_name, Email, Affiliation, course_id, assignedJob];
+      } else {
+        // Basic user creation for faculty/admin
+        sql = "INSERT INTO Users (f_name, l_name, email, affiliation) VALUES (?, ?, ?, ?)";
+        params = [First_name, Last_name, Email, Affiliation];
       }
       
-      // Log successful user creation
-      console.log(`User created: ${First_name} ${Last_name} (${Email}) as ${Affiliation}${group_id ? `, group: ${group_id}` : ''}${course_id ? `, class: ${course_id}` : ''}`);
-      
-      if (Affiliation === 'student') {
-        io.emit("newStudent", { 
+      // Execute the query
+      db.query(sql, params, (err, result) => {
+        if (err) {
+          console.error("Failed to create user:", err);
+          return res.status(500).json({ error: err.message });
+        }
+        
+        // Log successful user creation
+        console.log(`User created: ${First_name} ${Last_name} (${Email}) as ${Affiliation}${group_id ? `, group: ${group_id}` : ''}${course_id ? `, class: ${course_id}` : ''}${assignedJob ? `, job: ${assignedJob}` : ' with no job'}`);
+        
+        if (Affiliation === 'student') {
+          io.emit("newStudent", { 
+            id: result.insertId, 
+            First_name, 
+            Last_name,
+            classId: course_id
+          });
+
+          // If student was assigned a job, notify them if they're online
+          if (assignedJob) {
+            const studentSocketId = onlineStudents[Email];
+            if (studentSocketId) {
+              io.to(studentSocketId).emit("jobUpdated", { 
+                job: [assignedJob],
+                job_group_id: group_id,
+                class_id: course_id
+              });
+            }
+            console.log(`Notified new student ${Email} about job assignment: ${assignedJob}`);
+          }
+        }
+        // Return success response
+        res.status(201).json({ 
           id: result.insertId, 
           First_name, 
-          Last_name,
-          classId: course_id
+          Last_name, 
+          Email, 
+          Affiliation,
+          ...(group_id && { group_id }),
+          ...(course_id && { course_id }),
+          ...(assignedJob && { job_des: assignedJob })
         });
-      }
-      // Return success response
-      res.status(201).json({ 
-        id: result.insertId, 
-        First_name, 
-        Last_name, 
-        Email, 
-        Affiliation,
-        ...(group_id && { group_id }),
-        ...(course_id && { course_id }) 
       });
-    });
+    };
+
+    // If student is being assigned to a group, check for existing group job
+    if (Affiliation === 'student' && group_id) {
+      console.log(`Checking for existing job in group ${group_id} for new student ${Email}`);
+      
+      // Query to find existing group members and their job descriptions
+      db.query("SELECT job_des FROM Users WHERE group_id = ? AND affiliation = 'student' AND job_des IS NOT NULL LIMIT 1", 
+        [group_id], 
+        (err, jobResults) => {
+          if (err) {
+            console.error("Error checking group job assignments:", err);
+            return res.status(500).json({ error: err.message });
+          }
+          
+          let assignedJob = null;
+          
+          if (jobResults.length > 0) {
+            // Group has a job description, assign it to the new student
+            assignedJob = jobResults[0].job_des;
+            console.log(`Found existing job in group ${group_id}: ${assignedJob}`);
+          } else {
+            // No job found in group, check if job_des was explicitly provided
+            if (job_des) {
+              assignedJob = job_des;
+              console.log(`No existing job in group ${group_id}, using provided job: ${job_des}`);
+            } else {
+              console.log(`No existing job in group ${group_id} and no job provided, assigning null`);
+            }
+          }
+          
+          createUser(assignedJob);
+        });
+    } else {
+      // For non-students or students without groups, use provided job_des or null
+      createUser(job_des || null);
+    }
   });
 });
 
