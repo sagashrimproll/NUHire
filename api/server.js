@@ -18,6 +18,7 @@ const FRONT_URL = process.env.REACT_APP_FRONT_URL;
 const app = express();
 const http = require("http");
 const { Server } = require("socket.io");
+const { group } = require("console");
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const server = http.createServer(app); // Use HTTP server for Socket.io
@@ -426,6 +427,57 @@ io.on("connection", (socket) => {
     io.emit('makeOfferResponse', {classId, groupId, candidateId, accepted });
   });
 
+  // Listen for user completion of res-review stage
+  socket.on("userCompletedResReview", () => {    
+    if (!groupId) {
+      console.log("No group ID provided for userCompletedResReview");
+      return;
+    }
+    
+    // Get the student email from the socket connection
+    const studentEmail = Object.keys(onlineStudents).find(email => onlineStudents[email] === socket.id);
+    if (!studentEmail) {
+      console.log("Could not identify student for userCompletedResReview");
+      return;
+    }
+    
+    console.log(`Student ${studentEmail} completed res-review in group ${groupId}`);
+    
+    db.query("SELECT f_name, l_name, email, current_page FROM Users WHERE group_id = ? AND affiliation = 'student'", 
+      [groupId], (err, groupMembers) => {
+        if (err) {
+          console.error("Error fetching group members:", err);
+          return;
+        }
+                
+        if (!global.completedResReview) {
+          global.completedResReview = {};
+        }
+        if (!global.completedResReview[groupId]) {
+          global.completedResReview[groupId] = 0;
+        }
+        global.completedResReview[groupId] += 1;
+        
+        const completedCount = global.completedResReview[groupId].size;
+        const totalCount = groupMembers.length;
+        const allCompleted = completedCount >= totalCount;
+                
+        if (allCompleted) {          
+          groupMembers.forEach(member => {
+            const memberSocketId = onlineStudents[member.email];
+            if (memberSocketId) {
+              console.log(`Sending groupCompletedResReview to ${member.email}`);
+              io.to(memberSocketId).emit("groupCompletedResReview");
+            } else {
+              console.log(`Member ${member.email} is not online`);
+            }
+          });
+        } else {
+          console.log(`Group ${groupId} still waiting for ${totalCount - completedCount} more members to complete`);
+        }
+      });
+  });
+
   // Listens for the "disconnect" event, which is emitted when a client disconnects from the server
   // The server removes the student from the onlineStudents object and emits the "updateOnlineStudents" event to all connected clients
   socket.on("disconnect", () => {
@@ -614,14 +666,6 @@ app.post("/users", (req, res) => {
       // Log successful user creation
       console.log(`User created: ${First_name} ${Last_name} (${Email}) as ${Affiliation}${group_id ? `, group: ${group_id}` : ''}${course_id ? `, class: ${course_id}` : ''}`);
       
-      if (Affiliation === 'student') {
-        io.emit("newStudent", { 
-          id: result.insertId, 
-          First_name, 
-          Last_name,
-          classId: course_id
-        });
-      }
       // Return success response
       res.status(201).json({ 
         id: result.insertId, 
@@ -710,10 +754,6 @@ app.post("/update-job", (req, res) => {
       });
     }
   });
-
-  Promise.all(queries)
-  .then(() => res.json({ message: "Group updated successfully!" }))
-  .catch(error => res.status(500).json({ error: error.message }));
 });
 
 // Update user's class
@@ -776,7 +816,7 @@ app.post("/notes", (req, res) => {
   );
 });
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Group API Routes
 
 // get route for retrieving all groups from the database

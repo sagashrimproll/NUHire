@@ -37,6 +37,7 @@ export default function ResumesPage() {
   const [fadingEffect, setFadingEffect] = useState(false);
   const [timeSpent, setTimeSpent] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [disabled, setDisabled] = useState(true);
   const [popup, setPopup] = useState<{
     headline: string;
     message: string;
@@ -123,6 +124,16 @@ export default function ResumesPage() {
 
     return () => {
       socket.off("receivePopup");
+    };
+  }, []);
+
+  useEffect(() => {
+    socket.on("groupCompletedResReview", () => {
+      setDisabled(prev => !prev);
+    });
+
+    return () => {
+      socket.off("groupCompletedResReview");
     };
   }, []);
 
@@ -241,6 +252,15 @@ export default function ResumesPage() {
     localStorage.setItem("progress", "res-review-group");
     window.location.href = "/res-review-group";
   };
+
+  useEffect(() => {
+    if (totalDecisions === 10 && user && user.email) {
+      console.log(`User ${user.email} completed res-review with 10 decisions`);
+      socket.emit("userCompletedResReview", {
+        groupId: user.group_id,
+      });
+    }
+  }, [totalDecisions, user]);
 
   return (
     <div>
@@ -378,11 +398,11 @@ export default function ResumesPage() {
             onClick={completeResumes}
             className={`px-4 py-2 bg-navyHeader text-white rounded-lg mr-4 shadow-md hover:bg-blue-400 transition duration-300 font-rubik
               ${
-                totalDecisions < 10
+                disabled
                   ? "cursor-not-allowed opacity-50"
                   : "cursor-pointer hover:bg-blue-400"
               }`}
-            disabled={totalDecisions < 10}
+            disabled={disabled}
           >
             Next: Resume Review pt. 2 →
           </button>
