@@ -37,6 +37,7 @@ export default function ResumesPage() {
   const [fadingEffect, setFadingEffect] = useState(false);
   const [timeSpent, setTimeSpent] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [disabled, setDisabled] = useState(true);
   const [popup, setPopup] = useState<{
     headline: string;
     message: string;
@@ -125,6 +126,16 @@ export default function ResumesPage() {
       socket.off("receivePopup");
     };
   }, []);
+
+  useEffect(() => {
+    socket.on("groupCompletedResReview", (data) => {
+      setDisabled(false); 
+    });
+
+    return () => {
+      socket.off("groupCompletedResReview");
+    };
+  }, [disabled]);
 
   const fetchResumes = async () => {
     try {
@@ -241,6 +252,28 @@ export default function ResumesPage() {
     localStorage.setItem("progress", "res-review-group");
     window.location.href = "/res-review-group";
   };
+
+  // Function to get appropriate tooltip message based on current state
+  const getTooltipMessage = () => {
+    if (totalDecisions < 10) {
+      return `Complete at least 10 resume reviews first (${totalDecisions}/10 completed)`;
+    } else if (disabled && user?.group_id) {
+      return "Waiting for all group members to complete their individual resume reviews";
+    } else if (!user?.group_id) {
+      return "You need to be in a group to proceed";
+    } else {
+      return "Proceed to group resume review";
+    }
+  };
+
+  useEffect(() => {
+    if (totalDecisions === 10 && user && user.email) {
+      console.log(`User ${user.email} completed res-review with 10 decisions`);
+      socket.emit("userCompletedResReview", {
+        groupId: user.group_id,
+      });
+    }
+  }, [totalDecisions, user]);
 
   return (
     <div>
@@ -378,11 +411,11 @@ export default function ResumesPage() {
             onClick={completeResumes}
             className={`px-4 py-2 bg-navyHeader text-white rounded-lg mr-4 shadow-md hover:bg-blue-400 transition duration-300 font-rubik
               ${
-                totalDecisions < 10
+                disabled
                   ? "cursor-not-allowed opacity-50"
                   : "cursor-pointer hover:bg-blue-400"
               }`}
-            disabled={totalDecisions < 10}
+            disabled={disabled}
           >
             Next: Resume Review pt. 2 →
           </button>
