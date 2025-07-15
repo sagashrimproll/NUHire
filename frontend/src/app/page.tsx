@@ -6,8 +6,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 
 export default function Home() {
-  const handleGoogleLogin = () => {
-    window.location.href = `${API_BASE_URL}/auth/google`;
+  const handleKeycloakLogin = () => {
+    window.location.href = `${API_BASE_URL}/auth/keycloak`;
   };
 
   return (
@@ -16,7 +16,7 @@ export default function Home() {
       {/* Navigation Bar */}
       <div className="w-full flex justify-end p-2 bg-navy shadow-md font-rubik text-2xl fixed top-0">
         <button 
-          onClick={handleGoogleLogin} 
+          onClick={handleKeycloakLogin} 
           className="m-2 px-2 py-2 bg-wood text-black border-4 border-sand rounded-md text-lg transition-opacity hover:opacity-60 active:opacity-30"
         >
           Login
@@ -37,7 +37,7 @@ export default function Home() {
         <h1 className="text-5xl font-bold">Welcome to NUHire!</h1>
         <p className="text-2xl italic mt-2">Step into the employer's shoes!</p>
         <button 
-          onClick={handleGoogleLogin} 
+          onClick={handleKeycloakLogin} 
           className="mt-6 px-6 py-4 bg-white text-black border-4 border-navy rounded-md text-lg transition-opacity hover:opacity-60 active:opacity-30"
         >
           Click Here to Get Started

@@ -3,7 +3,7 @@ const express = require("express"); //Api framework
 const mysql = require("mysql2"); //MySQL database driver
 const passport = require("passport"); //Authentication middleware
 const session = require("express-session"); //Session management middleware, which is used for creating and managing user sessions
-const GoogleStrategy = require("passport-google-oauth20").Strategy; // Google OAuth 2.0 authentication strategy for Passport
+const OpenIDConnectStrategy = require("passport-openidconnect").Strategy; //OpenID Connect authentication strategy for Passport
 const dotenv = require("dotenv");// dotenv package to load environment variables from a .env file into process.env
 const cors = require("cors"); //CORS middleware for enabling Cross-Origin Resource Sharing
 const bodyParser = require("body-parser"); //Middleware for parsing incoming request bodies in a middleware before your handlers, available under the req.body property.
@@ -11,6 +11,8 @@ const multer = require("multer"); //Middleware for handling multipart/form-data,
 const fs = require("fs"); //File system module for interacting with the file system
 const path = require("path");  // Path module for working with file and directory paths
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Note: Using built-in fetch (Node.js 18+) and URLSearchParams for HTTP requests
+require('https').globalAgent.options.rejectUnauthorized = false;
 
 // Load environment variables from .env file, creates an express server, and sets up Socket.io
 dotenv.config();
@@ -253,45 +255,92 @@ async function initializeApp() {
   });
 }
 
-// Separate passport configuration function
+const jwt = require('jsonwebtoken');
+const fetch = require('node-fetch');
+
 function configurePassport() {
-  // Passport.js configuration for Google OAuth 2.0 authentication
-  passport.use(new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "/auth/google/callback"
-  }, (accessToken, refreshToken, profile, done) => {
-    const email = profile.emails[0].value.toLowerCase();
-    
+  console.log("=== Configuring Passport with Keycloak ===");
+
+  const issuerUrl = `https://localhost:8443/realms/${process.env.KEYCLOAK_REALM}`;
+  const tokenUrl = `${issuerUrl}/protocol/openid-connect/token`;
+  const userInfoUrl = `${issuerUrl}/protocol/openid-connect/userinfo`;
+
+  passport.use('oidc', new OpenIDConnectStrategy({
+    issuer: issuerUrl,
+    authorizationURL: `${issuerUrl}/protocol/openid-connect/auth`,
+    tokenURL: tokenUrl,
+    userInfoURL: userInfoUrl,
+    clientID: process.env.KEYCLOAK_CLIENT_ID,
+    clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
+    callbackURL: 'http://localhost:5001/auth/keycloak/callback',
+    skipUserProfile: true,
+    scope: ['openid', 'profile', 'email'],
+    passReqToCallback: false
+  }, async (accessToken, refreshToken, params, profile, done) => {
+    console.log("=== Passport Callback ===");
+
+    let email = null;
+    try {
+      // Decode ID token to extract user info
+      const idToken = params.id_token;
+      if (!idToken) {
+        console.error("❌ ID Token is missing");
+        return done(new Error("ID Token not present in token response"));
+      }
+
+      const decoded = jwt.decode(idToken);
+      console.log("🔓 Decoded ID Token:", decoded);
+
+      if (decoded?.email) {
+        email = decoded.email;
+        console.log("✅ Email extracted from ID Token:", email);
+      } else if (decoded?.preferred_username?.includes('@')) {
+        email = decoded.preferred_username;
+        console.log("✅ Email from preferred_username:", email);
+      } else {
+        console.error("❌ No email found in ID Token");
+        return done(new Error("Email not found in ID Token"));
+      }
+
+    } catch (error) {
+      console.error("❌ Error decoding ID token:", error);
+      return done(error);
+    }
+
+    // Normalize and use email to find user in DB
+    email = email.toLowerCase().trim();
+
     db.query("SELECT * FROM Users WHERE email = ?", [email], (err, results) => {
-      if (err) return done(err);
+      if (err) {
+        console.error("❌ DB error:", err);
+        return done(err);
+      }
+
       if (results.length > 0) {
         return done(null, results[0]);
       } else {
-        return done(null, { email });
+        return done(null, { email }); // let app handle first-time user
       }
     });
   }));
-  
-  // serializeUser and deserializeUser methods
+
   passport.serializeUser((user, done) => {
     done(null, user.id || user.email);
   });
-  
+
   passport.deserializeUser((identifier, done) => {
-    console.log("Deserializing user:", identifier);
     const query = isNaN(identifier)
       ? "SELECT * FROM Users WHERE email = ?"
       : "SELECT * FROM Users WHERE id = ?";
-  
+
     db.query(query, [identifier], (err, results) => {
       if (err) return done(err);
       if (results.length === 0) return done(null, false);
-      console.log("User found:", results[0]);
       return done(null, results[0]);
     });
   });
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Socket.io configuration for real-time communication between the server and clients
 
@@ -510,39 +559,57 @@ io.on("connection", (socket) => {
 });
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Google OAuth 2.0 authentication routes
+// Keycloak OAuth 2.0 authentication routes
 
-// The "/auth/google" route initiates the authentication process by redirecting the user to the Google login page
-app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+// The "/auth/keycloak" route initiates the authentication process by redirecting the user to the Keycloak login page
+app.get("/auth/keycloak", passport.authenticate("oidc"));
 
-// The "/auth/google/callback" route is the callback URL that Google redirects to after the user has authenticated
+// The "/auth/keycloak/callback" route is the callback URL that Keycloak redirects to after the user has authenticated
 // The server handles the authentication response and checks if the user exists in the database
-app.get("/auth/google/callback",
-  passport.authenticate("google", { failureRedirect: "/" }),
+app.get("/auth/keycloak/callback",
+  (req, res, next) => {
+    console.log("=== Callback route hit ===");
+    console.log("Query params:", req.query);
+    console.log("Session before auth:", req.session);
+    next();
+  },
+  passport.authenticate("oidc", { 
+    failureRedirect: "/",
+    failureFlash: false
+  }),
   (req, res) => {
-    const email = req.user.email;
+    console.log("=== Authentication successful ===");
+
+    const user = req.user;
+    if (!user || !user.email) {
+      console.error("No user or email found after authentication");
+      return res.redirect(`${FRONT_URL}/?error=no_user`);
+    }
+
+    const email = user.email;
 
     db.query("SELECT * FROM Users WHERE email = ?", [email], (err, results) => {
       if (err) {
         console.error("Database error:", err);
         return res.redirect("/");
       }
-      if (results.length > 0) {
-        const user = results[0];
-        const fullName = encodeURIComponent(`${user.First_name} ${user.Last_name}`);
 
-        // Check the Affiliation field
-        if (user.affiliation === "admin") {
+      if (results.length > 0) {
+        const dbUser = results[0];
+        const fullName = encodeURIComponent(`${dbUser.First_name || ""} ${dbUser.Last_name || ""}`.trim());
+
+        if (dbUser.affiliation === "admin") {
           return res.redirect(`${FRONT_URL}/advisor-dashboard?name=${fullName}`);
         } else {
           return res.redirect(`${FRONT_URL}/dashboard?name=${fullName}`);
         }
       } else {
-        return res.redirect(`${FRONT_URL}/signupform?email=${email}`);
+        return res.redirect(`${FRONT_URL}/signupform?email=${encodeURIComponent(email)}`);
       }
     });
   }
 );
+
 
 //check if the user is authenticated and return the user information
 app.get("/auth/user", (req, res) => {
