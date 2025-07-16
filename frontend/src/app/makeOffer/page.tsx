@@ -352,22 +352,20 @@ export default function MakeOffer() {
     socket.on("offerSelected", ({ candidateId, groupId, classId, checked }) => {
       if (user && groupId === user.group_id && classId === user.class) {
         console.log(`Group member ${checked ? 'selected' : 'deselected'} candidate ${candidateId} for offer`);
-        if (checked) {
-          // If selecting a candidate, uncheck all others and check only this one
-          setCheckedState(prev => {
-            const newState = Object.keys(prev).reduce((acc, key) => {
-              acc[Number(key)] = Number(key) === candidateId;
-              return acc;
-            }, {} as { [key: number]: boolean });
-            return newState;
+        setCheckedState(prev => {
+          // Clear all checkboxes first
+          const newState: { [key: number]: boolean } = {};
+          Object.keys(prev).forEach(key => {
+            newState[parseInt(key)] = false;
           });
-        } else {
-          // If deselecting, uncheck this candidate
-          setCheckedState(prev => ({
-            ...prev,
-            [candidateId]: false
-          }));
-        }
+          
+          // Then set the passed candidate if checked is true
+          if (checked) {
+            newState[candidateId] = true;
+          }
+          
+          return newState;
+        });
       }
     });
 
@@ -400,17 +398,17 @@ export default function MakeOffer() {
     let newCheckedState: { [key: number]: boolean };
 
     if (isCurrentlyChecked) {
-      // If clicking on the already checked item, uncheck it
-      newCheckedState = Object.keys(checkedState).reduce((acc, key) => {
-        acc[Number(key)] = false; // Uncheck all
-        return acc;
-      }, {} as { [key: number]: boolean });
+      // If clicking on the already checked item, uncheck all
+      newCheckedState = {};
+      interviewsWithVideos.forEach(interview => {
+        newCheckedState[interview.candidate_id] = false;
+      });
     } else {
-      // If clicking on an unchecked item, select only this one
-      newCheckedState = Object.keys(checkedState).reduce((acc, key) => {
-        acc[Number(key)] = Number(key) === interviewNumber;
-        return acc;
-      }, {} as { [key: number]: boolean });
+      // If clicking on an unchecked item, uncheck all and select only this one
+      newCheckedState = {};
+      interviewsWithVideos.forEach(interview => {
+        newCheckedState[interview.candidate_id] = interview.candidate_id === interviewNumber;
+      });
     }
 
     setCheckedState(newCheckedState);

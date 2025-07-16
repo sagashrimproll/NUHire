@@ -474,18 +474,18 @@ io.on("connection", (socket) => {
   });
 
   // Listen for interview submissions
-  socket.on("submitInterview", ({videoIndex, groupId, classId}) => {
-    console.log(`Interview submitted by group ${groupId}, class ${classId}, moving to video ${videoIndex}`);
+  socket.on("submitInterview", ({currentVideoIndex, nextVideoIndex, isLastInterview, groupId, classId}) => {
+    console.log(`Interview ${currentVideoIndex + 1} submitted by group ${groupId}, class ${classId}, moving to video ${nextVideoIndex + 1}, isLast: ${isLastInterview}`);
     const roomId = `group_${groupId}_class_${classId}`;
     // Broadcast to all members in the room including sender
-    io.to(roomId).emit("interviewSubmitted", {videoIndex, groupId, classId});
+    io.to(roomId).emit("interviewSubmitted", {currentVideoIndex, nextVideoIndex, isLastInterview, groupId, classId});
   });
 
   // Listen for offer candidate selection
-  socket.on("offerSelected", ({candidateId, groupId, classId, roomId}) => {
-    console.log(`Candidate ${candidateId} selected for offer by group ${groupId}, class ${classId}`);
+  socket.on("offerSelected", ({candidateId, groupId, classId, roomId, checked}) => {
+    console.log(`Candidate ${candidateId} ${checked ? 'selected' : 'deselected'} for offer by group ${groupId}, class ${classId}`);
     // Broadcast to all members in the room except sender (sender already updated their state)
-    socket.to(roomId).emit("offerSelected", {candidateId, groupId, classId});
+    socket.to(roomId).emit("offerSelected", {candidateId, groupId, classId, checked});
   });
 
   // Listen for offer submissions
