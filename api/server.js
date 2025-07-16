@@ -341,6 +341,8 @@ io.on("connection", (socket) => {
   // The server emits the checkbox update to all clients in the specified group room    
   // Listen for the "check" event
   socket.on("check", ({ group_id, resume_number, checked }) => {
+    console.log(`Checkbox update received: Room ${group_id}, Resume ${resume_number}, Checked: ${checked}`);
+    
     // Extract class information from the group_id if it contains the new format
     let actualGroupId = group_id;
     let classId = null;
@@ -367,8 +369,11 @@ io.on("connection", (socket) => {
             return; // Stop execution on error
         }
         
-        // Emit the update to all clients in the same room
-        socket.to(group_id).emit("checkboxUpdated", { resume_number, checked });
+        console.log(`Database updated successfully for resume ${resume_number}`);
+        
+        // Emit the update to ALL clients in the same room (including sender)
+        io.to(group_id).emit("checkboxUpdated", { resume_number, checked });
+        console.log(`Emitted checkboxUpdated to room ${group_id}: Resume ${resume_number}, Checked: ${checked}`);
     });
   });
 
@@ -419,6 +424,12 @@ io.on("connection", (socket) => {
     console.log(`Student in class ${classId}, group ${groupId} wants to offer candidate ${candidateId}`);
     io.emit("makeOfferRequest", {classId, groupId, candidateId});
   });
+
+  // Listen for the "moveGroup" event, that will move all student in the same group to the target page
+  socket.on("moveGroup", ({classId, groupId, targetPage}) => {
+    console.log(`Moving group ${groupId} in class ${classId} to ${targetPage}`);
+    io.emit("moveGroup", {class.Id, groupId, targetPage});
+  };)
 
   // Advisor’s decision → notify the student group
   socket.on('makeOfferResponse', ({classId, groupId, candidateId, accepted }) => {
