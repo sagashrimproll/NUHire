@@ -114,8 +114,12 @@ export default function ResReviewGroup() {
             }));
         });
 
-        socket.on("groupMove", ({groupId, classId, targetPage}) => {
-
+        socket.on("moveGroup", ({groupId, classId, targetPage}) => {
+            if (user && groupId === user.group_id && classId === user.class && targetPage === "/interview-stage") {
+                console.log(`Group navigation triggered: moving to ${targetPage}`);
+                localStorage.setItem("progress", "interview-stage");
+                window.location.href = targetPage; 
+            }
         });
   
         socket.on("connect_error", (err) => {
@@ -134,7 +138,7 @@ export default function ResReviewGroup() {
               socket.off("checkboxUpdated");
               socket.off("connect_error");
               socket.off("reconnect_failed");
-              socket.off("moveGroup")
+              socket.off("moveGroup");
               socket.close();
             }
           };
@@ -249,7 +253,7 @@ export default function ResReviewGroup() {
         }
         localStorage.setItem("progress", "interview-stage")
         window.location.href = "/interview-stage"; 
-        socket.emit("moveGroup", {groupId: user!.group_id, classId: user!.class, "/interview-stage"});
+        socket.emit("moveGroup", {groupId: user!.group_id, classId: user!.class, targetPage: "/interview-stage"});
     };
     
     // Calculate selected resume count
@@ -317,7 +321,7 @@ export default function ResReviewGroup() {
           <div className="flex justify-between mb-4">
             <button
               onClick={() => (window.location.href = "/jobdes")}
-              className="px-4 py-2 bg-navyHeader text-white rounded-lg ml-4 shadow-md hover:bg-blue-400 transition duration-300 font-rubik"
+              className="px-4 py-2 bg-navyHeader text-white rounded-lg ml-4 shadow-md cursor-not-allowed opacity-50 transition duration-300 font-rubik"
               disabled={true}
             >
               ← Back: Job Description
