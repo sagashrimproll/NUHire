@@ -341,6 +341,8 @@ io.on("connection", (socket) => {
   // The server emits the checkbox update to all clients in the specified group room    
   // Listen for the "check" event
   socket.on("check", ({ group_id, resume_number, checked }) => {
+    console.log(`Checkbox update received: Room ${group_id}, Resume ${resume_number}, Checked: ${checked}`);
+    
     // Extract class information from the group_id if it contains the new format
     let actualGroupId = group_id;
     let classId = null;
@@ -367,8 +369,11 @@ io.on("connection", (socket) => {
             return; // Stop execution on error
         }
         
-        // Emit the update to all clients in the same room
-        socket.to(group_id).emit("checkboxUpdated", { resume_number, checked });
+        console.log(`Database updated successfully for resume ${resume_number}`);
+        
+        // Emit the update to ALL clients in the same room (including sender)
+        io.to(group_id).emit("checkboxUpdated", { resume_number, checked });
+        console.log(`Emitted checkboxUpdated to room ${group_id}: Resume ${resume_number}, Checked: ${checked}`);
     });
   });
 
@@ -417,6 +422,32 @@ io.on("connection", (socket) => {
   // Listen for the "makeOfferRequest" event, which is emitted by the client when a student group wants to make an offer to a candidate
   socket.on("makeOfferRequest", ({classId, groupId, candidateId }) => {
     console.log(`Student in class ${classId}, group ${groupId} wants to offer candidate ${candidateId}`);
+    
+    // Find and notify all admin users about the new offer request
+    db.query("SELECT email FROM Users WHERE affiliation = 'admin'", (err, admins) => {
+      if (!err && admins.length > 0) {
+        console.log(`Notifying ${admins.length} admin(s) about offer request`);
+        admins.forEach(({ email }) => {
+          const adminSocketId = onlineStudents[email];
+          if (adminSocketId) {
+            console.log(`Sending offer request notification to admin: ${email}`);
+            io.to(adminSocketId).emit("makeOfferRequest", {
+              classId, 
+              groupId, 
+              candidateId,
+              message: `Group ${groupId} in Class ${classId} wants to make an offer to Candidate ${candidateId}`,
+              timestamp: new Date().toISOString()
+            });
+          } else {
+            console.log(`Admin ${email} is not currently online`);
+          }
+        });
+      } else {
+        console.log("No admin users found or database error:", err);
+      }
+    });
+    
+    // Also broadcast to all clients for general awareness (optional)
     io.emit("makeOfferRequest", {classId, groupId, candidateId});
   });
 
@@ -424,6 +455,44 @@ io.on("connection", (socket) => {
   socket.on('makeOfferResponse', ({classId, groupId, candidateId, accepted }) => {
     console.log(`Advisor responded to class ${classId}, group ${groupId} for candidate ${candidateId}: accepted=${accepted}`);
     io.emit('makeOfferResponse', {classId, groupId, candidateId, accepted });
+  });
+
+  // Listen for the "moveGroup" event, that will move all students in the same group to the target page
+  socket.on("moveGroup", ({classId, groupId, targetPage}) => {
+    console.log(`Moving group ${groupId} in class ${classId} to ${targetPage}`);
+    const roomId = `group_${groupId}_class_${classId}`;
+    console.log(`Emitting moveGroup to room: ${roomId}`);
+    io.to(roomId).emit("moveGroup", {classId, groupId, targetPage});
+  });
+
+  // Listen for rating updates during interviews
+  socket.on("updateRating", ({ratingType, value, groupId, classId}) => {
+    console.log(`Rating update from group ${groupId}, class ${classId}: ${ratingType} = ${value}`);
+    const roomId = `group_${groupId}_class_${classId}`;
+    // Broadcast to all members in the room including sender
+    io.to(roomId).emit("ratingUpdated", {ratingType, value, groupId, classId});
+  });
+
+  // Listen for interview submissions
+  socket.on("submitInterview", ({videoIndex, groupId, classId}) => {
+    console.log(`Interview submitted by group ${groupId}, class ${classId}, moving to video ${videoIndex}`);
+    const roomId = `group_${groupId}_class_${classId}`;
+    // Broadcast to all members in the room including sender
+    io.to(roomId).emit("interviewSubmitted", {videoIndex, groupId, classId});
+  });
+
+  // Listen for offer candidate selection
+  socket.on("offerSelected", ({candidateId, groupId, classId, roomId}) => {
+    console.log(`Candidate ${candidateId} selected for offer by group ${groupId}, class ${classId}`);
+    // Broadcast to all members in the room except sender (sender already updated their state)
+    socket.to(roomId).emit("offerSelected", {candidateId, groupId, classId});
+  });
+
+  // Listen for offer submissions
+  socket.on("offerSubmitted", ({candidateId, groupId, classId, roomId}) => {
+    console.log(`Offer submitted for candidate ${candidateId} by group ${groupId}, class ${classId}`);
+    // Broadcast to all members in the room except sender (sender already updated their state)
+    socket.to(roomId).emit("offerSubmitted", {candidateId, groupId, classId});
   });
 
   // Listen for user completion of res-review stage

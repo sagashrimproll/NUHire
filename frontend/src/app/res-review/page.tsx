@@ -87,6 +87,11 @@ export default function ResumesPage() {
     if (user && user.email) {
       socket.emit("studentOnline", { studentId: user.email });
 
+      // Join the proper room for group coordination
+      const roomId = `group_${user.group_id}_class_${user.class}`;
+      console.log("Joining room:", roomId);
+      socket.emit("joinGroup", roomId);
+
       socket.emit("studentPageChanged", {
         studentId: user.email,
         currentPage: pathname,
@@ -122,10 +127,20 @@ export default function ResumesPage() {
       }
     });
 
+    socket.on("moveGroup", ({groupId, classId, targetPage}) => {
+      if (user && groupId === user.group_id && classId === user.class && targetPage === "/res-review-group") {
+        console.log(`Group navigation triggered: moving to ${targetPage}`);
+        localStorage.setItem("progress", "res-review-group");
+        window.location.href = targetPage; 
+      }
+  });
+  
+
     return () => {
       socket.off("receivePopup");
+      socket.off("groupMove");
     };
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     socket.on("groupCompletedResReview", (data) => {
@@ -251,6 +266,8 @@ export default function ResumesPage() {
   const completeResumes = () => {
     localStorage.setItem("progress", "res-review-group");
     window.location.href = "/res-review-group";
+    socket.emit("moveGroup", {groupId: user!.group_id, classId: user!.class, targetPage: "/res-review-group"});
+
   };
 
   // Function to get appropriate tooltip message based on current state

@@ -155,9 +155,62 @@ export default function Interview() {
   useEffect(() => {
     if (user && user.email) {
       console.log("User loaded, updating current page");
+      
+      // Setup socket connection and join group room
+      const roomId = `group_${user.group_id}_class_${user.class}`;
+      console.log("Joining room:", roomId);
+      socket.emit("joinGroup", roomId);
+      
       // Emit socket events
       socket.emit("studentOnline", { studentId: user.email }); 
       socket.emit("studentPageChanged", { studentId: user.email, currentPage: pathname });
+      
+      // Listen for group move events
+      socket.on("moveGroup", ({groupId, classId, targetPage}) => {
+        if (user && groupId === user.group_id && classId === user.class && targetPage === "/makeOffer") {
+          console.log(`Group navigation triggered: moving to ${targetPage}`);
+          localStorage.setItem("progress", "makeOffer");
+          window.location.href = targetPage; 
+        }
+      });
+
+      // Listen for rating updates from other group members
+      socket.on("ratingUpdated", ({ ratingType, value, groupId, classId }) => {
+        if (user && groupId === user.group_id && classId === user.class) {
+          console.log(`Received rating update: ${ratingType} = ${value}`);
+          switch (ratingType) {
+            case 'overall':
+              setOverall(value);
+              break;
+            case 'professionalPresence':
+              setProfessionalPresence(value);
+              break;
+            case 'qualityOfAnswer':
+              setQualityOfAnswer(value);
+              break;
+            case 'personality':
+              setPersonality(value);
+              break;
+          }
+        }
+      });
+
+      // Listen for interview submissions from other group members
+      socket.on("interviewSubmitted", ({ videoIndex: newVideoIndex, groupId, classId }) => {
+        if (user && groupId === user.group_id && classId === user.class) {
+          console.log(`Group member submitted interview, moving to video ${newVideoIndex + 1}`);
+          setVideoIndex(newVideoIndex);
+          setTimeSpent(0);
+          setOverall(5);
+          setProfessionalPresence(5);
+          setQualityOfAnswer(5);
+          setPersonality(5);
+          
+          if (newVideoIndex >= interviews.length - 1) {
+            setFinished(true);
+          }
+        }
+      });
       
       // Update current page in database
       const updateCurrentPage = async () => {
@@ -171,7 +224,14 @@ export default function Interview() {
         }
       };
       
-      updateCurrentPage(); 
+      updateCurrentPage();
+      
+      // Cleanup function
+      return () => {
+        socket.off("moveGroup");
+        socket.off("ratingUpdated");
+        socket.off("interviewSubmitted");
+      };
     }
   }, [user, pathname]);
 
@@ -303,19 +363,55 @@ useEffect(() => {
   
   // Rating change handlers
   const handleOverallSliderChange = (value: number) => {
-    setOverall(value); 
+    setOverall(value);
+    // Emit rating update to group members
+    if (user) {
+      socket.emit("updateRating", {
+        ratingType: 'overall',
+        value,
+        groupId: user.group_id,
+        classId: user.class
+      });
+    }
   }
   
   const handleProfessionalPresenceSliderChange = (value: number) => {
-    setProfessionalPresence(value); 
+    setProfessionalPresence(value);
+    // Emit rating update to group members
+    if (user) {
+      socket.emit("updateRating", {
+        ratingType: 'professionalPresence',
+        value,
+        groupId: user.group_id,
+        classId: user.class
+      });
+    }
   }
   
   const handleQualityOfAnswerSliderChange = (value: number) => {
-    setQualityOfAnswer(value); 
+    setQualityOfAnswer(value);
+    // Emit rating update to group members
+    if (user) {
+      socket.emit("updateRating", {
+        ratingType: 'qualityOfAnswer',
+        value,
+        groupId: user.group_id,
+        classId: user.class
+      });
+    }
   }
   
   const handlePersonalitySliderChange = (value: number) => {
-    setPersonality(value); 
+    setPersonality(value);
+    // Emit rating update to group members
+    if (user) {
+      socket.emit("updateRating", {
+        ratingType: 'personality',
+        value,
+        groupId: user.group_id,
+        classId: user.class
+      });
+    }
   }
   
   // Reset all ratings
@@ -346,6 +442,17 @@ useEffect(() => {
       );
     }
 
+    const nextVideoIndex = videoIndex + 1;
+
+    // Emit submission event to synchronize group members
+    if (user) {
+      socket.emit("submitInterview", {
+        videoIndex: nextVideoIndex,
+        groupId: user.group_id,
+        classId: user.class
+      });
+    }
+
     if (videoIndex < interviews.length - 1) {
       nextVideo();
       resetRatings();
@@ -359,6 +466,8 @@ useEffect(() => {
   const completeInterview = () => {
     localStorage.setItem("progress", "makeOffer");
     window.location.href = '/makeOffer';
+    socket.emit("moveGroup", {groupId: user!.group_id, classId: user!.class, targetPage: "/makeOffer"});
+
   }
 
   // Loading state
@@ -576,7 +685,8 @@ useEffect(() => {
         <div className="flex justify-between ml-4 mt-4 mb-4 mr-4">
           <button
             onClick={() => (window.location.href = "/res-review-group")}
-            className="px-4 py-2 bg-navyHeader text-white rounded-lg shadow-md hover:bg-navy transition duration-300 font-rubik"
+            className="px-4 py-2 bg-navyHeader text-white rounded-lg shadow-md cursor-not-allowed opacity-50 transition duration-300 font-rubik"
+            disabled={true}
           >
             ← Back: Resume Review Group
           </button>

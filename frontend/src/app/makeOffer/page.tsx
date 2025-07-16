@@ -339,42 +339,123 @@ export default function MakeOffer() {
       }
     );
 
+    // Listen for group move events
+    socket.on("moveGroup", ({ groupId, classId, targetPage }) => {
+      if (user && groupId === user.group_id && classId === user.class) {
+        console.log(`Group navigation triggered: moving to ${targetPage}`);
+        localStorage.setItem("progress", targetPage.replace("/", ""));
+        window.location.href = targetPage;
+      }
+    });
+
+    // Listen for offer selections from other group members
+    socket.on("offerSelected", ({ candidateId, groupId, classId, checked }) => {
+      if (user && groupId === user.group_id && classId === user.class) {
+        console.log(`Group member ${checked ? 'selected' : 'deselected'} candidate ${candidateId} for offer`);
+        if (checked) {
+          // If selecting a candidate, uncheck all others and check only this one
+          setCheckedState(prev => {
+            const newState = Object.keys(prev).reduce((acc, key) => {
+              acc[Number(key)] = Number(key) === candidateId;
+              return acc;
+            }, {} as { [key: number]: boolean });
+            return newState;
+          });
+        } else {
+          // If deselecting, uncheck this candidate
+          setCheckedState(prev => ({
+            ...prev,
+            [candidateId]: false
+          }));
+        }
+      }
+    });
+
+    // Listen for offer submissions from other group members
+    socket.on("offerSubmitted", ({ candidateId, groupId, classId }) => {
+      if (user && groupId === user.group_id && classId === user.class) {
+        console.log(`Group member submitted offer for candidate ${candidateId}`);
+        setPopup({
+          headline: "Offer submitted",
+          message: "Awaiting approval from your advisor…",
+        });
+        setOfferPending(true);
+      }
+    });
+
     return () => {
+      socket?.off("moveGroup");
+      socket?.off("offerSelected");
+      socket?.off("offerSubmitted");
       socket?.disconnect();
     };
   }, [user]);
 
   const handleCheckboxChange = (interviewNumber: number) => {
-    if (!socket || !isConnected) return;
+    if (!socket || !isConnected || !user) return;
 
-    const roomId = `group_${user!.group_id}_class_${user!.class}`;
+    const roomId = `group_${user.group_id}_class_${user.class}`;
+    const isCurrentlyChecked = checkedState[interviewNumber] || false;
 
-    const newCheckedState = !checkedState[interviewNumber];
-    setCheckedState((prev) => ({
-      ...prev,
-      [interviewNumber]: newCheckedState,
-    }));
+    let newCheckedState: { [key: number]: boolean };
 
+    if (isCurrentlyChecked) {
+      // If clicking on the already checked item, uncheck it
+      newCheckedState = Object.keys(checkedState).reduce((acc, key) => {
+        acc[Number(key)] = false; // Uncheck all
+        return acc;
+      }, {} as { [key: number]: boolean });
+    } else {
+      // If clicking on an unchecked item, select only this one
+      newCheckedState = Object.keys(checkedState).reduce((acc, key) => {
+        acc[Number(key)] = Number(key) === interviewNumber;
+        return acc;
+      }, {} as { [key: number]: boolean });
+    }
+
+    setCheckedState(newCheckedState);
+
+    // Emit the selection to all group members
+    socket.emit("offerSelected", {
+      candidateId: interviewNumber,
+      groupId: user.group_id,
+      classId: user.class,
+      roomId: roomId,
+      checked: !isCurrentlyChecked, // Send the new checked state
+    });
+
+    // Also emit the individual checkbox update for backward compatibility
     socket.emit("checkint", {
       group_id: roomId,
       interview_number: interviewNumber,
-      checked: newCheckedState,
+      checked: !isCurrentlyChecked,
     });
   };
 
   const handleMakeOffer = () => {
+    if (!user || !socket) return;
+    
     const selectedIds = Object.entries(checkedState)
       .filter(([_, checked]) => checked)
       .map(([id]) => Number(id));
     if (selectedIds.length !== 1) return;
     const candidateId = selectedIds[0];
 
-    console.log("user class: ", user!.class); // delete later -> seeing if user class is being fetched.  
+    console.log("user class: ", user.class); // delete later -> seeing if user class is being fetched.  
 
-    socket?.emit("makeOfferRequest", {
-      classId: user!.class,
-      groupId: user!.group_id,
+    // Emit to advisor
+    socket.emit("makeOfferRequest", {
+      classId: user.class,
+      groupId: user.group_id,
       candidateId,
+    });
+
+    // Emit to group members so they see the submission
+    socket.emit("offerSubmitted", {
+      candidateId,
+      groupId: user.group_id,
+      classId: user.class,
+      roomId: `group_${user.group_id}_class_${user.class}`
     });
 
     setPopup({
@@ -516,9 +597,10 @@ export default function MakeOffer() {
         <footer className="flex justify-between mt-6">
           <button
             onClick={() => (window.location.href = "/jobdes")}
-            className="px-4 py-2 bg-navyHeader text-white rounded-lg shadow-md hover:bg-blue-400 transition duration-300 font-rubik"
+            className="px-4 py-2 bg-navyHeader text-white rounded-lg shadow-md cursor-not-allowed opacity-50 transition duration-300 font-rubik"
+            disabled={true}
           >
-            ← Back: Job Description
+            ← Back: Interview Stage
           </button>
           <button
             onClick={completeMakeOffer}

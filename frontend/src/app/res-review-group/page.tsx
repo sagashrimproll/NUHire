@@ -105,11 +105,21 @@ export default function ResReviewGroup() {
             setIsConnected(false);
         });
   
+        // Handle checkbox updates from other group members
         socket.on("checkboxUpdated", ({ resume_number, checked }: { resume_number: number; checked: boolean }) => {
+            console.log(`Received checkbox update: Resume ${resume_number}, Checked: ${checked}`);
             setCheckedState((prev) => ({
                 ...prev,
                 [resume_number]: checked,
             }));
+        });
+
+        socket.on("moveGroup", ({groupId, classId, targetPage}) => {
+            if (user && groupId === user.group_id && classId === user.class && targetPage === "/interview-stage") {
+                console.log(`Group navigation triggered: moving to ${targetPage}`);
+                localStorage.setItem("progress", "interview-stage");
+                window.location.href = targetPage; 
+            }
         });
   
         socket.on("connect_error", (err) => {
@@ -128,6 +138,7 @@ export default function ResReviewGroup() {
               socket.off("checkboxUpdated");
               socket.off("connect_error");
               socket.off("reconnect_failed");
+              socket.off("moveGroup");
               socket.close();
             }
           };
@@ -225,34 +236,14 @@ export default function ResReviewGroup() {
         console.log(`Sending checkbox update to room ${roomId}:`);
         console.log(`Resume ${resumeNumber}, Checked: ${newCheckedState}`);
       
-        setCheckedState((prev) => ({
-          ...prev,
-          [resumeNumber]: newCheckedState,
-        }));
-      
+        // Don't update local state immediately - wait for server confirmation
+        // This ensures all group members see the same state
         socket.emit("check", {
           group_id: roomId,
           resume_number: resumeNumber,
           checked: newCheckedState,
         });
       };
-    
-    useEffect(() => {
-        if (!socket) return;
-    
-        socket.on("checkboxUpdated", ({ resume_number, checked }) => {
-            console.log(`Received checkbox update: Resume ${resume_number}, Checked: ${checked}`);
-    
-            setCheckedState((prev) => ({
-                ...prev,
-                [resume_number]: checked,
-            }));
-        });
-    
-        return () => {
-            socket.off("checkboxUpdated");
-        };
-    }, []);
     
     const completeResumes = () => {
         const selectedCount = Object.values(checkedState).filter((checked) => checked).length;
@@ -262,6 +253,7 @@ export default function ResReviewGroup() {
         }
         localStorage.setItem("progress", "interview-stage")
         window.location.href = "/interview-stage"; 
+        socket.emit("moveGroup", {groupId: user!.group_id, classId: user!.class, targetPage: "/interview-stage"});
     };
     
     // Calculate selected resume count
@@ -329,7 +321,8 @@ export default function ResReviewGroup() {
           <div className="flex justify-between mb-4">
             <button
               onClick={() => (window.location.href = "/jobdes")}
-              className="px-4 py-2 bg-navyHeader text-white rounded-lg ml-4 shadow-md hover:bg-blue-400 transition duration-300 font-rubik"
+              className="px-4 py-2 bg-navyHeader text-white rounded-lg ml-4 shadow-md cursor-not-allowed opacity-50 transition duration-300 font-rubik"
+              disabled={true}
             >
               ← Back: Job Description
             </button>
