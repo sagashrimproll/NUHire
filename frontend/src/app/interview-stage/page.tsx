@@ -1,5 +1,5 @@
 'use client';
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Navbar from "../components/navbar";
 import NotesPage from "../components/note";
@@ -55,12 +55,26 @@ export default function Interview() {
   const [timeSpent, setTimeSpent] = useState(0);
   const [fadingEffect, setFadingEffect] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
   const [interviews, setInterviews] = useState<Array<{
     resume_id: number;
     title: string;
     video_path: string;
     interview: string;
   }>>([]);
+
+  // Use ref to always have access to current interviews state
+  const interviewsRef = useRef(interviews);
+  
+  // Update ref whenever interviews change
+  useEffect(() => {
+    interviewsRef.current = interviews;
+  }, [interviews]);
+
+  // Reset video loaded state when video changes
+  useEffect(() => {
+    setVideoLoaded(false);
+  }, [videoIndex]);
 
   // Fetch user data
   useEffect(() => {
@@ -196,17 +210,31 @@ export default function Interview() {
       });
 
       // Listen for interview submissions from other group members
-      socket.on("interviewSubmitted", ({ videoIndex: newVideoIndex, groupId, classId }) => {
+      socket.on("interviewSubmitted", ({ currentVideoIndex, nextVideoIndex, isLastInterview, groupId, classId }) => {
         if (user && groupId === user.group_id && classId === user.class) {
-          console.log(`Group member submitted interview, moving to video ${newVideoIndex + 1}`);
-          setVideoIndex(newVideoIndex);
-          setTimeSpent(0);
-          setOverall(5);
-          setProfessionalPresence(5);
-          setQualityOfAnswer(5);
-          setPersonality(5);
+          console.log(`Group member submitted interview ${currentVideoIndex + 1}, moving to video index ${nextVideoIndex}, isLast: ${isLastInterview}`);
+          console.log(`Total interviews available: ${interviewsRef.current.length}`);
+          console.log(`Current interviews array:`, interviewsRef.current);
           
-          if (newVideoIndex >= interviews.length - 1) {
+          // Check if this is the last interview
+          if (isLastInterview) {
+            console.log(`All interviews completed, setting finished state`);
+            setFinished(true);
+          } else if (interviewsRef.current.length > 0 && nextVideoIndex < interviewsRef.current.length) {
+            console.log(`Setting video index to ${nextVideoIndex}`);
+            setVideoIndex(nextVideoIndex);
+            setTimeSpent(0);
+            setOverall(5);
+            setProfessionalPresence(5);
+            setQualityOfAnswer(5);
+            setPersonality(5);
+            setFinished(false); 
+            setVideoLoaded(false); // Reset video loaded state for new video 
+          } else if (interviewsRef.current.length === 0) {
+            console.log(`Interviews not loaded yet, waiting for interviews to load before processing`);
+            // Don't set finished state yet, wait for interviews to load
+          } else {
+            console.log(`Invalid video index ${nextVideoIndex} for ${interviewsRef.current.length} interviews, setting finished state`);
             setFinished(true);
           }
         }
@@ -233,7 +261,7 @@ export default function Interview() {
         socket.off("interviewSubmitted");
       };
     }
-  }, [user, pathname]);
+  }, [user, pathname]); // Remove interviews from dependency array
 
   // Fetch candidates data when user is loaded
 // Fetch candidates data when user is loaded
@@ -339,12 +367,23 @@ useEffect(() => {
   // Get current video
   const currentVid = interviews[videoIndex];
 
-  // Debug logging
+  // Debug logging - Add more detailed logging
   useEffect(() => {
+    console.log("=== Interview State Debug ===");
     console.log("Interviews:", interviews);
     console.log("Video Index:", videoIndex);
     console.log("Current video:", currentVid);
-  }, [interviews, videoIndex, currentVid]);
+    console.log("Finished:", finished);
+    console.log("Loading:", loading);
+    
+    if (interviews.length > 0 && videoIndex >= 0) {
+      const isValidIndex = videoIndex < interviews.length;
+      console.log("Is valid video index:", isValidIndex);
+      if (!isValidIndex) {
+        console.warn(`Invalid video index ${videoIndex} for ${interviews.length} interviews`);
+      }
+    }
+  }, [interviews, videoIndex, currentVid, finished, loading]);
 
   // Move to next video with transition effect
   const nextVideo = () => { 
@@ -429,6 +468,15 @@ useEffect(() => {
       return;
     }
 
+    if (!videoLoaded) {
+      console.warn("Video not fully loaded yet, cannot submit");
+      return;
+    }
+
+    // Calculate these values at submission time, not render time
+    const nextVideoIndex = videoIndex + 1;
+    const isLastInterview = nextVideoIndex >= interviews.length;
+
     if (noShow) {
       await sendResponseToBackend(1, 1, 1, 1, timeSpent, currentVid.resume_id);
     } else {
@@ -440,21 +488,25 @@ useEffect(() => {
         timeSpent,
         currentVid.resume_id
       );
-    }
-
-    const nextVideoIndex = videoIndex + 1;
-
+    }    
+    console.log(`Submitting interview. Current index: ${videoIndex}, Next index: ${nextVideoIndex}, Is last: ${isLastInterview}, Total interviews: ${interviews.length}`);
     // Emit submission event to synchronize group members
     if (user) {
       socket.emit("submitInterview", {
-        videoIndex: nextVideoIndex,
+        currentVideoIndex: videoIndex,
+        nextVideoIndex: nextVideoIndex,
+        isLastInterview: isLastInterview,
         groupId: user.group_id,
         classId: user.class
       });
     }
 
-    if (videoIndex < interviews.length - 1) {
-      nextVideo();
+    // Update local state
+    if (!isLastInterview) {
+      console.log(`Moving to next video (index ${nextVideoIndex})`);
+      setVideoIndex(nextVideoIndex);
+      setTimeSpent(0);
+      setVideoLoaded(false); // Reset video loaded state for new video
       resetRatings();
     } else {
       console.log("All interviews have been rated!");
@@ -467,7 +519,6 @@ useEffect(() => {
     localStorage.setItem("progress", "makeOffer");
     window.location.href = '/makeOffer';
     socket.emit("moveGroup", {groupId: user!.group_id, classId: user!.class, targetPage: "/makeOffer"});
-
   }
 
   // Loading state
@@ -608,19 +659,21 @@ useEffect(() => {
           {/* Submit button */}
           <button
             onClick={handleSubmit}
-            disabled={finished}
+            disabled={finished || !videoLoaded}
             className={`px-4 py-2 rounded-lg shadow-md transition duration-300 font-rubik mt-6 ${
-              finished
-                ? "bg-blue-500 text-white opacity-50 cursor-not-allowed"
+              finished || !videoLoaded
+                ? "bg-gray-400 text-white opacity-50 cursor-not-allowed"
                 : "bg-blue-500 text-white hover:bg-blue-900"
             }`}
           >
-            Submit Response
+            {!videoLoaded ? "Loading Video..." : "Submit Response"}
           </button>
           
           {/* Video progress indicator */}
           <div className="mt-6 text-sm text-gray-700">
-            Video {videoIndex + 1} of {interviews.length}
+            {interviews.length > 0 ? 
+              `Video ${Math.min(videoIndex + 1, interviews.length)} of ${interviews.length}` : 
+              "Loading videos..."}
           </div>
         </div>
 
@@ -640,7 +693,10 @@ useEffect(() => {
         {/* Video display */}
         <div className={`md:w-2/3 flex flex-col items-center justify-center p-4 md:p-8 ${fadingEffect ? 'opacity-50 transition-opacity duration-500' : 'opacity-100 transition-opacity duration-500'}`}>
           <h1 className="text-xl font-rubik font-bold mb-4 text-center">
-            {noShow ? "Candidate No-Show" : `Candidate Interview ${videoIndex + 1}`}
+            {noShow ? "Candidate No-Show" : 
+             interviews.length > 0 && videoIndex >= 0 && videoIndex < interviews.length ? 
+             `Candidate Interview ${videoIndex + 1}` : 
+             "Loading Interview..."}
           </h1>
           <div className="w-full max-w-4xl aspect-video border-4 border-navyHeader mb-5 rounded-lg shadow-lg mx-auto">
             {noShow ? (
@@ -649,17 +705,29 @@ useEffect(() => {
                   This candidate did not show up.
                 </p>
               </div>
-            ) : currentVid ? (
+            ) : currentVid && currentVid.interview ? (
               <iframe
+                key={`video-${videoIndex}`}
                 className="w-full h-full rounded-lg shadow-lg"
                 src={currentVid.interview}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 referrerPolicy="strict-origin-when-cross-origin"
                 allowFullScreen
+                onLoad={() => {
+                  console.log("Video iframe loaded");
+                  setTimeout(() => {
+                    setVideoLoaded(true);
+                  }, 2000);
+                }}
               ></iframe>
             ) : (
               <div className="flex items-center justify-center h-full bg-gray-100">
-                <p className="text-gray-500">Loading Interview Video...</p>
+                <p className="text-gray-500">
+                  {interviews.length === 0 ? "No interviews available" : 
+                   videoIndex >= interviews.length ? "All interviews completed" :
+                   !videoLoaded ? "Loading Interview Video..." :
+                   "Loading Interview Video..."}
+                </p>
               </div>
             )}
           </div>
