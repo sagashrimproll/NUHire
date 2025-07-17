@@ -537,6 +537,55 @@ const Grouping = () => {
             <p className="text-sand text-center">No groups found for this class.</p>
           )}
         </div>
+
+        {/* Pending Offers Section */}
+        <div className="mt-8 mb-6">
+          <h2 className="text-2xl font-bold text-sand mb-4">Pending Offers</h2>
+          
+          {pendingOffers.length > 0 ? (
+            <div className="bg-springWater p-4 rounded-md shadow">
+              <div className="space-y-3">
+                {pendingOffers.map(({classId, groupId, candidateId }) => (
+                  <div
+                    key={`pending-offer-${classId}-${groupId}-${candidateId}`}
+                    className="bg-white p-4 rounded border border-wood flex items-center justify-between"
+                  >
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-navy">
+                        Group {groupId} from Class {classId}
+                      </h3>
+                      <p className="text-gray-600">
+                        Wants to make an offer to Candidate {candidateId}
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Awaiting your approval decision
+                      </p>
+                    </div>
+                    <div className="flex space-x-3 ml-4">
+                      <button
+                        onClick={() => respondToOffer(classId, groupId, candidateId, true)}
+                        className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md font-medium transition-colors"
+                      >
+                        Approve
+                      </button>
+                      <button
+                        onClick={() => respondToOffer(classId, groupId, candidateId, false)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md font-medium transition-colors"
+                      >
+                        Reject
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="bg-springWater p-4 rounded-md text-center">
+              <p className="text-navy">No pending offers at this time</p>
+            </div>
+          )}
+        </div>
+
         {/* Render pending offers as popups */}
         {pendingOffers.map(({classId, groupId, candidateId }) => (
           <div
