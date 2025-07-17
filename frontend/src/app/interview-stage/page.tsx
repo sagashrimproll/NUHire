@@ -196,23 +196,18 @@ export default function Interview() {
       });
 
       // Listen for interview submissions from other group members
-      socket.on("interviewSubmitted", ({ currentVideoIndex, nextVideoIndex, isLastInterview, groupId, classId }) => {
+      socket.on("interviewSubmitted", ({ videoIndex: newVideoIndex, groupId, classId }) => {
         if (user && groupId === user.group_id && classId === user.class) {
-          console.log(`Group member submitted interview ${currentVideoIndex + 1}, moving to video ${nextVideoIndex + 1}`);
+          console.log(`Group member submitted interview, moving to video ${newVideoIndex + 1}`);
+          setVideoIndex(newVideoIndex);
+          setTimeSpent(0);
+          setOverall(5);
+          setProfessionalPresence(5);
+          setQualityOfAnswer(5);
+          setPersonality(5);
           
-          // Only update if we're not ahead of the group
-          if (videoIndex <= currentVideoIndex) {
-            setVideoIndex(nextVideoIndex);
-            setTimeSpent(0);
-            setOverall(5);
-            setProfessionalPresence(5);
-            setQualityOfAnswer(5);
-            setPersonality(5);
-            
-            if (isLastInterview) {
-              setFinished(true);
-              console.log("All interviews completed by group submission");
-            }
+          if (newVideoIndex >= interviews.length - 1) {
+            setFinished(true);
           }
         }
       });
@@ -240,6 +235,7 @@ export default function Interview() {
     }
   }, [user, pathname]);
 
+  // Fetch candidates data when user is loaded
 // Fetch candidates data when user is loaded
 useEffect(() => {
   if (!user?.group_id) return;
@@ -446,24 +442,18 @@ useEffect(() => {
       );
     }
 
-    // Calculate next video index
     const nextVideoIndex = videoIndex + 1;
-    
-    // Check if this is the last interview
-    const isLastInterview = nextVideoIndex >= interviews.length;
 
     // Emit submission event to synchronize group members
     if (user) {
       socket.emit("submitInterview", {
-        currentVideoIndex: videoIndex,  // Send current video that was just completed
-        nextVideoIndex: nextVideoIndex, // Send next video index
-        isLastInterview: isLastInterview,
+        videoIndex: nextVideoIndex,
         groupId: user.group_id,
         classId: user.class
       });
     }
 
-    if (!isLastInterview) {
+    if (videoIndex < interviews.length - 1) {
       nextVideo();
       resetRatings();
     } else {
