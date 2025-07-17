@@ -1046,7 +1046,9 @@ app.get("/resume", (req, res) => {
 app.post("/resume/vote", (req, res) => {
   const { student_id, group_id, class: classId, timespent, resume_number, vote } = req.body;
 
-  if (!student_id || !group_id || !classId || !resume_number || !timespent || !vote) {
+  // More precise validation that allows timespent to be 0
+  if (!student_id || !group_id || !classId || !resume_number || timespent === undefined || timespent === null || !vote) {
+    console.log("Validation failed. Received data:", { student_id, group_id, classId, timespent, resume_number, vote });
     return res.status(400).json({ 
       error: "student_id, group_id, class, resume_number, timespent, and vote are required" 
     });
