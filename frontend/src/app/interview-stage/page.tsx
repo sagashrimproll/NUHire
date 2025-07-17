@@ -210,7 +210,7 @@ export default function Interview() {
       });
 
       // Listen for interview submissions from other group members
-      socket.on("interviewSubmitted", ({ currentVideoIndex, nextVideoIndex, isLastInterview, groupId, classId }) => {
+      socket.on("interviewSubmitted", ({ videoIndex: newVideoIndex, groupId, classId }) => {
         if (user && groupId === user.group_id && classId === user.class) {
           console.log(`Group member submitted interview ${currentVideoIndex + 1}, moving to video index ${nextVideoIndex}, isLast: ${isLastInterview}`);
           console.log(`Total interviews available: ${interviewsRef.current.length}`);
@@ -263,6 +263,7 @@ export default function Interview() {
     }
   }, [user, pathname]); // Remove interviews from dependency array
 
+  // Fetch candidates data when user is loaded
 // Fetch candidates data when user is loaded
 useEffect(() => {
   if (!user?.group_id) return;
@@ -487,10 +488,8 @@ useEffect(() => {
         timeSpent,
         currentVid.resume_id
       );
-    }
-    
+    }    
     console.log(`Submitting interview. Current index: ${videoIndex}, Next index: ${nextVideoIndex}, Is last: ${isLastInterview}, Total interviews: ${interviews.length}`);
-
     // Emit submission event to synchronize group members
     if (user) {
       socket.emit("submitInterview", {
