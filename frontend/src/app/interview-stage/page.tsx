@@ -210,7 +210,7 @@ export default function Interview() {
       });
 
       // Listen for interview submissions from other group members
-      socket.on("interviewSubmitted", ({ videoIndex: newVideoIndex, groupId, classId }) => {
+      socket.on("interviewSubmitted", ({ currentVideoIndex, nextVideoIndex, isLastInterview, groupId, classId }) => {
         if (user && groupId === user.group_id && classId === user.class) {
           console.log(`Group member submitted interview ${currentVideoIndex + 1}, moving to video index ${nextVideoIndex}, isLast: ${isLastInterview}`);
           console.log(`Total interviews available: ${interviewsRef.current.length}`);
