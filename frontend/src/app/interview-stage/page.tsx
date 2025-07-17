@@ -717,7 +717,7 @@ useEffect(() => {
                   console.log("Video iframe loaded");
                   setTimeout(() => {
                     setVideoLoaded(true);
-                  }, 2000);
+                  }, 500);
                 }}
               ></iframe>
             ) : (
