@@ -446,9 +446,9 @@ io.on("connection", (socket) => {
         console.log("No admin users found or database error:", err);
       }
     });
-    
-    // Also broadcast to all clients for general awareness (optional)
-    io.emit("makeOfferRequest", {classId, groupId, candidateId});
+
+    const roomId = `group_${groupId}_class_${classId}`;
+    io.to(roomId).emit("groupMemberOffer");
   });
 
   // Advisor’s decision → notify the student group

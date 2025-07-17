@@ -268,6 +268,14 @@ export default function MakeOffer() {
       setIsConnected(false);
     });
 
+    socket.on("groupMemberOffer", () => {
+      setPopup({
+        headline: "Offer submitted",
+        message: "Awaiting approval from your advisor…",
+      });
+      setOfferPending(true);
+    });
+
     // Listens to Advisor's response
     socket.on(
       "makeOfferResponse",
