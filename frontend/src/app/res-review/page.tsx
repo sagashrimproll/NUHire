@@ -38,6 +38,7 @@ export default function ResumesPage() {
   const [timeSpent, setTimeSpent] = useState(0);
   const [loading, setLoading] = useState(true);
   const [disabled, setDisabled] = useState(true);
+  const [resumeLoading, setResumeLoading] = useState(true);
   const [popup, setPopup] = useState<{
     headline: string;
     message: string;
@@ -175,10 +176,35 @@ export default function ResumesPage() {
   }, [currentResumeIndex]);
 
   const sendVoteToBackend = async (vote: "yes" | "no" | "unanswered") => {
-    if (!user || !user.id || !user.group_id) {
-      console.error("Student ID not found");
+    if (!user || !user.id || !user.group_id || !user.class) {
+      console.error("Missing user data:", {
+        hasUser: !!user,
+        hasId: !!user?.id,
+        hasGroupId: !!user?.group_id,
+        hasClass: !!user?.class,
+        userValue: user
+      });
       return;
     }
+
+    if (timeSpent < 0) {
+      console.error("Invalid time spent:", timeSpent);
+      return;
+    }
+
+    if (currentResumeIndex < 0) {
+      console.error("Invalid resume index:", currentResumeIndex);
+      return;
+    }
+
+    const voteData = {
+      student_id: user.id,
+      group_id: user.group_id,
+      class: user.class,
+      timespent: timeSpent,
+      resume_number: currentResumeIndex + 1,
+      vote: vote,
+    };
 
     try {
       const response = await fetch(`${API_BASE_URL}/resume/vote`, {
@@ -186,15 +212,10 @@ export default function ResumesPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          student_id: user.id,
-          group_id: user.group_id,
-          class: user.class,
-          timespent: timeSpent,
-          resume_number: currentResumeIndex + 1,
-          vote: vote,
-        }),
+        body: JSON.stringify(voteData),
       });
+
+      console.log("Response status:", response.status, response.statusText);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -210,6 +231,7 @@ export default function ResumesPage() {
   const nextResume = () => {
     if (currentResumeIndex < resumesList.length - 1) {
       setFadingEffect(true);
+      setResumeLoading(true); // Set resume loading when changing resumes
       setTimeout(() => {
         setCurrentResumeIndex(currentResumeIndex + 1);
         setRestricted(false);
@@ -242,6 +264,12 @@ export default function ResumesPage() {
 
   const handleAccept = () => {
     if (maxDecisions) return;
+    if (!user || loading || resumeLoading) {
+      console.warn("User data not ready or resume still loading, skipping vote");
+      return;
+    }
+    
+    console.log("About to call sendVoteToBackend with 'yes'");
     sendVoteToBackend("yes");
     setAccepted((prev) => prev + 1);
     setResumes((prev) => prev + 1);
@@ -250,6 +278,10 @@ export default function ResumesPage() {
 
   const handleReject = () => {
     if (maxDecisions) return;
+    if (!user || loading || resumeLoading) {
+      console.warn("User data not ready or resume still loading, skipping vote");
+      return;
+    }
     sendVoteToBackend("no");
     setRejected((prev) => prev + 1);
     setResumes((prev) => prev + 1);
@@ -258,6 +290,10 @@ export default function ResumesPage() {
 
   const handleNoResponse = () => {
     if (maxDecisions) return;
+    if (!user || loading || resumeLoading) {
+      console.warn("User data not ready or resume still loading, skipping vote");
+      return;
+    }
     sendVoteToBackend("unanswered");
     setNoResponse((prev) => prev + 1);
     nextResume();
@@ -346,17 +382,25 @@ export default function ResumesPage() {
             {!restricted && (
               <>
                 <button
-                  className="bg-[#a2384f] text-white font-rubik px-6 py-2 rounded-lg shadow-md hover:bg-red-600 hover:scale-105 transition duration-300"
+                  className={`bg-[#a2384f] text-white font-rubik px-6 py-2 rounded-lg shadow-md transition duration-300 ${
+                    resumes > 10 || resumeLoading 
+                      ? "opacity-50 cursor-not-allowed" 
+                      : "hover:bg-red-600 hover:scale-105"
+                  }`}
                   onClick={handleReject}
-                  disabled={resumes > 10}
+                  disabled={resumes > 10 || resumeLoading}
                 >
                   Reject
                 </button>
 
                 <button
-                  className="bg-gray-500 text-white font-rubik px-6 py-2 rounded-lg shadow-md hover:bg-gray-600 hover:scale-105 transition duration-300"
+                  className={`bg-gray-500 text-white font-rubik px-6 py-2 rounded-lg shadow-md transition duration-300 ${
+                    resumes > 10 || resumeLoading 
+                      ? "opacity-50 cursor-not-allowed" 
+                      : "hover:bg-gray-600 hover:scale-105"
+                  }`}
                   onClick={handleNoResponse}
-                  disabled={resumes > 10}
+                  disabled={resumes > 10 || resumeLoading}
                 >
                   Skip
                 </button>
@@ -364,9 +408,13 @@ export default function ResumesPage() {
             )}
 
             <button
-              className="bg-[#367b62] text-white font-rubik px-6 py-2 rounded-lg shadow-md hover:bg-green-600 hover:scale-105 transition duration-300"
+              className={`bg-[#367b62] text-white font-rubik px-6 py-2 rounded-lg shadow-md transition duration-300 ${
+                resumes > 10 || resumeLoading 
+                  ? "opacity-50 cursor-not-allowed" 
+                  : "hover:bg-green-600 hover:scale-105"
+              }`}
               onClick={handleAccept}
-              disabled={resumes > 10}
+              disabled={resumes > 10 || resumeLoading}
             >
               Accept
             </button>
@@ -389,6 +437,15 @@ export default function ResumesPage() {
               <Document
                 file={`${API_BASE_URL}/${resumesList[currentResumeIndex].file_path}`}
                 onLoadError={console.error}
+                onLoadSuccess={() => {
+                  console.log("Resume loaded successfully");
+                  setResumeLoading(false);
+                }}
+                loading={
+                  <div className="flex justify-center items-center h-96">
+                    <div className="text-lg text-gray-600">Loading resume...</div>
+                  </div>
+                }
               >
                 <Page
                   pageNumber={1}
@@ -399,6 +456,10 @@ export default function ResumesPage() {
                       ? 1.0
                       : 1.0
                   }
+                  onLoadSuccess={() => {
+                    console.log("Page rendered successfully");
+                    setResumeLoading(false);
+                  }}
                 />
               </Document>
             ) : (
