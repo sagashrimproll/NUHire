@@ -18,7 +18,7 @@ const Grouping = () => {
   }
   
   //Defining the constants and state variables
-  const [user, setUser] = useState<{ affiliation: string } | null>(null);
+  const [user, setUser] = useState<{ affiliation: string; email?: string; [key: string]: any } | null>(null);
   const [loading, setLoading] = useState(true);
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudents, setSelectedStudents] = useState<Student[]>([]);
@@ -63,17 +63,38 @@ const Grouping = () => {
     fetchUser();
   }, [router]);
 
+  // ✅ Admin socket setup - Register admin and listen for offer requests
   useEffect(() => {
+    if (!user || user.affiliation !== "admin") return;
+
+    console.log("Setting up admin socket connection");
+
     const onRequest = (data: { classId: number; groupId: number; candidateId: number }) => {
+      console.log("Admin received makeOfferRequest:", data);
       const { classId, groupId, candidateId } = data;
       setPendingOffers((prev) => [...prev, {classId, groupId, candidateId }]);
     };
+
+    socket.on("connect", () => {
+      console.log("Admin connected to socket:", socket.id);
+      
+      // Register admin as online so they can receive offer notifications
+      socket.emit("studentOnline", { studentId: user.email });
+      console.log("Admin registered as online with email:", user.email);
+    });
     
     socket.on("makeOfferRequest", onRequest);
+
+    socket.on("disconnect", () => {
+      console.log("Admin disconnected from socket");
+    });
+
     return () => {
       socket.off("makeOfferRequest", onRequest);
+      socket.off("connect");
+      socket.off("disconnect");
     };
-  }, []);
+  }, [user]);
 
   const respondToOffer = (
     classId: number,
@@ -150,6 +171,8 @@ const Grouping = () => {
 
   // ✅ Socket.IO setup for real-time updates
   useEffect(() => {
+    if (!user) return; // Wait for user to be loaded
+    
     const socket = io(API_BASE_URL, {
       reconnectionAttempts: 5,
       timeout: 5000,
@@ -245,7 +268,7 @@ const Grouping = () => {
     return () => {
       socket.disconnect();
     };
-  }, []); // Empty dependency array so it only runs once
+  }, []); 
 
   // ✅ Handle class selection change
   const handleClassChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
